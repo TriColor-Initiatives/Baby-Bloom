@@ -13,11 +13,31 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-const app = initializeApp(firebaseConfig);
+// Check if Firebase config is available
+const isFirebaseConfigured = firebaseConfig.apiKey && 
+  firebaseConfig.apiKey !== 'your_api_key' && 
+  firebaseConfig.projectId;
 
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-export const database = getDatabase(app);
-export const storage = getStorage(app);
+let app = null;
+let auth = null;
+let googleProvider = null;
+let database = null;
+let storage = null;
 
+if (isFirebaseConfigured) {
+  try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    googleProvider = new GoogleAuthProvider();
+    database = getDatabase(app);
+    storage = getStorage(app);
+    console.log('Firebase initialized successfully');
+  } catch (error) {
+    console.warn('Firebase initialization failed:', error.message);
+  }
+} else {
+  console.warn('Firebase not configured. App will run in local-only mode. To enable cloud features, create a .env file with your Firebase credentials.');
+}
+
+export { auth, googleProvider, database, storage };
 export default app;

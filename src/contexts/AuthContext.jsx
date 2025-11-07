@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  signInWithPopup, 
+import {
+  signInWithPopup,
   signOut as firebaseSignOut,
-  onAuthStateChanged 
+  onAuthStateChanged
 } from 'firebase/auth';
 import { auth, googleProvider } from '../services/firebase';
 
@@ -21,6 +21,12 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // If Firebase is not configured, just set loading to false
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
@@ -30,6 +36,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const signInWithGoogle = async () => {
+    if (!auth || !googleProvider) {
+      console.warn('Firebase not configured. Sign in is not available.');
+      return;
+    }
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
@@ -39,6 +49,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signOut = async () => {
+    if (!auth) {
+      console.warn('Firebase not configured. Sign out is not available.');
+      return;
+    }
     try {
       await firebaseSignOut(auth);
     } catch (error) {
