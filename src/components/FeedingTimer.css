@@ -1,0 +1,205 @@
+/* Feeding Timer Styles */
+
+.timer-modal {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  max-width: 500px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.3s ease-out;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.timer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xl);
+  border-bottom: 1px solid var(--border);
+}
+
+.timer-header h2 {
+  font-size: var(--font-size-xl);
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.timer-content {
+  padding: var(--spacing-xl);
+}
+
+.timer-setup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.timer-type-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+.timer-start-btn {
+  width: 100%;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  font-size: var(--font-size-lg);
+  margin-top: var(--spacing-md);
+}
+
+/* Timer Active State */
+.timer-active {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.timer-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  align-items: center;
+}
+
+.main-timer {
+  text-align: center;
+  padding: var(--spacing-xl);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  color: white;
+  box-shadow: var(--shadow-lg);
+}
+
+.timer-value {
+  font-size: 72px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: var(--spacing-sm);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+
+.timer-label {
+  font-size: var(--font-size-md);
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.side-timers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+  width: 100%;
+}
+
+.side-timer {
+  text-align: center;
+  padding: var(--spacing-lg);
+  background: var(--surface-variant);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-normal);
+  border: 2px solid var(--border);
+}
+
+.side-timer[style*="var(--primary)"] {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
+}
+
+.side-icon {
+  font-size: 32px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.side-time {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: var(--spacing-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.side-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.switch-side-btn {
+  width: 100%;
+  justify-content: center;
+  font-size: var(--font-size-md);
+  padding: var(--spacing-md);
+}
+
+.timer-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+.timer-controls .btn {
+  justify-content: center;
+  padding: var(--spacing-md);
+}
+
+.timer-paused-notice {
+  text-align: center;
+  padding: var(--spacing-md);
+  background: var(--warning);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  opacity: 0.8;
+}
+
+/* Pulsing animation for active timer */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.main-timer {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .timer-modal {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .timer-value {
+    font-size: 56px;
+  }
+
+  .side-time {
+    font-size: 24px;
+  }
+
+  .timer-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark Mode */
+[data-theme="dark"] .timer-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+[data-theme="dark"] .side-timer {
+  background: var(--surface);
+}

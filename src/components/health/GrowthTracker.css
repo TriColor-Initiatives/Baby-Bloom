@@ -1,0 +1,62 @@
+.growth-modal {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+.growth-content {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+}
+
+.growth-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.growth-card {
+    background: var(--background);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    border-left: 4px solid var(--success);
+}
+
+.growth-date {
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.growth-measurements {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.growth-measurement {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-secondary);
+}
+
+.measurement-icon {
+    font-size: 1.2rem;
+}
+
+.measurement-label {
+    font-weight: 500;
+    min-width: 60px;
+}
+
+.measurement-value {
+    color: var(--text-primary);
+    font-weight: 600;
+}

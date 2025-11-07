@@ -1,0 +1,260 @@
+.topbar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: var(--topbar-height);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-lg);
+  z-index: 100;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.app-logo {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 10px rgba(13, 27, 76, 0.18));
+}
+
+.app-name {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.company-logo {
+  height: 45px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  max-width: 200px;
+  transition: transform var(--transition-fast);
+}
+
+.topbar-right a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.topbar-right a:hover .company-logo {
+  transform: scale(1.05);
+}
+
+.topbar-menu-btn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.topbar-menu-btn:hover {
+  background: var(--surface-variant);
+}
+
+.topbar-menu-icon {
+  position: relative;
+  width: 20px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 1px;
+  transition: background var(--transition-fast);
+}
+
+.topbar-menu-icon::before,
+.topbar-menu-icon::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 1px;
+  transition: background var(--transition-fast);
+}
+
+.topbar-menu-icon::before {
+  top: -6px;
+}
+
+.topbar-menu-icon::after {
+  top: 6px;
+}
+
+.topbar-search {
+  position: relative;
+  width: 400px;
+}
+
+.topbar-search-input {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface-variant);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.topbar-search-input:focus {
+  background: var(--surface);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.topbar-search-icon {
+  position: absolute;
+  left: var(--spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.topbar-quick-add {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.topbar-quick-add:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.topbar-icon-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background: var(--surface-variant);
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 20px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.topbar-icon-btn:hover {
+  background: var(--primary-light);
+}
+
+.topbar-icon-btn .badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background: var(--error);
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+}
+
+.topbar-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs);
+  background: var(--surface-variant);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.topbar-profile:hover {
+  background: var(--primary-light);
+}
+
+.topbar-profile-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary);
+}
+
+.topbar-profile-info {
+  padding-right: var(--spacing-sm);
+}
+
+.topbar-profile-name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  display: block;
+  line-height: 1.2;
+}
+
+.topbar-profile-role {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  display: block;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0 var(--spacing-lg);
+  }
+
+  .topbar-menu-btn {
+    display: flex;
+  }
+
+  .company-name {
+    display: none;
+  }
+
+  .app-name {
+    font-size: var(--font-size-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar-quick-add span {
+    display: none;
+  }
+
+  .topbar-quick-add {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+}

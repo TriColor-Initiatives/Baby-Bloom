@@ -1,0 +1,442 @@
+import { useState } from 'react';
+import { useBaby } from '../../contexts/BabyContext';
+import TopBar from '../layout/TopBar';
+import './WelcomeScreen.css';
+
+const heroTiles = [
+    {
+        title: 'Morning friendly',
+        description: 'Quick taps before coffee.',
+        icon: '??',
+        accent: 'sunrise'
+    },
+    {
+        title: 'Night mode ready',
+        description: 'Soft hues for sleepy logs.',
+        icon: '??',
+        accent: 'moon'
+    },
+    {
+        label: 'Setup time',
+        title: '2 quick steps',
+        description: 'No sign-ups or emails needed.',
+        icon: '?',
+        accent: 'spark'
+    },
+    {
+        label: 'Care focus',
+        title: 'Holistic',
+        description: 'Activities, health, and reminders stay connected.',
+        icon: '??',
+        accent: 'heart'
+    },
+    {
+        title: 'Daily rhythm',
+        description: 'Log feedings, naps, diapers, and moods in seconds.',
+        icon: '??',
+        accent: 'sunrise'
+    },
+    {
+        title: 'Growth & health',
+        description: 'See trends for weight, height, symptoms, and visits.',
+        icon: '??',
+        accent: 'sprout'
+    },
+    {
+        title: 'Family reminders',
+        description: 'Coordinate meds, pumping, tummy time, and more.',
+        icon: '?',
+        accent: 'clock'
+    },
+    {
+        title: 'Sweet memories',
+        description: 'Pin tummy time wins, first giggles, and photo notes.',
+        icon: '??',
+        accent: 'camera'
+    }
+];
+
+const reassurancePoints = [
+    {
+        title: 'Private by design',
+        description: 'Everything stays on this device. No accounts required.',
+        icon: '🔒'
+    },
+    {
+        title: 'Made for sharing',
+        description: 'Add caregivers later and keep everyone in sync.',
+        icon: '🤝'
+    }
+];
+
+const milestoneMoments = [
+    {
+        title: 'First smile',
+        caption: 'Save photos & tiny wins.',
+        icon: '😊'
+    },
+    {
+        title: 'Doctor visits',
+        caption: 'Bring stats in one tap.',
+        icon: '🩺'
+    },
+    {
+        title: 'Sleep streaks',
+        caption: 'Spot restful patterns.',
+        icon: '🌙'
+    }
+];
+
+const floatingStickers = ['??', '??', '?', '??'];
+
+const steps = [
+    { label: 'Baby basics', icon: '🍼' },
+    { label: 'Details', icon: '🧸' }
+];
+
+const WelcomeScreen = ({ onComplete }) => {
+    const { addBaby } = useBaby();
+    const [step, setStep] = useState(1);
+    const [formData, setFormData] = useState({
+        name: '',
+        dateOfBirth: '',
+        gender: '',
+        weight: '',
+        height: '',
+        bloodType: ''
+    });
+
+    const handleChange = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleNext = () => {
+        if (step === 1 && formData.name && formData.dateOfBirth && formData.gender) {
+            setStep(2);
+        }
+    };
+
+    const handleBack = () => {
+        setStep(1);
+    };
+
+    const handleSubmit = () => {
+        if (formData.name && formData.dateOfBirth && formData.gender) {
+            addBaby(formData);
+            onComplete();
+        }
+    };
+
+    const calculateAge = (dob) => {
+        if (!dob) return '';
+        const today = new Date();
+        const birthDate = new Date(dob);
+        const months = (today.getFullYear() - birthDate.getFullYear()) * 12 +
+            (today.getMonth() - birthDate.getMonth());
+
+        if (months < 1) {
+            const days = Math.floor((today - birthDate) / (1000 * 60 * 60 * 24));
+            return `${days} day${days !== 1 ? 's' : ''} old`;
+        } else if (months < 12) {
+            return `${months} month${months !== 1 ? 's' : ''} old`;
+        } else {
+            const years = Math.floor(months / 12);
+            const remainingMonths = months % 12;
+            return `${years} year${years !== 1 ? 's' : ''} ${remainingMonths > 0 ? `${remainingMonths} month${remainingMonths !== 1 ? 's' : ''}` : ''}`;
+        }
+    };
+
+    const bubbleInitial = formData.name ? formData.name.charAt(0).toUpperCase() : 'BB';
+
+    return (
+        <div className="welcome-screen">
+            <TopBar />
+
+            <div className="welcome-grid">
+                <section className="welcome-spotlight">
+                    <div className="floating-toys">
+                        {floatingStickers.map(sticker => (
+                            <span key={sticker} aria-hidden="true">{sticker}</span>
+                        ))}
+                    </div>
+
+                    <div className="spotlight-header">
+                        <h1>Design the perfect baby dashboard in minutes <span role="img" aria-hidden="true">🌱</span></h1>
+                        <p>Turn everyday logs into insights that cover feeding, sleep, growth, health, and memories.</p>
+                    </div>
+
+                    <div className="spotlight-badges">
+                        <div className="badge-card">
+                            <span role="img" aria-hidden="true">🌞</span>
+                            <div>
+                                <strong>Morning friendly</strong>
+                                <p>Quick taps before coffee.</p>
+                            </div>
+                        </div>
+                        <div className="badge-card">
+                            <span role="img" aria-hidden="true">🌙</span>
+                            <div>
+                                <strong>Night mode ready</strong>
+                                <p>Soft hues for sleepy logs.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="spotlight-stats">
+                        {statTiles.map(tile => (
+                            <div key={tile.label} className="stat-card">
+                                <span className="stat-icon" aria-hidden="true">{tile.icon}</span>
+                                <span className="stat-label">{tile.label}</span>
+                                <strong>{tile.title}</strong>
+                                <p>{tile.description}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <ul className="highlight-grid">
+                        {highlightCards.map(card => (
+                            <li key={card.title} className="highlight-item">
+                                <span className={`highlight-icon ${card.accent}`} aria-hidden="true">{card.icon}</span>
+                                <div>
+                                    <h3>{card.title}</h3>
+                                    <p>{card.description}</p>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+
+                    <div className="reassurance-panel">
+                        {reassurancePoints.map(point => (
+                            <div key={point.title} className="reassurance-item">
+                                <div className="reassurance-title">
+                                    <span role="img" aria-hidden="true">{point.icon}</span>
+                                    <strong>{point.title}</strong>
+                                </div>
+                                <p>{point.description}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <ul className="milestone-strip">
+                        {milestoneMoments.map(moment => (
+                            <li key={moment.title}>
+                                <span className="moment-emoji" aria-hidden="true">{moment.icon}</span>
+                                <div>
+                                    <strong>{moment.title}</strong>
+                                    <p>{moment.caption}</p>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+
+                <section className="welcome-form-panel">
+                    <div className="welcome-form-card">
+                        <header className="form-intro">
+                            <span className="eyebrow">Baby profile · 🧸</span>
+                            <h2>Tell us about your little one</h2>
+                            <p>We personalize insights or reminders once we know a few basics.</p>
+                        </header>
+
+                        <div className="step-tracker">
+                            {steps.map((stepData, index) => {
+                                const position = index + 1;
+                                const isActive = step === position;
+                                const isComplete = step > position;
+
+                                return (
+                                    <div key={stepData.label} className="step-item">
+                                        <div className={`step-node ${isActive ? 'active' : ''} ${isComplete ? 'complete' : ''}`}>
+                                            <span className="step-icon" aria-hidden="true">{stepData.icon}</span>
+                                            <span>{position}</span>
+                                        </div>
+                                        <span className="step-text">{stepData.label}</span>
+                                        {index < steps.length - 1 && (
+                                            <div className={`step-connector ${step > position ? 'filled' : ''}`} />
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {step === 1 && (
+                            <div className="form-body">
+                                <div className="baby-persona">
+                                    <div className="baby-bubble" aria-hidden="true">
+                                        {bubbleInitial}
+                                    </div>
+                                    <div>
+                                        <p className="baby-label">{formData.gender ? `Tracking a ${formData.gender}` : 'Profile preview'}</p>
+                                        <p className="baby-name">{formData.name || 'Little explorer'}</p>
+                                        <p className="baby-age">
+                                            {formData.dateOfBirth ? calculateAge(formData.dateOfBirth) : 'Age updates once you add a birthday.'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <ul className="celebration-chips">
+                                    <li>🎯 Smart insights</li>
+                                    <li>💖 Shareable moments</li>
+                                    <li>📅 Gentle reminders</li>
+                                </ul>
+
+                                <div className="form-section">
+                                    <div className="form-group">
+                                        <label>Baby's name *</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g., Amara, Julian"
+                                            value={formData.name}
+                                            onChange={(e) => handleChange('name', e.target.value)}
+                                            autoFocus
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Date of birth *</label>
+                                        <input
+                                            type="date"
+                                            value={formData.dateOfBirth}
+                                            onChange={(e) => handleChange('dateOfBirth', e.target.value)}
+                                            max={new Date().toISOString().split('T')[0]}
+                                        />
+                                        {formData.dateOfBirth && (
+                                            <small className="age-display">
+                                                {calculateAge(formData.dateOfBirth)}
+                                            </small>
+                                        )}
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Gender *</label>
+                                        <div className="gender-options">
+                                            <button
+                                                type="button"
+                                                className={`gender-pill ${formData.gender === 'male' ? 'selected' : ''}`}
+                                                onClick={() => handleChange('gender', 'male')}
+                                            >
+                                                Boy 👦
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`gender-pill ${formData.gender === 'female' ? 'selected' : ''}`}
+                                                onClick={() => handleChange('gender', 'female')}
+                                            >
+                                                Girl 👧
+                                            </button>
+                                        </div>
+                                        <p className="helper-text">You can update this anytime in Settings.</p>
+                                    </div>
+                                </div>
+
+                                <div className="tip-card">
+                                    <span role="img" aria-hidden="true">✨</span>
+                                    <p>Names & birthdays unlock personalized dashboards instantly.</p>
+                                </div>
+
+                                <div className="form-actions">
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary btn-large"
+                                        onClick={handleNext}
+                                        disabled={!formData.name || !formData.dateOfBirth || !formData.gender}
+                                    >
+                                        Continue to details ✨
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-text"
+                                        onClick={() => {
+                                            if (formData.name && formData.dateOfBirth && formData.gender) {
+                                                handleSubmit();
+                                            }
+                                        }}
+                                    >
+                                        Skip additional details
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 2 && (
+                            <div className="form-body">
+                                <div className="form-section">
+                                    <div className="form-header">
+                                        <h3>Optional details</h3>
+                                        <p>These help build personalized growth charts and recommendations.</p>
+                                    </div>
+
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Birth weight (kg)</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                placeholder="e.g., 3.4"
+                                                value={formData.weight}
+                                                onChange={(e) => handleChange('weight', e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Birth height (cm)</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                placeholder="e.g., 50"
+                                                value={formData.height}
+                                                onChange={(e) => handleChange('height', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Blood type</label>
+                                        <select
+                                            value={formData.bloodType}
+                                            onChange={(e) => handleChange('bloodType', e.target.value)}
+                                        >
+                                            <option value="">Select blood type</option>
+                                            <option value="A+">A+</option>
+                                            <option value="A-">A-</option>
+                                            <option value="B+">B+</option>
+                                            <option value="B-">B-</option>
+                                            <option value="AB+">AB+</option>
+                                            <option value="AB-">AB-</option>
+                                            <option value="O+">O+</option>
+                                            <option value="O-">O-</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="info-banner">
+                                        <strong>Good to know 💡</strong>
+                                        <p>You can always edit or add more medical info later from the Health page.</p>
+                                    </div>
+                                </div>
+
+                                <div className="form-actions split">
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary"
+                                        onClick={handleBack}
+                                    >
+                                        Back
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary btn-large"
+                                        onClick={handleSubmit}
+                                    >
+                                        Complete setup 🎉
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </section>
+            </div>
+        </div>
+    );
+};
+
+export default WelcomeScreen;

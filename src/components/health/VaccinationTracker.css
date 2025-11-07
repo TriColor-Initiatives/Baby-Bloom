@@ -1,0 +1,91 @@
+.vaccination-modal {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+.vaccination-content {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+}
+
+.vaccination-info {
+    background: var(--primary);
+    color: white;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.vaccination-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.vaccination-card {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--background);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.vaccination-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.vaccination-card.completed {
+    border-left-color: var(--success);
+}
+
+.vaccination-card.upcoming {
+    border-left-color: var(--warning);
+}
+
+.vaccination-card.pending {
+    border-left-color: var(--text-secondary);
+}
+
+.vaccination-age {
+    font-weight: 600;
+    color: var(--primary);
+    min-width: 80px;
+}
+
+.vaccination-details {
+    flex: 1;
+}
+
+.vaccination-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.vaccination-dose {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.vaccination-status {
+    font-size: 1.5rem;
+}
+
+.vaccination-note {
+    background: var(--warning);
+    color: white;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+}
