@@ -51,6 +51,19 @@
   box-shadow: var(--shadow-sm);
 }
 
+.btn-secondary.is-active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.page-meta {
+  margin-bottom: var(--spacing-xl);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;

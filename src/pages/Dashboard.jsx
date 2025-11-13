@@ -38,47 +38,6 @@ const Dashboard = () => {
     return 'Good Evening';
   };
 
-  // Get real data from localStorage
-  const getTodayFeedings = () => {
-    const feedings = JSON.parse(localStorage.getItem('babyFeedings') || '[]');
-    const today = new Date().toDateString();
-    return feedings.filter(f => new Date(f.timestamp || f.date).toDateString() === today);
-  };
-
-  const getTodaySleep = () => {
-    const sleeps = JSON.parse(localStorage.getItem('babySleep') || '[]');
-    const today = new Date().toDateString();
-    return sleeps.filter(s => new Date(s.timestamp || s.date).toDateString() === today);
-  };
-
-  const getTodayDiapers = () => {
-    const diapers = JSON.parse(localStorage.getItem('babyDiapers') || '[]');
-    const today = new Date().toDateString();
-    return diapers.filter(d => new Date(d.timestamp || d.date).toDateString() === today);
-  };
-
-  const todayFeedings = getTodayFeedings();
-  const todaySleep = getTodaySleep();
-  const todayDiapers = getTodayDiapers();
-
-  const calculateTotalSleepHours = () => {
-    return todaySleep.reduce((total, sleep) => {
-      if (sleep.duration) {
-        const [hours, minutes] = sleep.duration.split(':').map(Number);
-        return total + hours + (minutes / 60);
-      }
-      return total;
-    }, 0).toFixed(1);
-  };
-
-  const getLastActivity = (items) => {
-    if (items.length === 0) return null;
-    const sorted = [...items].sort((a, b) =>
-      new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date)
-    );
-    return sorted[0];
-  };
-
   const getTimeAgo = (date) => {
     if (!date) return 'No data';
     const now = new Date();
@@ -93,52 +52,6 @@ const Dashboard = () => {
     return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
   };
 
-  const lastFeeding = getLastActivity(todayFeedings);
-  const lastDiaper = getLastActivity(todayDiapers);
-  const totalSleepHours = calculateTotalSleepHours();
-
-  const todayStats = [
-    {
-      id: 1,
-      type: 'feeding',
-      icon: '🍼',
-      title: 'Feedings Today',
-      value: todayFeedings.length > 0 ? todayFeedings.length : '-',
-      subtitle: lastFeeding ? `Last fed ${getTimeAgo(lastFeeding.timestamp || lastFeeding.date)}` : 'No feedings logged today',
-      isEmpty: todayFeedings.length === 0,
-      action: () => navigate('/feeding')
-    },
-    {
-      id: 2,
-      type: 'sleep',
-      icon: '😴',
-      title: 'Sleep Duration',
-      value: todaySleep.length > 0 ? `${totalSleepHours}h` : '-',
-      subtitle: todaySleep.length > 0 ? `${todaySleep.length} sleep session${todaySleep.length !== 1 ? 's' : ''}` : 'No sleep logged today',
-      isEmpty: todaySleep.length === 0,
-      action: () => navigate('/sleep')
-    },
-    {
-      id: 3,
-      type: 'diaper',
-      icon: '🧷',
-      title: 'Diaper Changes',
-      value: todayDiapers.length > 0 ? todayDiapers.length : '-',
-      subtitle: lastDiaper ? `Last changed ${getTimeAgo(lastDiaper.timestamp || lastDiaper.date)}` : 'No changes logged today',
-      isEmpty: todayDiapers.length === 0,
-      action: () => navigate('/diaper')
-    },
-    {
-      id: 4,
-      type: 'health',
-      icon: '🩺',
-      title: 'Health Status',
-      value: 'Good',
-      subtitle: 'Track health records',
-      isEmpty: false,
-      action: () => navigate('/health')
-    }
-  ];
 
   // Build Recent Activity from real data across modules
   const getAllFeedings = () => {
@@ -154,7 +67,74 @@ const Dashboard = () => {
     try { return JSON.parse(localStorage.getItem('baby-bloom-health') || '[]'); } catch { return []; }
   };
 
+  const allFeedings = getAllFeedings();
+  const allSleep = getAllSleep();
+  const allDiapers = getAllDiapers();
+  const allHealth = getAllHealth();
+
   const safeDate = (d) => (d ? new Date(d) : null);
+
+  const getLatestEntryDate = (items) => {
+    if (!items?.length) return null;
+    return items.reduce((latest, item) => {
+      const date = safeDate(item.timestamp || item.date);
+      if (!date) return latest;
+      if (!latest || date > latest) return date;
+      return latest;
+    }, null);
+  };
+
+  const analysisSources = [
+    { id: 'feedings', label: 'Feedings', icon: '🍼', color: 'var(--primary)', data: allFeedings },
+    { id: 'sleep', label: 'Sleep Sessions', icon: '😴', color: 'var(--secondary, #9c6cff)', data: allSleep },
+    { id: 'diapers', label: 'Diaper Changes', icon: '🧷', color: 'var(--accent, #ffb86c)', data: allDiapers },
+    { id: 'health', label: 'Health Records', icon: '🩺', color: 'var(--success, #25c685)', data: allHealth },
+  ];
+
+  const statActions = {
+    feedings: () => navigate('/feeding'),
+    sleep: () => navigate('/sleep'),
+    diapers: () => navigate('/diaper'),
+    health: () => navigate('/health'),
+  };
+
+  const handleStatKeyDown = (event, action) => {
+    if (!action) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      action();
+    }
+  };
+
+  const analysisStats = analysisSources.map((source) => {
+    const latest = getLatestEntryDate(source.data);
+    return {
+      id: source.id,
+      label: source.label,
+      icon: source.icon,
+      color: source.color,
+      count: source.data.length,
+      subtitle: source.data.length ? `Last entry ${getTimeAgo(latest)}` : 'No entries yet',
+      action: statActions[source.id]
+    };
+  });
+
+  const totalLogs = analysisStats.reduce((sum, stat) => sum + stat.count, 0);
+  const trackedCategories = analysisStats.filter((stat) => stat.count > 0).length;
+  const donutGradient = totalLogs > 0
+    ? (() => {
+        let cumulative = 0;
+        const segments = analysisStats
+          .filter((stat) => stat.count > 0)
+          .map((stat) => {
+            const start = (cumulative / totalLogs) * 100;
+            cumulative += stat.count;
+            const end = (cumulative / totalLogs) * 100;
+            return `${stat.color} ${start}% ${end}%`;
+          });
+        return `conic-gradient(${segments.join(',')})`;
+      })()
+    : 'conic-gradient(var(--surface-variant, #e5e7f8) 0% 100%)';
 
   const formatSleepTitle = (s) => {
     const kind = (s.type || 'sleep').toString().toLowerCase();
@@ -185,28 +165,28 @@ const Dashboard = () => {
   };
 
   const recentActivities = (() => {
-    const feedings = getAllFeedings().map((f) => ({
+    const feedings = allFeedings.map((f) => ({
       id: `f-${f.id || f.timestamp}`,
       icon: '🍼',
       title: formatFeedingTitle(f),
       when: f.timestamp || f.date,
       bg: 'var(--primary-light)'
     }));
-    const sleeps = getAllSleep().map((s) => ({
+    const sleeps = allSleep.map((s) => ({
       id: `s-${s.id || s.timestamp}`,
       icon: '💤',
       title: formatSleepTitle(s),
       when: s.timestamp || s.date,
       bg: 'var(--secondary-light)'
     }));
-    const diapers = getAllDiapers().map((d) => ({
+    const diapers = allDiapers.map((d) => ({
       id: `d-${d.id || d.timestamp}`,
       icon: '🧷',
       title: formatDiaperTitle(d),
       when: d.timestamp || d.date,
       bg: 'var(--accent)'
     }));
-    const health = getAllHealth().map((h) => ({
+    const health = allHealth.map((h) => ({
       id: `h-${h.id || h.date}`,
       icon: getHealthIcon(h.type),
       title: h.title || (h.type ? h.type[0].toUpperCase() + h.type.slice(1) : 'Health record'),
@@ -250,19 +230,10 @@ const Dashboard = () => {
       time: getTimeUntil(r.dueAt)
     }));
 
-  const quickActions = [
-    { id: 1, icon: '🍼', label: 'Log Feeding', action: () => navigate('/feeding?add=true') },
-    { id: 2, icon: '😴', label: 'Log Sleep', action: () => navigate('/sleep?add=true') },
-    { id: 3, icon: '🧷', label: 'Log Diaper', action: () => navigate('/diaper?add=true') },
-    { id: 4, icon: '🩺', label: 'Log Health', action: () => navigate('/health?add=true') },
-  ];
-
   // Show welcome screen if no babies
   if (showWelcome) {
     return <WelcomeScreen onComplete={handleWelcomeComplete} />;
   }
-
-  const hasAnyData = todayFeedings.length > 0 || todaySleep.length > 0 || todayDiapers.length > 0;
 
   return (
     <div className="dashboard">
@@ -277,56 +248,87 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {!hasAnyData && (
-        <div className="getting-started-banner">
-          <div className="banner-content">
-            <span className="banner-icon">🚀</span>
-            <div>
-              <h3>Getting Started</h3>
-              <p>Start tracking your baby's daily activities using the quick actions below!</p>
-              <p style={{ fontSize: 'var(--font-size-xs)', marginTop: 'var(--spacing-xs)', opacity: 0.8 }}>
-                💡 Focus on <strong>Daily Tracking</strong> (Feeding, Sleep, Diaper, Health) - other features available in "More"
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="dashboard-grid">
-        {todayStats.map((stat) => (
-          <div
-            key={stat.id}
-            className={`stat-card ${stat.type} ${stat.isEmpty ? 'empty' : ''}`}
-            onClick={stat.action}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="stat-header">
-              <div className="stat-icon">{stat.icon}</div>
-              {!stat.isEmpty && (
-                <span className="stat-trend up">✓</span>
-              )}
-            </div>
-            <div className="stat-title">{stat.title}</div>
-            <div className="stat-value">{stat.value}</div>
-            <div className="stat-subtitle">{stat.subtitle}</div>
-            {stat.isEmpty && (
-              <div className="stat-cta">Click to add →</div>
-            )}
-          </div>
-        ))}
-      </div>
-
       <div className="section-card" style={{ marginBottom: 'var(--spacing-xl)' }}>
         <div className="section-header">
-          <h3 className="section-title">Quick Actions</h3>
+          <h3 className="section-title">Daily Log Overview</h3>
         </div>
-        <div className="quick-actions">
-          {quickActions.map((action) => (
-            <button key={action.id} className="quick-action-btn" onClick={action.action}>
-              <span>{action.icon}</span>
-              <span>{action.label}</span>
-            </button>
-          ))}
+        <div className="analysis-overview">
+          <div className="analysis-donut-card">
+            <p className="analysis-donut-title">Today's Overview</p>
+            <div className="analysis-donut-ring" style={{ backgroundImage: donutGradient }}>
+              <div className="analysis-donut-inner">
+                <span className="analysis-total">{totalLogs}</span>
+                <small>Total logs</small>
+                <small>{trackedCategories || 0} categories</small>
+              </div>
+            </div>
+            <div className="analysis-donut-legend">
+              {analysisStats.map((stat) => (
+                <div key={stat.id} className="analysis-legend-item">
+                  <span
+                    className="analysis-legend-dot"
+                    style={{ background: stat.color }}
+                  />
+                  <span>{stat.label}</span>
+                  <strong>{stat.count}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="analysis-stats-card">
+            <p className="analysis-stats-title">Category breakdown</p>
+            <div className="analysis-stats-list">
+              {analysisStats.map((stat) => (
+                <div
+                  key={`${stat.id}-row`}
+                  className="analysis-stat-row"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View ${stat.label}`}
+                  onClick={stat.action}
+                  onKeyDown={(event) => handleStatKeyDown(event, stat.action)}
+                >
+                  <div className="analysis-stat-info">
+                    <span className="analysis-stat-icon" style={{ color: stat.color }}>
+                      {stat.icon}
+                    </span>
+                    <div>
+                      <div className="analysis-stat-label">{stat.label}</div>
+                      <div className="analysis-stat-subtitle">{stat.subtitle}</div>
+                    </div>
+                  </div>
+                  <div className="analysis-stat-value">{stat.count}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="cry-helper-card">
+        <div className="cry-helper-content">
+          <div>
+            <p className="cry-helper-eyebrow">Need quick help?</p>
+            <h3>Is your baby crying? Know the reason faster</h3>
+            <p>Jump into the Baby Cry Reason Finder to get guided suggestions and calming tips based on common triggers.</p>
+            <div className="cry-helper-tags">
+              <span>AI-guided</span>
+              <span>2 min flow</span>
+              <span>Trusted by parents</span>
+            </div>
+          </div>
+          <div className="cry-helper-cta">
+            <div className="cry-helper-icon">🤱</div>
+            <a
+              className="btn btn-primary cry-helper-btn"
+              href="https://app.tricolorinitiatives.com/baby-cry-reason-finder/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open Cry Finder
+            </a>
+          </div>
         </div>
       </div>
 
@@ -343,7 +345,7 @@ const Dashboard = () => {
                 <h3>No recent activity yet</h3>
                 <p>Log feeding, sleep, diapers, or health to see them here</p>
                 <div className="empty-tips">
-                  <div className="empty-tip"><span>🍼</span><span>Use Quick Actions to log your first entry</span></div>
+                  <div className="empty-tip"><span>🍼</span><span>Use the Feeding, Sleep, Diaper or Health pages to log your first entry</span></div>
                   <div className="empty-tip"><span>⏱️</span><span>Activities appear instantly after saving</span></div>
                 </div>
                 <button className="btn btn-primary btn-large" onClick={() => navigate('/feeding?add=true')}>
@@ -419,3 +421,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

@@ -1,12 +1,14 @@
 import '../styles/pages.css';
+import { useState } from 'react';
 
 const Recipes = () => {
+  const [viewMode, setViewMode] = useState('search');
   const recipes = [
     {
       id: 1,
       name: 'Sweet Potato Puree',
       age: '6+ months',
-      icon: '🍠',
+      icon: '🥣',
       time: '20 min',
       difficulty: 'Easy',
       nutrition: 'Rich in Vitamin A'
@@ -15,7 +17,7 @@ const Recipes = () => {
       id: 2,
       name: 'Banana Oatmeal',
       age: '6+ months',
-      icon: '🍌',
+      icon: '🥄',
       time: '10 min',
       difficulty: 'Easy',
       nutrition: 'Fiber and Potassium'
@@ -66,31 +68,45 @@ const Recipes = () => {
       </div>
 
       <div className="page-actions">
-        <button className="btn btn-secondary">
+        <button
+          className={`btn btn-secondary ${viewMode === 'search' ? 'active' : ''}`}
+          onClick={() => setViewMode('search')}
+        >
           <span>🔍</span>
           <span>Search Recipes</span>
         </button>
-        <button className="btn btn-secondary">
+        <button
+          className={`btn btn-secondary ${viewMode === 'favorites' ? 'active' : ''}`}
+          onClick={() => setViewMode('favorites')}
+        >
           <span>⭐</span>
           <span>Favorites</span>
         </button>
-        <button className="btn btn-secondary">
-          <span>📅</span>
+        <button
+          className={`btn btn-secondary ${viewMode === 'planner' ? 'active' : ''}`}
+          onClick={() => setViewMode('planner')}
+        >
+          <span>🗓️</span>
           <span>Meal Planner</span>
         </button>
+      </div>
+      <div className="page-meta">
+        {viewMode === 'search' && <p>Search through wholesome meals and filter by age or ingredients.</p>}
+        {viewMode === 'favorites' && <p>Save go-to recipes so you can revisit them quickly.</p>}
+        {viewMode === 'planner' && <p>Plan weekly meals around your little one’s milestones.</p>}
       </div>
 
       <div className="section-card">
         <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Recipe Library</h3>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-          gap: 'var(--spacing-lg)' 
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gap: 'var(--spacing-lg)'
         }}>
           {recipes.map((recipe) => (
             <div key={recipe.id} className="card" style={{ cursor: 'pointer' }}>
-              <div style={{ 
-                fontSize: '64px', 
+              <div style={{
+                fontSize: '64px',
                 textAlign: 'center',
                 marginBottom: 'var(--spacing-md)',
                 padding: 'var(--spacing-lg)',
@@ -100,29 +116,29 @@ const Recipes = () => {
                 {recipe.icon}
               </div>
               <h4 style={{ marginBottom: 'var(--spacing-xs)' }}>{recipe.name}</h4>
-              <div style={{ 
-                fontSize: 'var(--font-size-xs)', 
+              <div style={{
+                fontSize: 'var(--font-size-xs)',
                 color: 'var(--text-tertiary)',
                 marginBottom: 'var(--spacing-md)'
               }}>
                 {recipe.age}
               </div>
-              <div style={{ 
+              <div style={{
                 display: 'flex',
                 gap: 'var(--spacing-md)',
                 fontSize: 'var(--font-size-xs)',
                 color: 'var(--text-secondary)',
                 marginBottom: 'var(--spacing-sm)'
               }}>
-                <span>⏱️ {recipe.time}</span>
-                <span>📊 {recipe.difficulty}</span>
+                <span>⏰ {recipe.time}</span>
+                <span>⚙️ {recipe.difficulty}</span>
               </div>
-              <div style={{ 
+              <div style={{
                 fontSize: 'var(--font-size-xs)',
                 color: 'var(--primary-dark)',
                 fontWeight: 600
               }}>
-                💪 {recipe.nutrition}
+                ⚡ {recipe.nutrition}
               </div>
             </div>
           ))}
@@ -131,7 +147,7 @@ const Recipes = () => {
 
       <div className="section-card" style={{ marginTop: 'var(--spacing-xl)' }}>
         <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Feeding Guidelines</h3>
-        <div style={{ 
+        <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
           gap: 'var(--spacing-md)'
