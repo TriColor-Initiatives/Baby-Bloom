@@ -15,7 +15,6 @@ import './Health.css';
 const Health = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [records, setRecords] = useState([]);
-  const [activeFilter, setActiveFilter] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAppointmentsOpen, setIsAppointmentsOpen] = useState(false);
   const [isVaccinationsOpen, setIsVaccinationsOpen] = useState(false);
@@ -138,10 +137,8 @@ const Health = () => {
     }
   };
 
-  const getFilteredRecords = () => {
-    if (activeFilter === 'all') return records;
-    return records.filter(r => r.type === activeFilter);
-  };
+  // Show all records (no filtering)
+  const filteredRecords = records;
 
   const getTypeIcon = (type) => {
     const icons = {
@@ -189,7 +186,6 @@ const Health = () => {
     return date.toLocaleDateString();
   };
 
-  const filteredRecords = getFilteredRecords();
 
   return (
     <div className="page-container">
@@ -243,39 +239,6 @@ const Health = () => {
 
       <div className="content-grid">
         <div className="feeding-log">
-          <div className="filter-tabs">
-            <button
-              className={`filter-tab ${activeFilter === 'all' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('all')}
-            >
-              All Records
-            </button>
-            <button
-              className={`filter-tab ${activeFilter === 'checkup' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('checkup')}
-            >
-              ✅ Check-ups
-            </button>
-            <button
-              className={`filter-tab ${activeFilter === 'illness' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('illness')}
-            >
-              🤒 Illness
-            </button>
-            <button
-              className={`filter-tab ${activeFilter === 'medication' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('medication')}
-            >
-              💊 Medications
-            </button>
-            <button
-              className={`filter-tab ${activeFilter === 'vaccination' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('vaccination')}
-            >
-              💉 Vaccinations
-            </button>
-          </div>
-
           <h3 style={{ marginBottom: 'var(--spacing-lg)', marginTop: 'var(--spacing-lg)' }}>
             Health Records ({filteredRecords.length})
           </h3>

@@ -38,7 +38,7 @@ const Sidebar = ({ isOpen, isCollapsed, onHoverChange, onClose }) => {
       section: 'Baby Development',
       items: [
         { path: '/growth', icon: '📈', label: 'Growth' },
-        { path: '/milestones', icon: '�', label: 'Milestones' },
+        ...(isBaby6MonthsOrOlder ? [{ path: '/milestones', icon: '⭐', label: 'Milestones' }] : []),
         { path: '/photos', icon: '📸', label: 'Photos' },
       ],
     },

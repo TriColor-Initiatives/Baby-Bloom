@@ -84,8 +84,6 @@ const milestoneMoments = [
     }
 ];
 
-const floatingStickers = ['\u{1F319}', '\u{1FA81}', '\u{2B50}', '\u{1F308}'];
-
 const WelcomeFeaturesPage = ({ onContinue }) => {
     return (
         <div className="welcome-features-page">
@@ -93,13 +91,8 @@ const WelcomeFeaturesPage = ({ onContinue }) => {
 
             <div className="features-container">
                 <section className="welcome-spotlight-full">
-                    <div className="floating-toys">
-                        {floatingStickers.map((sticker, index) => (
-                            <span key={index} aria-hidden="true">{sticker}</span>
-                        ))}
-                    </div>
-
-                    <div className="spotlight-content">
+                    <div className="welcome-form-panel-centered">
+                        <div className="spotlight-content">
                         <div className="spotlight-header">
                             <h1>Design the perfect baby dashboard in minutes <span role="img" aria-hidden="true">🌱</span></h1>
                             <p>Turn everyday logs into insights that cover feeding, sleep, growth, health, and memories.</p>
@@ -150,6 +143,7 @@ const WelcomeFeaturesPage = ({ onContinue }) => {
                             </button>
                             <p className="cta-note">Just a few details to personalize your experience</p>
                         </div>
+                    </div>
                     </div>
                 </section>
             </div>
