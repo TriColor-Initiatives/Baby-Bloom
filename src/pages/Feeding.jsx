@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useBaby } from '../contexts/BabyContext';
 import FeedingTimer from '../components/FeedingTimer';
 import FeedingAnalytics from '../components/FeedingAnalytics';
 import FeedingReminder from '../components/FeedingReminder';
@@ -11,6 +12,7 @@ import '../styles/pages.css';
 import './Feeding.css';
 
 const Feeding = () => {
+  const { activeBaby } = useBaby();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeFilter, setActiveFilter] = useState('all');
   const [feedings, setFeedings] = useState([]);
@@ -33,6 +35,29 @@ const Feeding = () => {
     notes: '',
     timestamp: new Date().toISOString().slice(0, 16)
   });
+
+  // Check if baby is 6 months or older
+  const isBaby6MonthsOrOlder = () => {
+    if (!activeBaby || !activeBaby.dateOfBirth) return false;
+    const today = new Date();
+    const birthDate = new Date(activeBaby.dateOfBirth);
+    const months = (today.getFullYear() - birthDate.getFullYear()) * 12 +
+      (today.getMonth() - birthDate.getMonth());
+    return months >= 6;
+  };
+
+  const canShowSolidFood = isBaby6MonthsOrOlder();
+
+  // Reset form type if solid food is selected but baby is under 6 months
+  useEffect(() => {
+    if (formData.type === 'solid' && !canShowSolidFood) {
+      setFormData(prev => ({ ...prev, type: 'bottle' }));
+    }
+    // Reset active filter if it's 'solid' but baby is under 6 months
+    if (activeFilter === 'solid' && !canShowSolidFood) {
+      setActiveFilter('all');
+    }
+  }, [canShowSolidFood, formData.type, activeFilter]);
 
   // Load feedings from localStorage
   useEffect(() => {
@@ -131,7 +156,17 @@ const Feeding = () => {
   };
 
   const getFilteredFeedings = () => {
-    if (activeFilter === 'all') return feedings;
+    if (activeFilter === 'all') {
+      // If baby is under 6 months, filter out solid food entries
+      if (!canShowSolidFood) {
+        return feedings.filter(f => f.type !== 'solid');
+      }
+      return feedings;
+    }
+    // If trying to filter by solid food but baby is under 6 months, return empty
+    if (activeFilter === 'solid' && !canShowSolidFood) {
+      return [];
+    }
     return feedings.filter(f => f.type === activeFilter);
   };
 
@@ -268,12 +303,14 @@ const Feeding = () => {
             >
               🤱 Breast
             </button>
-            <button
-              className={`filter-btn ${activeFilter === 'solid' ? 'active' : ''}`}
-              onClick={() => setActiveFilter('solid')}
-            >
-              🥘 Solid Food
-            </button>
+            {canShowSolidFood && (
+              <button
+                className={`filter-btn ${activeFilter === 'solid' ? 'active' : ''}`}
+                onClick={() => setActiveFilter('solid')}
+              >
+                🥘 Solid Food
+              </button>
+            )}
           </div>
 
           <div className="log-entries">
@@ -436,13 +473,15 @@ const Feeding = () => {
                   >
                     🤱 Breast
                   </button>
-                  <button
-                    type="button"
-                    className={`type-btn ${formData.type === 'solid' ? 'active' : ''}`}
-                    onClick={() => setFormData({ ...formData, type: 'solid' })}
-                  >
-                    🥘 Solid
-                  </button>
+                  {canShowSolidFood && (
+                    <button
+                      type="button"
+                      className={`type-btn ${formData.type === 'solid' ? 'active' : ''}`}
+                      onClick={() => setFormData({ ...formData, type: 'solid' })}
+                    >
+                      🥘 Solid
+                    </button>
+                  )}
                 </div>
               </div>
 

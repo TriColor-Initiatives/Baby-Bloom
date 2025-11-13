@@ -113,15 +113,17 @@
 }
 
 .empty-tip span:first-child {
-  font-size: 24px;
+  font-size: var(--font-size-lg);
   flex-shrink: 0;
 }
 
 .btn-large {
-  padding: var(--spacing-md) var(--spacing-xl);
-  font-size: var(--font-size-lg);
+  padding: 10px 18px !important;
+  font-size: 13px !important;
   font-weight: 600;
-  gap: var(--spacing-sm);
+  gap: 6px;
+  min-height: 40px !important;
+  max-height: 44px !important;
 }
 
 /* Modal Styles */
@@ -347,8 +349,10 @@
   }
 
   .page-actions .btn {
-    padding: var(--spacing-sm);
-    font-size: var(--font-size-xs);
+    padding: 7px 12px !important;
+    font-size: 11px !important;
+    min-height: 32px !important;
+    max-height: 36px !important;
   }
 }
 

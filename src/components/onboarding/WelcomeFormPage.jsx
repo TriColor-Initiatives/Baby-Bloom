@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useBaby } from '../../contexts/BabyContext';
 import TopBar from '../layout/TopBar';
+import CustomDatePicker from './CustomDatePicker';
+import babyBloomLogo from '../../assets/images/baby_bloom_logo.png?url';
 import './WelcomeFormPage.css';
 
 const steps = [
@@ -64,8 +66,6 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
         }
     };
 
-    const bubbleInitial = formData.name ? formData.name.charAt(0).toUpperCase() : 'BB';
-
     return (
         <div className="welcome-form-page">
             <TopBar />
@@ -104,7 +104,7 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
                             <div className="form-body">
                                 <div className="baby-persona">
                                     <div className="baby-bubble" aria-hidden="true">
-                                        {bubbleInitial}
+                                        <img src={babyBloomLogo} alt="Baby Bloom" className="baby-bubble-logo" />
                                     </div>
                                     <div>
                                         <p className="baby-label">{formData.gender ? `Tracking a ${formData.gender}` : 'Profile preview'}</p>
@@ -135,11 +135,10 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
 
                                     <div className="form-group">
                                         <label>Date of birth *</label>
-                                        <input
-                                            type="date"
+                                        <CustomDatePicker
                                             value={formData.dateOfBirth}
-                                            onChange={(e) => handleChange('dateOfBirth', e.target.value)}
-                                            max={new Date().toISOString().split('T')[0]}
+                                            onChange={(value) => handleChange('dateOfBirth', value)}
+                                            maxDate={new Date().toISOString().split('T')[0]}
                                         />
                                         {formData.dateOfBirth && (
                                             <small className="age-display">
@@ -170,7 +169,7 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
                                     </div>
                                 </div>
 
-                                <div className="tip-card">
+                                <div className="gradient-banner">
                                     <span role="img" aria-hidden="true">✨</span>
                                     <p>Names & birthdays unlock personalized dashboards instantly.</p>
                                 </div>
@@ -186,7 +185,7 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
                                     </button>
                                     <button
                                         type="button"
-                                        className="btn btn-text"
+                                        className="btn skip-link"
                                         onClick={() => {
                                             if (formData.name && formData.dateOfBirth && formData.gender) {
                                                 handleSubmit();

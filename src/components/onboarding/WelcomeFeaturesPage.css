@@ -293,9 +293,9 @@
 
 .btn {
     border: none;
-    border-radius: 20px;
-    padding: 1.25rem 2.5rem;
-    font-size: 1.2rem;
+    border-radius: 28px;
+    padding: 1.75rem 3.5rem !important;
+    font-size: 1.5rem !important;
     font-weight: 700;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
@@ -304,19 +304,21 @@
 .btn-primary {
     background: #fff;
     color: var(--primary, #5568c9);
-    box-shadow: 0 16px 32px rgba(255, 255, 255, 0.4);
+    box-shadow: 0 20px 40px rgba(255, 255, 255, 0.5);
 }
 
 .btn-large {
-    padding: 1.5rem 3.5rem;
-    font-size: 1.4rem;
-    border-radius: 22px;
+    padding: 1.2rem 3rem !important;
+    font-size: 1.2rem !important;
+    border-radius: 28px;
     font-weight: 800;
+    min-height: 56px !important;
+    min-width: 220px !important;
 }
 
 .btn-primary:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 32px rgba(255, 255, 255, 0.45);
+    transform: translateY(-3px);
+    box-shadow: 0 24px 48px rgba(255, 255, 255, 0.55);
 }
 
 @keyframes toyFloat {

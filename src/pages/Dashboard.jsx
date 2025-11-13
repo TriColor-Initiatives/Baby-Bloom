@@ -27,6 +27,18 @@ const Dashboard = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Check if baby is younger than 6 months (0-6 months)
+  const isBabyUnder6Months = () => {
+    if (!activeBaby || !activeBaby.dateOfBirth) return false;
+    const today = new Date();
+    const birthDate = new Date(activeBaby.dateOfBirth);
+    const months = (today.getFullYear() - birthDate.getFullYear()) * 12 +
+      (today.getMonth() - birthDate.getMonth());
+    return months < 6;
+  };
+
+  const canShowCryHelper = isBabyUnder6Months();
+
   const handleWelcomeComplete = () => {
     setShowWelcome(false);
   };
@@ -306,31 +318,33 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="cry-helper-card">
-        <div className="cry-helper-content">
-          <div>
-            <p className="cry-helper-eyebrow">Need quick help?</p>
-            <h3>Is your baby crying? Know the reason faster</h3>
-            <p>Jump into the Baby Cry Reason Finder to get guided suggestions and calming tips based on common triggers.</p>
-            <div className="cry-helper-tags">
-              <span>AI-guided</span>
-              <span>2 min flow</span>
-              <span>Trusted by parents</span>
+      {canShowCryHelper && (
+        <div className="cry-helper-card">
+          <div className="cry-helper-content">
+            <div>
+              <p className="cry-helper-eyebrow">Need quick help?</p>
+              <h3>Is your baby crying? Know the reason faster</h3>
+              <p>Jump into the Baby Cry Reason Finder to get guided suggestions and calming tips based on common triggers.</p>
+              <div className="cry-helper-tags">
+                <span>AI-guided</span>
+                <span>2 min flow</span>
+                <span>Trusted by parents</span>
+              </div>
+            </div>
+            <div className="cry-helper-cta">
+              <div className="cry-helper-icon">🤱</div>
+              <a
+                className="btn btn-primary cry-helper-btn"
+                href="https://app.tricolorinitiatives.com/baby-cry-reason-finder/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open Cry Finder
+              </a>
             </div>
           </div>
-          <div className="cry-helper-cta">
-            <div className="cry-helper-icon">🤱</div>
-            <a
-              className="btn btn-primary cry-helper-btn"
-              href="https://app.tricolorinitiatives.com/baby-cry-reason-finder/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Open Cry Finder
-            </a>
-          </div>
         </div>
-      </div>
+      )}
 
       <div className="dashboard-content">
         <div className="section-card">

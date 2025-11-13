@@ -1,10 +1,22 @@
 ﻿import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useBaby } from '../../contexts/BabyContext';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, isCollapsed, onHoverChange, onClose }) => {
   const location = useLocation();
+  const { activeBaby } = useBaby();
   const [moreExpanded, setMoreExpanded] = useState(false);
+
+  // Check if baby is 6 months or older
+  const isBaby6MonthsOrOlder = useMemo(() => {
+    if (!activeBaby || !activeBaby.dateOfBirth) return false;
+    const today = new Date();
+    const birthDate = new Date(activeBaby.dateOfBirth);
+    const months = (today.getFullYear() - birthDate.getFullYear()) * 12 +
+      (today.getMonth() - birthDate.getMonth());
+    return months >= 6;
+  }, [activeBaby]);
 
   const navItems = [
     {
@@ -40,7 +52,7 @@ const Sidebar = ({ isOpen, isCollapsed, onHoverChange, onClose }) => {
         { path: '/breastfeeding', icon: '🤱', label: 'Breastfeeding' },
         { path: '/education', icon: '📚', label: 'Education' },
         { path: '/tips', icon: '💡', label: 'Tips' },
-        { path: '/recipes', icon: '🥣', label: 'Recipes' },
+        ...(isBaby6MonthsOrOlder ? [{ path: '/recipes', icon: '🥣', label: 'Recipes' }] : []),
       ],
     },
   ];
