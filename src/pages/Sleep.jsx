@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import '../styles/pages.css';
+import './sleep.css';
 
 const Sleep = () => {
   const [searchParams, setSearchParams] = useSearchParams();
