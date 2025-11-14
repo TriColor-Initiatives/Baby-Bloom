@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+﻿import { useMemo, useState, useEffect } from 'react';
 import '../styles/pages.css';
 
 const CATEGORY_CONFIG = {
@@ -17,67 +17,117 @@ const EXPORT_ICON = '\u{1F4CA}';
 const HOURS = 60 * 60 * 1000;
 const DAYS = 24 * HOURS;
 
-const createTimelineEntries = () => {
-  const hoursAgo = (hours) => new Date(Date.now() - hours * HOURS).toISOString();
-  const daysAgo = (days, extraHours = 0) =>
-    new Date(Date.now() - (days * DAYS + extraHours * HOURS)).toISOString();
+// Helper functions to format data
+const formatFeedingTitle = (f) => {
+  const kind = (f.type || 'feeding').toString().toLowerCase();
+  const amount = f.amount || f.volume || f.quantity;
+  const unit = f.unit || (amount ? (f.type === 'solid' ? 'g' : 'ml') : '');
+  const amtText = amount ? ` ${amount}${unit}` : '';
+  const label = kind === 'bottle' ? 'Bottle' : kind === 'breast' ? 'Breastfeeding' : kind === 'solid' ? 'Solid food' : 'Feeding';
+  return `${label}${amtText}`;
+};
 
-  return [
-    {
-      id: 'feed-formula-1',
-      category: 'feeding',
-      title: 'Fed formula 180ml',
-      timestamp: hoursAgo(2),
-      note: 'Drank the full bottle in 12 minutes.',
-    },
-    {
-      id: 'nap-mid-morning',
-      category: 'sleep',
-      title: 'Nap for 1.5 hours',
-      timestamp: hoursAgo(3.5),
-      note: 'Slept in the crib after a lullaby.',
-    },
-    {
-      id: 'diaper-wet',
-      category: 'diaper',
-      title: 'Diaper change - wet',
-      timestamp: hoursAgo(5),
-    },
-    {
-      id: 'solid-lunch',
-      category: 'feeding',
-      title: 'Ate mashed carrots',
-      timestamp: hoursAgo(7.5),
-      note: 'Mixed with a spoon of sweet potato.',
-    },
-    {
-      id: 'tummy-time',
-      category: 'activity',
-      title: 'Tummy time 15 min',
-      timestamp: daysAgo(1, 3),
-      note: 'Reached for the rattle twice.',
-    },
-    {
-      id: 'vitamin-d',
-      category: 'health',
-      title: 'Vitamin D drops',
-      timestamp: daysAgo(2, 2),
-    },
-    {
-      id: 'first-clap',
-      category: 'milestone',
-      title: 'First time clapping!',
-      timestamp: daysAgo(3, 6),
-      note: 'Clapped along to "If You\'re Happy and You Know It".',
-    },
-    {
-      id: 'telehealth-checkup',
-      category: 'health',
-      title: 'Telehealth check-in',
-      timestamp: daysAgo(6, 1),
-      note: 'Discussed feeding schedule with Dr. Wilson.',
-    },
-  ];
+const formatSleepTitle = (s) => {
+  const kind = (s.type || 'sleep').toString().toLowerCase();
+  const dur = s.duration ? ` for ${s.duration.replace(/^0:/, '')}` : '';
+  return `${kind === 'nap' ? 'Nap' : 'Sleep'}${dur}`;
+};
+
+const formatDiaperTitle = (d) => {
+  const t = (d.type || '').toString().toLowerCase();
+  const label = t === 'wet' ? 'Diaper change - wet' : t === 'dirty' ? 'Diaper change - dirty' : t === 'both' ? 'Diaper change - wet & dirty' : 'Diaper change';
+  return label;
+};
+
+const getHealthIcon = (t) => {
+  const m = (t || '').toString().toLowerCase();
+  if (m.includes('check')) return '🩺';
+  if (m.includes('vaccine') || m.includes('immun')) return '💉';
+  if (m.includes('med')) return '💊';
+  if (m.includes('growth') || m.includes('measure')) return '📈';
+  if (m.includes('allergy')) return '🤧';
+  return '🏥';
+};
+
+// Load real data from localStorage
+const loadTimelineData = () => {
+  const getAllFeedings = () => {
+    try { return JSON.parse(localStorage.getItem('babyFeedings') || '[]'); } catch { return []; }
+  };
+  const getAllSleep = () => {
+    try { return JSON.parse(localStorage.getItem('babySleep') || '[]'); } catch { return []; }
+  };
+  const getAllDiapers = () => {
+    try { return JSON.parse(localStorage.getItem('babyDiapers') || '[]'); } catch { return []; }
+  };
+  const getAllHealth = () => {
+    try { return JSON.parse(localStorage.getItem('baby-bloom-health') || '[]'); } catch { return []; }
+  };
+
+  const allFeedings = getAllFeedings();
+  const allSleep = getAllSleep();
+  const allDiapers = getAllDiapers();
+  const allHealth = getAllHealth();
+
+  const entries = [];
+
+  // Add feedings
+  allFeedings.forEach((f) => {
+    const timestamp = f.timestamp || f.date;
+    if (timestamp) {
+      entries.push({
+        id: `f-${f.id || f.timestamp}`,
+        category: 'feeding',
+        title: formatFeedingTitle(f),
+        timestamp: timestamp,
+        note: f.notes || f.note || ''
+      });
+    }
+  });
+
+  // Add sleep
+  allSleep.forEach((s) => {
+    const timestamp = s.timestamp || s.date;
+    if (timestamp) {
+      entries.push({
+        id: `s-${s.id || s.timestamp}`,
+        category: 'sleep',
+        title: formatSleepTitle(s),
+        timestamp: timestamp,
+        note: s.notes || s.note || ''
+      });
+    }
+  });
+
+  // Add diapers
+  allDiapers.forEach((d) => {
+    const timestamp = d.timestamp || d.date;
+    if (timestamp) {
+      entries.push({
+        id: `d-${d.id || d.timestamp}`,
+        category: 'diaper',
+        title: formatDiaperTitle(d),
+        timestamp: timestamp,
+        note: d.notes || d.note || ''
+      });
+    }
+  });
+
+  // Add health records
+  allHealth.forEach((h) => {
+    const timestamp = h.date || h.timestamp;
+    if (timestamp) {
+      entries.push({
+        id: `h-${h.id || h.date}`,
+        category: 'health',
+        title: h.title || (h.type ? h.type[0].toUpperCase() + h.type.slice(1) : 'Health record'),
+        timestamp: timestamp,
+        note: h.notes || h.note || h.description || ''
+      });
+    }
+  });
+
+  return entries;
 };
 
 const isSameDay = (dateA, dateB) =>
@@ -116,8 +166,14 @@ const escapeCsv = (value) => {
 };
 
 const Timeline = () => {
-  const [timelineEntries] = useState(createTimelineEntries);
+  const [timelineEntries, setTimelineEntries] = useState([]);
   const [activeRange, setActiveRange] = useState('week');
+
+  // Load real data from localStorage
+  useEffect(() => {
+    const entries = loadTimelineData();
+    setTimelineEntries(entries);
+  }, []);
 
   const relativeTimeFormatter = useMemo(
     () => new Intl.RelativeTimeFormat('en', { numeric: 'auto' }),
@@ -187,7 +243,9 @@ const Timeline = () => {
 
   const emptyMessage =
     activeRange === 'today'
-      ? 'No activities logged yet today. Add a new entry to see it appear here.'
+      ? 'No activities logged yet today. Log feeding, sleep, diaper, or health records to see them here.'
+      : timelineEntries.length === 0
+      ? 'No activities recorded yet. Start logging feeding, sleep, diaper, or health records to build your timeline.'
       : 'No activities recorded in the last 7 days.';
 
   return (

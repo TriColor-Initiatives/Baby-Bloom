@@ -8,17 +8,6 @@ const MotherHealth = () => {
         <p className="page-subtitle">Track your postpartum health and self-care</p>
       </div>
 
-      <div className="page-actions">
-        <button className="btn btn-primary">
-          <span>➕</span>
-          <span>Log Wellness</span>
-        </button>
-        <button className="btn btn-secondary">
-          <span>😊</span>
-          <span>Mood Check-in</span>
-        </button>
-      </div>
-
       <div className="content-grid">
         <div className="section-card">
           <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Self-Care Reminders</h3>

@@ -23,8 +23,16 @@ export default function Reminders() {
     useEffect(() => {
         try {
             const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            setReminders(Array.isArray(saved) ? saved : []);
-        } catch {
+            const reminders = Array.isArray(saved) ? saved : [];
+            // Ensure all reminders have a completed property
+            const normalizedReminders = reminders.map(r => ({
+                ...r,
+                completed: r.completed === true ? true : false
+            }));
+            console.log('Loaded reminders from localStorage:', normalizedReminders);
+            setReminders(normalizedReminders);
+        } catch (error) {
+            console.error('Error loading reminders:', error);
             setReminders([]);
         }
     }, []);
@@ -55,7 +63,13 @@ export default function Reminders() {
             });
         } else {
             setEditingId(null);
-            setForm(defaultForm);
+            setForm({
+                title: '',
+                dueAt: new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16),
+                category: 'general',
+                notes: '',
+                icon: '⏰'
+            });
         }
         setIsModalOpen(true);
     };
@@ -69,25 +83,56 @@ export default function Reminders() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        e.stopPropagation();
+        
+        if (!form.title.trim()) {
+            alert('Please enter a reminder title');
+            return;
+        }
+
+        const isEditing = editingId !== null;
+        const existingReminder = isEditing ? reminders.find(r => r.id === editingId) : null;
+        
         const payload = {
-            id: editingId || Date.now(),
-            title: form.title.trim() || 'Reminder',
+            id: isEditing ? editingId : Date.now(),
+            title: form.title.trim(),
             dueAt: new Date(form.dueAt).toISOString(),
-            category: form.category,
+            category: form.category || 'general',
             icon: form.icon || '⏰',
-            notes: form.notes?.trim(),
-            completed: false,
-            createdAt: editingId ? undefined : new Date().toISOString()
+            notes: form.notes?.trim() || '',
+            completed: isEditing && existingReminder ? (existingReminder.completed === true) : false,
+            createdAt: isEditing && existingReminder ? existingReminder.createdAt : new Date().toISOString()
         };
+
+        console.log('Adding reminder:', payload);
+
         setReminders((prev) => {
             const others = prev.filter((r) => r.id !== payload.id);
-            return [...others, payload].sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt));
+            const updated = [...others, payload];
+            console.log('Updated reminders:', updated);
+            return updated.sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt));
         });
+        
+        // Reset form with fresh defaults
+        setForm({
+            title: '',
+            dueAt: new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16),
+            category: 'general',
+            notes: '',
+            icon: '⏰'
+        });
+        setEditingId(null);
         closeModal();
     };
 
     const toggleComplete = (id) => {
-        setReminders((prev) => prev.map((r) => (r.id === id ? { ...r, completed: !r.completed } : r)));
+        setReminders((prev) => prev.map((r) => {
+            if (r.id === id) {
+                const currentCompleted = r.completed === true;
+                return { ...r, completed: !currentCompleted };
+            }
+            return r;
+        }));
     };
 
     const removeReminder = (id) => {
@@ -95,11 +140,12 @@ export default function Reminders() {
     };
 
     const now = new Date();
-    const upcoming = useMemo(
-        () => reminders.filter((r) => !r.completed && new Date(r.dueAt) >= now).sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt)),
-        [reminders]
-    );
-    const completed = useMemo(() => reminders.filter((r) => r.completed).sort((a, b) => new Date(b.dueAt) - new Date(a.dueAt)), [reminders]);
+    const upcoming = useMemo(() => {
+        const filtered = reminders.filter((r) => r.completed !== true);
+        console.log('Upcoming reminders:', filtered, 'Total reminders:', reminders);
+        return filtered.sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt));
+    }, [reminders]);
+    const completed = useMemo(() => reminders.filter((r) => r.completed === true).sort((a, b) => new Date(b.dueAt) - new Date(a.dueAt)), [reminders]);
 
     const timeUntil = (dateStr) => {
         const diffMs = new Date(dateStr) - new Date();

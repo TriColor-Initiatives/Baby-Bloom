@@ -8,17 +8,6 @@ const Breastfeeding = () => {
         <p className="page-subtitle">Tips, tracking, and guidance for breastfeeding</p>
       </div>
 
-      <div className="page-actions">
-        <button className="btn btn-primary">
-          <span>➕</span>
-          <span>Log Session</span>
-        </button>
-        <button className="btn btn-secondary">
-          <span>⏱️</span>
-          <span>Start Timer</span>
-        </button>
-      </div>
-
       <div className="content-grid">
         <div className="section-card">
           <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Helpful Tips</h3>
@@ -46,21 +35,6 @@ const Breastfeeding = () => {
         </div>
 
         <div className="info-panel">
-          <div className="info-card">
-            <div className="info-card-title">
-              <span>📊</span>
-              <span>Today</span>
-            </div>
-            <div className="info-item">
-              <div className="info-item-label">Sessions</div>
-              <div className="info-item-value">6</div>
-            </div>
-            <div className="info-item">
-              <div className="info-item-label">Total Duration</div>
-              <div className="info-item-value">2h 15m</div>
-            </div>
-          </div>
-
           <div className="tip-card">
             <div className="tip-card-title">
               <span>🆘</span>

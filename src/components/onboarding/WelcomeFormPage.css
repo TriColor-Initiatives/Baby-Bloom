@@ -537,6 +537,9 @@
 .form-actions:not(.split) .btn-primary {
     width: 100%;
     max-width: 340px;
+    padding: 0.9rem 1.75rem !important;
+    font-size: 1rem !important;
+    min-height: 52px !important;
 }
 
 .btn {

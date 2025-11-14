@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useBaby } from '../contexts/BabyContext';
 import '../styles/pages.css';
 import './Settings.css';
 
 export default function Settings() {
   const { theme, accentColor, toggleTheme, changeAccentColor } = useTheme();
   const { user, signOut } = useAuth();
+  const { activeBaby, updateBaby, activeBabyId } = useBaby();
   
   // Notification states
   const [notifications, setNotifications] = useState({
@@ -17,11 +19,14 @@ export default function Settings() {
     dailySummary: false,
   });
   
-  // Baby profile state
+  // Baby profile state - load from activeBaby if available
   const [babyProfile, setBabyProfile] = useState({
     name: '',
     birthDate: '',
     gender: 'not-specified',
+    weight: '',
+    height: '',
+    bloodType: '',
   });
   
   // Other settings
@@ -30,22 +35,32 @@ export default function Settings() {
   const [timeFormat, setTimeFormat] = useState('12h');
   const [dataSync, setDataSync] = useState(false);
   
-  // Load settings from localStorage
+  // Load settings from localStorage and activeBaby
   useEffect(() => {
     const savedNotifications = localStorage.getItem('baby-bloom-notifications');
-    const savedProfile = localStorage.getItem('baby-bloom-profile');
     const savedLanguage = localStorage.getItem('baby-bloom-language');
     const savedTimeFormat = localStorage.getItem('baby-bloom-time-format');
     const savedDataSync = localStorage.getItem('baby-bloom-data-sync');
     const savedAutoTheme = localStorage.getItem('baby-bloom-auto-theme');
     
     if (savedNotifications) setNotifications(JSON.parse(savedNotifications));
-    if (savedProfile) setBabyProfile(JSON.parse(savedProfile));
     if (savedLanguage) setLanguage(savedLanguage);
     if (savedTimeFormat) setTimeFormat(savedTimeFormat);
     if (savedDataSync) setDataSync(savedDataSync === 'true');
     if (savedAutoTheme) setAutoTheme(savedAutoTheme === 'true');
-  }, []);
+    
+    // Load from activeBaby if available
+    if (activeBaby) {
+      setBabyProfile({
+        name: activeBaby.name || '',
+        birthDate: activeBaby.dateOfBirth || '',
+        gender: activeBaby.gender || 'not-specified',
+        weight: activeBaby.weight || '',
+        height: activeBaby.height || '',
+        bloodType: activeBaby.bloodType || '',
+      });
+    }
+  }, [activeBaby]);
   
   // Save notification settings
   const handleNotificationChange = (key) => {
@@ -58,7 +73,20 @@ export default function Settings() {
   const handleProfileChange = (field, value) => {
     const updated = { ...babyProfile, [field]: value };
     setBabyProfile(updated);
-    localStorage.setItem('baby-bloom-profile', JSON.stringify(updated));
+    
+    // Update in BabyContext if activeBaby exists
+    if (activeBabyId && activeBaby) {
+      const updateData = {};
+      if (field === 'birthDate') {
+        updateData.dateOfBirth = value;
+      } else {
+        updateData[field] = value;
+      }
+      updateBaby(activeBabyId, updateData);
+    } else {
+      // Fallback to localStorage if no active baby
+      localStorage.setItem('baby-bloom-profile', JSON.stringify(updated));
+    }
   };
   
   // Save language
@@ -215,6 +243,49 @@ export default function Settings() {
                 value={babyProfile.birthDate}
                 onChange={(e) => handleProfileChange('birthDate', e.target.value)}
               />
+            </div>
+
+            <div className="setting-item-vertical">
+              <label className="setting-label">Birth Weight (kg)</label>
+              <input
+                type="number"
+                step="0.1"
+                className="setting-input"
+                placeholder="e.g., 3.4"
+                value={babyProfile.weight}
+                onChange={(e) => handleProfileChange('weight', e.target.value)}
+              />
+            </div>
+
+            <div className="setting-item-vertical">
+              <label className="setting-label">Birth Height (cm)</label>
+              <input
+                type="number"
+                step="0.1"
+                className="setting-input"
+                placeholder="e.g., 50"
+                value={babyProfile.height}
+                onChange={(e) => handleProfileChange('height', e.target.value)}
+              />
+            </div>
+
+            <div className="setting-item-vertical">
+              <label className="setting-label">Blood Type</label>
+              <select
+                className="setting-input"
+                value={babyProfile.bloodType}
+                onChange={(e) => handleProfileChange('bloodType', e.target.value)}
+              >
+                <option value="">Select blood type</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
             </div>
 
             <div className="setting-item-vertical">
