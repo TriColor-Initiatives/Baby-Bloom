@@ -6,7 +6,6 @@ import './AppLayout.css';
 
 const AppLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -14,21 +13,13 @@ const AppLayout = () => {
 
   const closeSidebar = () => {
     setSidebarOpen(false);
-    setSidebarCollapsed(true);
   };
-
-  const handleSidebarHoverState = (isCollapsed) => {
-    setSidebarCollapsed(isCollapsed);
-  };
-
-  const effectiveCollapsed = sidebarOpen ? false : sidebarCollapsed;
 
   return (
     <div className="app-layout">
       <Sidebar
         isOpen={sidebarOpen}
-        isCollapsed={effectiveCollapsed}
-        onHoverChange={handleSidebarHoverState}
+        isCollapsed={false}
         onClose={closeSidebar}
       />
       <TopBar onMenuClick={toggleSidebar} />
@@ -38,7 +29,7 @@ const AppLayout = () => {
         onClick={closeSidebar}
       />
       
-      <main className={`app-main ${effectiveCollapsed ? 'collapsed' : ''}`}>
+      <main className="app-main">
         <Outlet />
       </main>
     </div>
