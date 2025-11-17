@@ -46,6 +46,34 @@ const appFeatures = [
         icon: '\u{1F3B2}',
         color: '#A8E6CF',
         gradient: 'linear-gradient(135deg, #A8E6CF 0%, #C8F4E0 100%)'
+    },
+    {
+        title: 'Mother Wellness',
+        description: 'Tools for postpartum care, mood tracking, hydration, and self-care reminders.',
+        icon: '\u{1F497}',
+        color: '#FFC0E3',
+        gradient: 'linear-gradient(135deg, #FFC0E3 0%, #FFD9ED 100%)'
+    },
+    {
+        title: 'Photos',
+        description: 'Save, organize, and view baby photos and milestones in a beautiful gallery.',
+        icon: '\u{1F4F7}',
+        color: '#B8D4F0',
+        gradient: 'linear-gradient(135deg, #B8D4F0 0%, #D4E8FF 100%)'
+    },
+    {
+        title: 'Reminders',
+        description: 'Set reminders for feeding times, doctor visits, medications, and important events.',
+        icon: '\u{23F0}',
+        color: '#FFE5B4',
+        gradient: 'linear-gradient(135deg, #FFE5B4 0%, #FFF0D4 100%)'
+    },
+    {
+        title: 'Timeline',
+        description: 'View all major baby milestones and daily activities in a clean chronological timeline.',
+        icon: '\u{1F4C5}',
+        color: '#C8E6D5',
+        gradient: 'linear-gradient(135deg, #C8E6D5 0%, #E0F4E8 100%)'
     }
 ];
 
@@ -135,17 +163,6 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
                                 </div>
                             </div>
                         ))}
-                    </div>
-
-                    <div className="reassurance-section">
-                        <div className="reassurance-badge">
-                            <span role="img" aria-hidden="true">🔒</span>
-                            <span>Private & secure</span>
-                        </div>
-                        <div className="reassurance-badge">
-                            <span role="img" aria-hidden="true">⚡</span>
-                            <span>Quick & easy</span>
-                        </div>
                     </div>
 
                     <button 
