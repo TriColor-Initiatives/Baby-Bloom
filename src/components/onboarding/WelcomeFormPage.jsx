@@ -284,7 +284,6 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
                                 >
                                     Save Profile
                                 </button>
-                                <p className="profile-helper-text">You can update this anytime in Settings.</p>
                             </div>
                         </div>
                     </div>
