@@ -1,54 +1,15 @@
-/* Feeding Calendar Styles */
-
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(31, 36, 64, 0.75);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: var(--spacing-lg);
-}
+/* Feeding Calendar Styles - Component-specific only */
+/* Modal structure styles are unified in Feeding.css */
+/* Calendar has special gradient header styling - preserved below */
 
 .calendar-modal {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fe 100%);
-  border-radius: 24px;
-  max-width: 900px;
-  width: 100%;
-  max-height: 90vh;
-  overflow: hidden;
-  box-shadow: 0 24px 80px rgba(31, 36, 64, 0.25), 0 0 1px rgba(31, 36, 64, 0.1);
-  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 .calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 2rem 2rem 1.5rem 2rem;
   background: linear-gradient(135deg, #5568c9 0%, #7b9dff 100%);
   color: white;
-  position: relative;
-  overflow: hidden;
+  padding: 1.5rem;
 }
 
 .calendar-header::before {
@@ -64,36 +25,26 @@
 }
 
 .calendar-header h2 {
-  font-size: 1.75rem;
-  margin: 0;
   color: white;
-  font-weight: 800;
+  font-weight: 700;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 1;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-.close-btn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.calendar-header .modal-close {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
   color: white;
-  font-size: 20px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-  z-index: 1;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
 }
 
-.close-btn:hover {
+.calendar-header .modal-close:hover {
   background: rgba(255, 255, 255, 0.3);
+  color: white;
   transform: rotate(90deg) scale(1.05);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
@@ -161,11 +112,10 @@
   box-shadow: 0 8px 24px rgba(85, 104, 201, 0.4);
 }
 
+/* Calendar content uses unified padding from Feeding.css */
 .calendar-content {
-  padding: 2rem;
   background: white;
   overflow-y: auto;
-  max-height: calc(90vh - 240px);
 }
 
 .calendar-grid {

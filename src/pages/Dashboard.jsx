@@ -416,19 +416,51 @@ const Dashboard = () => {
         <div className="section-header">
           <h3 className="section-title">Weekly Insights</h3>
         </div>
-        <div style={{
-          padding: 'var(--spacing-xl)',
-          background: 'var(--surface-variant)',
-          borderRadius: 'var(--radius-md)',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '48px', marginBottom: 'var(--spacing-md)' }}>📊</div>
-          <h4 style={{ marginBottom: 'var(--spacing-sm)' }}>Your Baby's Week at a Glance</h4>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-lg)' }}>
-            This week your baby had consistent sleep patterns and tried 2 new foods!
-          </p>
-          <Link to="/growth" className="section-link">View Detailed Report →</Link>
-        </div>
+        {(() => {
+          // Check if there's any data in the current week (last 7 days)
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          sevenDaysAgo.setHours(0, 0, 0, 0);
+          
+          const hasWeeklyData = [
+            ...allFeedings,
+            ...allSleep,
+            ...allDiapers,
+            ...allHealth
+          ].some(item => {
+            const itemDate = safeDate(item.timestamp || item.date);
+            return itemDate && itemDate >= sevenDaysAgo;
+          });
+
+          if (!hasWeeklyData) {
+            // Empty state - no data for current week
+            return (
+              <div className="weekly-insights-empty">
+                <div className="empty-icon">📊</div>
+                <p className="empty-message">
+                  No records yet — your weekly insights will appear here once you start logging activities.
+                </p>
+              </div>
+            );
+          }
+
+          // Full insights - data exists
+          return (
+            <div style={{
+              padding: 'var(--spacing-xl)',
+              background: 'var(--surface-variant)',
+              borderRadius: 'var(--radius-md)',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: 'var(--spacing-md)' }}>📊</div>
+              <h4 style={{ marginBottom: 'var(--spacing-sm)' }}>Your Baby's Week at a Glance</h4>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-lg)' }}>
+                This week your baby had consistent sleep patterns and tried 2 new foods!
+              </p>
+              <Link to="/growth" className="section-link">View Detailed Report →</Link>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

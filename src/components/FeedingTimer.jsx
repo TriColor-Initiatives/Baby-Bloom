@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import '../pages/Feeding.css';
 import './FeedingTimer.css';
 
 const FeedingTimer = ({ onComplete, onClose }) => {

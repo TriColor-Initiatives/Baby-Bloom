@@ -126,8 +126,9 @@
   max-height: 44px !important;
 }
 
-/* Modal Styles */
-.modal-overlay {
+/* Unified Modal System - All Feeding Modals */
+.modal-overlay,
+.modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
@@ -148,21 +149,31 @@
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }
 }
 
-.modal-content {
+/* Unified Modal Content - All modals use this */
+.modal-content,
+.analytics-modal,
+.timer-modal,
+.reminder-modal,
+.export-modal,
+.advanced-analytics-modal,
+.calendar-modal,
+.goals-modal {
   background: var(--surface);
-  border-radius: var(--radius-xl);
-  max-width: 600px;
+  border-radius: 20px;
   width: 100%;
+  max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-lg);
+  overflow-x: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.15);
   animation: slideUp 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes slideUp {
@@ -170,31 +181,54 @@
     transform: translateY(20px);
     opacity: 0;
   }
-
   to {
     transform: translateY(0);
     opacity: 1;
   }
 }
 
-.modal-header {
+/* Unified Modal Header - All modals use this */
+.modal-header,
+.analytics-header,
+.timer-header,
+.reminder-header,
+.export-header,
+.advanced-analytics-header,
+.calendar-header,
+.goals-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-xl);
+  padding: 1.5rem;
   border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 10;
+  flex-shrink: 0;
 }
 
-.modal-header h2 {
-  font-size: var(--font-size-xl);
+.modal-header h2,
+.analytics-header h2,
+.timer-header h2,
+.reminder-header h2,
+.export-header h2,
+.advanced-analytics-header h2,
+.calendar-header h2,
+.goals-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
   margin: 0;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
-.modal-close {
+/* Unified Close Button - All modals use this */
+.modal-close,
+.close-btn {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-full);
+  border-radius: 50%;
   border: none;
   background: var(--surface-variant);
   color: var(--text-secondary);
@@ -204,17 +238,50 @@
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
-.modal-close:hover {
+.modal-close:hover,
+.close-btn:hover {
   background: var(--error);
   color: white;
   transform: rotate(90deg);
 }
 
+/* Unified Modal Body - All modals use this */
+.modal-body,
+.analytics-content,
+.timer-content,
+.reminder-content,
+.export-content,
+.advanced-analytics-content,
+.calendar-content,
+.goals-content {
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* View tabs for Advanced Analytics - positioned after header */
+.view-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 73px;
+  z-index: 9;
+  flex-shrink: 0;
+}
+
 /* Form Styles */
 .feeding-form {
-  padding: var(--spacing-xl);
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .form-group {
@@ -223,20 +290,20 @@
 
 .form-group label {
   display: block;
-  font-size: var(--font-size-sm);
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: 0.5rem;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: var(--spacing-md);
+  padding: 0.75rem 1rem;
   border: 2px solid var(--border);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-md);
+  border-radius: 12px;
+  font-size: 0.9375rem;
   color: var(--text-primary);
   background: var(--surface-variant);
   transition: all var(--transition-normal);
@@ -299,25 +366,125 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Modal Actions */
+/* Unified Modal Actions - All modals use this */
 .modal-actions {
   display: flex;
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-xl);
-  padding-top: var(--spacing-lg);
+  gap: 0.75rem;
+  padding: 1.5rem;
   border-top: 1px solid var(--border);
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 .modal-actions .btn {
   flex: 1;
   justify-content: center;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 12px;
+  min-height: 44px;
+}
+
+/* Unified Typography for All Modal Content */
+.modal-body h3,
+.analytics-content h3,
+.timer-content h3,
+.reminder-content h3,
+.export-content h3,
+.advanced-analytics-content h3,
+.calendar-content h3,
+.goals-content h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.01em;
+}
+
+.modal-body p,
+.analytics-content p,
+.timer-content p,
+.reminder-content p,
+.export-content p,
+.advanced-analytics-content p,
+.calendar-content p,
+.goals-content p {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+}
+
+.modal-body label,
+.analytics-content label,
+.timer-content label,
+.reminder-content label,
+.export-content label,
+.advanced-analytics-content label,
+.calendar-content label,
+.goals-content label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  display: block;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .modal-content {
+  .modal-content,
+  .analytics-modal,
+  .timer-modal,
+  .reminder-modal,
+  .export-modal,
+  .advanced-analytics-modal,
+  .calendar-modal,
+  .goals-modal {
     max-height: 100vh;
     border-radius: 0;
+    max-width: 100%;
+  }
+
+  .modal-header,
+  .analytics-header,
+  .timer-header,
+  .reminder-header,
+  .export-header,
+  .advanced-analytics-header,
+  .calendar-header,
+  .goals-header {
+    padding: 1.25rem;
+  }
+
+  .modal-header h2,
+  .analytics-header h2,
+  .timer-header h2,
+  .reminder-header h2,
+  .export-header h2,
+  .advanced-analytics-header h2,
+  .calendar-header h2,
+  .goals-header h2 {
+    font-size: 1.125rem;
+  }
+
+  .modal-body,
+  .analytics-content,
+  .timer-content,
+  .reminder-content,
+  .export-content,
+  .advanced-analytics-content,
+  .calendar-content,
+  .goals-content,
+  .feeding-form {
+    padding: 1.25rem;
+  }
+
+  .modal-actions {
+    padding: 1.25rem;
   }
 
   .form-row {

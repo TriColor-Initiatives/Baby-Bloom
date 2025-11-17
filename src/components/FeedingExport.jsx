@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import '../pages/Feeding.css';
 import './FeedingExport.css';
 
 const FeedingExport = ({ feedings, onClose }) => {
@@ -355,7 +356,7 @@ const FeedingExport = ({ feedings, onClose }) => {
       <div className="export-modal" onClick={(e) => e.stopPropagation()}>
         <div className="export-header">
           <h2>📊 Export Report</h2>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="export-content">

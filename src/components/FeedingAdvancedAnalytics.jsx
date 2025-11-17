@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import '../pages/Feeding.css';
 import './FeedingAdvancedAnalytics.css';
 
 const FeedingAdvancedAnalytics = ({ feedings, onClose }) => {
@@ -254,7 +255,7 @@ const FeedingAdvancedAnalytics = ({ feedings, onClose }) => {
       <div className="advanced-analytics-modal" onClick={(e) => e.stopPropagation()}>
         <div className="advanced-analytics-header">
           <h2>📈 Advanced Analytics</h2>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="view-tabs">

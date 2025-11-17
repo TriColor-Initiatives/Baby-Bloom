@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import '../pages/Feeding.css';
 import './FeedingReminder.css';
 
 const FeedingReminder = ({ feedings, onClose }) => {

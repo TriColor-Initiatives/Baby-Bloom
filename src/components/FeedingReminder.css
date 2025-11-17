@@ -1,40 +1,5 @@
-/* Feeding Reminder Styles */
-
-.reminder-modal {
-  background: var(--surface);
-  border-radius: var(--radius-xl);
-  max-width: 600px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-lg);
-  animation: slideUp 0.3s ease-out;
-}
-
-.reminder-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-xl);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  background: var(--surface);
-  z-index: 10;
-}
-
-.reminder-header h2 {
-  font-size: var(--font-size-xl);
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.reminder-content {
-  padding: var(--spacing-xl);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xl);
-}
+/* Feeding Reminder Styles - Component-specific only */
+/* Modal structure styles are unified in Feeding.css */
 
 .reminder-section {
   display: flex;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import '../pages/Feeding.css';
 import './FeedingGoals.css';
 
 const FeedingGoals = ({ feedings, onClose }) => {
@@ -61,7 +62,7 @@ const FeedingGoals = ({ feedings, onClose }) => {
       <div className="goals-modal" onClick={(e) => e.stopPropagation()}>
         <div className="goals-header">
           <h2>🎯 Goals & Insights</h2>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="goals-content">

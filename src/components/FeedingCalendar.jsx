@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import '../pages/Feeding.css';
 import './FeedingCalendar.css';
 
 const FeedingCalendar = ({ feedings, onClose }) => {
@@ -77,7 +78,7 @@ const FeedingCalendar = ({ feedings, onClose }) => {
       <div className="calendar-modal" onClick={(e) => e.stopPropagation()}>
         <div className="calendar-header">
           <h2>📅 Feeding Calendar</h2>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="calendar-controls">
