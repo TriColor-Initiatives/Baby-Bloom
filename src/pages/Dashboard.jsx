@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 import { useAuth } from '../contexts/AuthContext';
@@ -151,6 +151,17 @@ const Dashboard = () => {
   const allDiapers = getAllDiapers();
   const allHealth = getAllHealth();
 
+  // Get photos from localStorage
+  const getAllPhotos = () => {
+    try { 
+      const photos = JSON.parse(localStorage.getItem('baby-bloom-photos') || '[]');
+      return Array.isArray(photos) ? photos : [];
+    } catch { 
+      return []; 
+    }
+  };
+  const allPhotos = getAllPhotos();
+
   const safeDate = (d) => (d ? new Date(d) : null);
 
   const getLatestEntryDate = (items) => {
@@ -167,12 +178,14 @@ const Dashboard = () => {
     { id: 'feedings', label: 'Feedings', icon: '🍼', color: 'var(--primary)', data: allFeedings },
     { id: 'sleep', label: 'Sleep Sessions', icon: '😴', color: 'var(--secondary, #9c6cff)', data: allSleep },
     { id: 'health', label: 'Health Records', icon: '🩺', color: 'var(--success, #25c685)', data: allHealth },
+    { id: 'photos', label: 'Photos', icon: '📷', color: 'var(--accent, #ff6b9d)', data: allPhotos },
   ];
 
   const statActions = {
     feedings: () => navigate('/feeding'),
     sleep: () => navigate('/sleep'),
     health: () => navigate('/health'),
+    photos: () => navigate('/photos'),
   };
 
   const handleStatKeyDown = (event, action) => {
@@ -185,13 +198,18 @@ const Dashboard = () => {
 
   const analysisStats = analysisSources.map((source) => {
     const latest = getLatestEntryDate(source.data);
+    // For photos, show count differently
+    const subtitle = source.id === 'photos' 
+      ? (source.data.length ? `${source.data.length} photo${source.data.length !== 1 ? 's' : ''} saved` : 'No photos yet')
+      : (source.data.length ? `Last entry ${getTimeAgo(latest)}` : 'No entries yet');
+    
     return {
       id: source.id,
       label: source.label,
       icon: source.icon,
       color: source.color,
       count: source.data.length,
-      subtitle: source.data.length ? `Last entry ${getTimeAgo(latest)}` : 'No entries yet',
+      subtitle: subtitle,
       action: statActions[source.id]
     };
   });
@@ -384,6 +402,35 @@ const Dashboard = () => {
               ))}
             </div>
           </div>
+
+          <div className="analysis-stats-card">
+            <div className="section-header">
+              <h3 className="section-title">Upcoming Reminders</h3>
+              <Link to="/reminders" className="section-link">All →</Link>
+            </div>
+            <div className="reminders">
+              {upcomingReminders.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">⏰</div>
+                  <h3>No reminders yet</h3>
+                  <p>Create reminders for feedings, vitamins, checkups and more</p>
+                  <button className="btn btn-primary btn-large" onClick={() => navigate('/reminders?add=true')}>
+                    <span>➕</span><span>Add a Reminder</span>
+                  </button>
+                </div>
+              ) : (
+                upcomingReminders.map((reminder) => (
+                  <div key={reminder.id} className="reminder-item">
+                    <span className="reminder-icon">{reminder.icon}</span>
+                    <div className="reminder-content">
+                      <div className="reminder-title">{reminder.title}</div>
+                      <div className="reminder-time">{reminder.time}</div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -415,69 +462,38 @@ const Dashboard = () => {
         </div>
       )}
 
-      <div className="dashboard-content">
-        <div className="section-card">
-          <div className="section-header">
-            <h3 className="section-title">Recent Activity</h3>
-            <Link to="/timeline" className="section-link">View All →</Link>
-          </div>
-          <div className="timeline">
-            {recentActivities.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">🗓️</div>
-                <h3>No recent activity yet</h3>
-                <p>Log feeding, sleep, diapers, or health to see them here</p>
-                <div className="empty-tips">
-                  <div className="empty-tip"><span>🍼</span><span>Use the Feeding, Sleep, Diaper or Health pages to log your first entry</span></div>
-                  <div className="empty-tip"><span>⏱️</span><span>Activities appear instantly after saving</span></div>
-                </div>
-                <button className="btn btn-primary btn-large" onClick={() => navigate('/feeding?add=true')}>
-                  <span>➕</span><span>Log a Feeding</span>
-                </button>
-              </div>
-            ) : (
-              recentActivities.map((activity) => (
-                <div key={activity.id} className="timeline-item">
-                  <div className="timeline-icon" style={{ background: activity.bg }}>
-                    {activity.icon}
-                  </div>
-                  <div className="timeline-content">
-                    <div className="timeline-title">{activity.title}</div>
-                    <div className="timeline-time">{activity.time}</div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+      <div className="section-card">
+        <div className="section-header">
+          <h3 className="section-title">Recent Activity</h3>
+          <Link to="/timeline" className="section-link">View All →</Link>
         </div>
-
-        <div className="section-card">
-          <div className="section-header">
-            <h3 className="section-title">Upcoming Reminders</h3>
-            <Link to="/reminders" className="section-link">All →</Link>
-          </div>
-          <div className="reminders">
-            {upcomingReminders.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">⏰</div>
-                <h3>No reminders yet</h3>
-                <p>Create reminders for feedings, vitamins, checkups and more</p>
-                <button className="btn btn-primary btn-large" onClick={() => navigate('/reminders?add=true')}>
-                  <span>➕</span><span>Add a Reminder</span>
-                </button>
+        <div className="timeline">
+          {recentActivities.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">🗓️</div>
+              <h3>No recent activity yet</h3>
+              <p>Log feeding, sleep, diapers, or health to see them here</p>
+              <div className="empty-tips">
+                <div className="empty-tip"><span>🍼</span><span>Use the Feeding, Sleep, Diaper or Health pages to log your first entry</span></div>
+                <div className="empty-tip"><span>⏱️</span><span>Activities appear instantly after saving</span></div>
               </div>
-            ) : (
-              upcomingReminders.map((reminder) => (
-                <div key={reminder.id} className="reminder-item">
-                  <span className="reminder-icon">{reminder.icon}</span>
-                  <div className="reminder-content">
-                    <div className="reminder-title">{reminder.title}</div>
-                    <div className="reminder-time">{reminder.time}</div>
-                  </div>
+              <button className="btn btn-primary btn-large" onClick={() => navigate('/feeding?add=true')}>
+                <span>➕</span><span>Log a Feeding</span>
+              </button>
+            </div>
+          ) : (
+            recentActivities.map((activity) => (
+              <div key={activity.id} className="timeline-item">
+                <div className="timeline-icon" style={{ background: activity.bg }}>
+                  {activity.icon}
                 </div>
-              ))
-            )}
-          </div>
+                <div className="timeline-content">
+                  <div className="timeline-title">{activity.title}</div>
+                  <div className="timeline-time">{activity.time}</div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -515,15 +531,10 @@ const Dashboard = () => {
 
           // Full insights - data exists
           return (
-            <div style={{
-              padding: 'var(--spacing-xl)',
-              background: 'var(--surface-variant)',
-              borderRadius: 'var(--radius-md)',
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: '48px', marginBottom: 'var(--spacing-md)' }}>📊</div>
-              <h4 style={{ marginBottom: 'var(--spacing-sm)' }}>Your Baby's Week at a Glance</h4>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--spacing-lg)' }}>
+            <div className="weekly-insights-content">
+              <div>📊</div>
+              <h4>Your Baby's Week at a Glance</h4>
+              <p>
                 This week your baby had consistent sleep patterns and tried 2 new foods!
               </p>
               <Link to="/growth" className="section-link">View Detailed Report →</Link>
