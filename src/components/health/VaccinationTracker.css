@@ -107,6 +107,7 @@
     font-weight: 600;
     color: var(--primary);
     min-width: 80px;
+    font-size: 0.85rem;
 }
 
 .vaccination-details {
@@ -117,10 +118,11 @@
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: var(--spacing-xs);
+    font-size: 0.95rem;
 }
 
 .vaccination-dose {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
 }
 
@@ -134,3 +136,4 @@
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
 }
+

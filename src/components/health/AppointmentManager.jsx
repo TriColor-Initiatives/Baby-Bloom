@@ -141,19 +141,23 @@ const AppointmentManager = ({ onClose }) => {
     }
   };
 
+  const detailIcons = {
+    date: '🗓️',
+    doctor: '👩‍⚕️',
+    location: '📍',
+    notes: '📝',
+  };
+
   const content = (
     <>
-      <div className="appointment-header">
-        <h2>📅 Appointment Manager</h2>
-        {isModal && (
-          <button className="close-btn" onClick={handleClose} aria-label="Close">
-            ×
-          </button>
-        )}
-      </div>
+      {isModal && (
+        <button className="close-btn appointment-close" onClick={handleClose} aria-label="Close">
+          ×
+        </button>
+      )}
 
       <div className="appointment-content">
-        <div className="appointment-form-section">
+        <div className="appointment-form-section appointment-panel">
           <h3>{isEditing ? 'Edit appointment' : 'Schedule new appointment'}</h3>
 
           <form onSubmit={handleSubmit} className="appointment-form">
@@ -246,9 +250,13 @@ const AppointmentManager = ({ onClose }) => {
               </label>
             </div>
 
-            <div className="form-actions">
+            <div className="form-actions appointment-actions">
               {isEditing && (
-                <button type="button" className="btn btn-secondary" onClick={() => { setFormData(createDefaultForm()); setIsEditing(false); }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary ghost"
+                  onClick={() => { setFormData(createDefaultForm()); setIsEditing(false); }}
+                >
                   Cancel edit
                 </button>
               )}
@@ -259,7 +267,7 @@ const AppointmentManager = ({ onClose }) => {
           </form>
         </div>
 
-        <div className="appointment-list-section">
+        <div className="appointment-list-section appointment-panel">
           <h3>Upcoming Appointments ({upcomingAppointments.length})</h3>
           {upcomingAppointments.length === 0 ? (
             <div className="empty-state">
@@ -279,30 +287,54 @@ const AppointmentManager = ({ onClose }) => {
 
                   <div className="appointment-card-body">
                     <div className="appointment-detail">
-                      <span>🗓️</span>
-                      <span>{formatDate(apt.date, apt.time)}</span>
+                      <span className="detail-icon">{detailIcons.date}</span>
+                      <div>
+                        <p className="detail-label">Date & time</p>
+                        <p>{formatDate(apt.date, apt.time)}</p>
+                      </div>
                     </div>
                     <div className="appointment-detail">
-                      <span>👩‍⚕️</span>
-                      <span>{apt.doctor}</span>
+                      <span className="detail-icon">{detailIcons.doctor}</span>
+                      <div>
+                        <p className="detail-label">Provider</p>
+                        <p>{apt.doctor}</p>
+                      </div>
                     </div>
                     <div className="appointment-detail">
-                      <span>📍</span>
-                      <span>{apt.location}</span>
+                      <span className="detail-icon">{detailIcons.location}</span>
+                      <div>
+                        <p className="detail-label">Location</p>
+                        <p>{apt.location}</p>
+                      </div>
                     </div>
                     {apt.notes && (
                       <div className="appointment-detail">
-                        <span>📝</span>
-                        <span>{apt.notes}</span>
+                        <span className="detail-icon">{detailIcons.notes}</span>
+                        <div>
+                          <p className="detail-label">Notes</p>
+                          <p>{apt.notes}</p>
+                        </div>
                       </div>
                     )}
                   </div>
 
                   <div className="appointment-card-actions">
-                    <button onClick={() => handleEdit(apt)} className="btn-icon" title="Edit">
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(apt)}
+                      className="btn-icon"
+                      title="Edit appointment"
+                      aria-label="Edit appointment"
+                    >
                       ✏️
                     </button>
-                    <button onClick={() => handleDelete(apt.id)} className="btn-icon" title="Delete">
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(apt.id)}
+                      className="btn-icon"
+                      title="Delete appointment"
+                      aria-label="Delete appointment"
+                    >
                       🗑️
                     </button>
                   </div>
@@ -325,16 +357,28 @@ const AppointmentManager = ({ onClose }) => {
                     </div>
                     <div className="appointment-card-body">
                       <div className="appointment-detail">
-                        <span>🗓️</span>
-                        <span>{formatDate(apt.date, apt.time)}</span>
+                        <span className="detail-icon">{detailIcons.date}</span>
+                        <div>
+                          <p className="detail-label">Date & time</p>
+                          <p>{formatDate(apt.date, apt.time)}</p>
+                        </div>
                       </div>
                       <div className="appointment-detail">
-                        <span>👩‍⚕️</span>
-                        <span>{apt.doctor}</span>
+                        <span className="detail-icon">{detailIcons.doctor}</span>
+                        <div>
+                          <p className="detail-label">Provider</p>
+                          <p>{apt.doctor}</p>
+                        </div>
                       </div>
                     </div>
                     <div className="appointment-card-actions">
-                      <button onClick={() => handleDelete(apt.id)} className="btn-icon" title="Delete">
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(apt.id)}
+                        className="btn-icon"
+                        title="Delete appointment"
+                        aria-label="Delete appointment"
+                      >
                         🗑️
                       </button>
                     </div>
