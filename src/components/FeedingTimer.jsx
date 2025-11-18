@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import '../pages/Feeding.css';
 import './FeedingTimer.css';
 
-const FeedingTimer = ({ onComplete, onClose }) => {
+const FeedingTimer = ({ onComplete, onClose, canShowSolidFood = false }) => {
   const [feedingType, setFeedingType] = useState('breast');
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -11,6 +11,7 @@ const FeedingTimer = ({ onComplete, onClose }) => {
   const [leftTime, setLeftTime] = useState(0);
   const [rightTime, setRightTime] = useState(0);
   const [amount, setAmount] = useState('');
+  const [solidDetails, setSolidDetails] = useState('');
   const [notes, setNotes] = useState('');
   const intervalRef = useRef(null);
   const startTimeRef = useRef(null);
@@ -94,6 +95,13 @@ const FeedingTimer = ({ onComplete, onClose }) => {
       feedingData.rightDuration = Math.floor(rightTime / 60);
     } else if (feedingType === 'bottle' && amount) {
       feedingData.amount = parseFloat(amount);
+    } else if (feedingType === 'solid') {
+      if (amount) {
+        feedingData.amount = parseFloat(amount);
+      }
+      if (solidDetails.trim()) {
+        feedingData.details = solidDetails.trim();
+      }
     }
 
     onComplete(feedingData);
@@ -134,6 +142,15 @@ const FeedingTimer = ({ onComplete, onClose }) => {
                   >
                     🍼 Bottle
                   </button>
+                  {canShowSolidFood && (
+                    <button
+                      type="button"
+                      className={`type-btn ${feedingType === 'solid' ? 'active' : ''}`}
+                      onClick={() => setFeedingType('solid')}
+                    >
+                      🍲 Solid
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -148,6 +165,30 @@ const FeedingTimer = ({ onComplete, onClose }) => {
                     min="0"
                   />
                 </div>
+              )}
+
+              {feedingType === 'solid' && (
+                <>
+                  <div className="form-group">
+                    <label>Amount (g) - Optional</label>
+                    <input
+                      type="number"
+                      placeholder="e.g., 50"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      min="0"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Food Details - Optional</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Mashed carrots"
+                      value={solidDetails}
+                      onChange={(e) => setSolidDetails(e.target.value)}
+                    />
+                  </div>
+                </>
               )}
 
               <div className="form-group">

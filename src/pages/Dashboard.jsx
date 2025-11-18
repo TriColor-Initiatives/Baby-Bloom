@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useBaby } from '../contexts/BabyContext';
@@ -99,14 +99,12 @@ const Dashboard = () => {
   const analysisSources = [
     { id: 'feedings', label: 'Feedings', icon: '🍼', color: 'var(--primary)', data: allFeedings },
     { id: 'sleep', label: 'Sleep Sessions', icon: '😴', color: 'var(--secondary, #9c6cff)', data: allSleep },
-    { id: 'diapers', label: 'Diaper Changes', icon: '🧷', color: 'var(--accent, #ffb86c)', data: allDiapers },
     { id: 'health', label: 'Health Records', icon: '🩺', color: 'var(--success, #25c685)', data: allHealth },
   ];
 
   const statActions = {
     feedings: () => navigate('/feeding'),
     sleep: () => navigate('/sleep'),
-    diapers: () => navigate('/diaper'),
     health: () => navigate('/health'),
   };
 
@@ -467,4 +465,5 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
 

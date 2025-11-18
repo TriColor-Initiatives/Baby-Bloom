@@ -2,10 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useBaby } from '../contexts/BabyContext';
 import FeedingTimer from '../components/FeedingTimer';
-import FeedingAnalytics from '../components/FeedingAnalytics';
 import FeedingReminder from '../components/FeedingReminder';
-import FeedingExport from '../components/FeedingExport';
-import FeedingAdvancedAnalytics from '../components/FeedingAdvancedAnalytics';
 import FeedingCalendar from '../components/FeedingCalendar';
 import FeedingGoals from '../components/FeedingGoals';
 import '../styles/pages.css';
@@ -18,10 +15,7 @@ const Feeding = () => {
   const [feedings, setFeedings] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTimerOpen, setIsTimerOpen] = useState(false);
-  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
-  const [isExportOpen, setIsExportOpen] = useState(false);
-  const [isAdvancedAnalyticsOpen, setIsAdvancedAnalyticsOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isGoalsOpen, setIsGoalsOpen] = useState(false);
   const [editingFeeding, setEditingFeeding] = useState(null);
@@ -256,14 +250,6 @@ const Feeding = () => {
           <span>⏱️</span>
           <span>Start Timer</span>
         </button>
-        <button className="btn btn-secondary" onClick={() => setIsAnalyticsOpen(true)}>
-          <span>📊</span>
-          <span>Analytics</span>
-        </button>
-        <button className="btn btn-secondary" onClick={() => setIsAdvancedAnalyticsOpen(true)}>
-          <span>📈</span>
-          <span>Advanced</span>
-        </button>
         <button className="btn btn-secondary" onClick={() => setIsCalendarOpen(true)}>
           <span>📅</span>
           <span>Calendar</span>
@@ -275,10 +261,6 @@ const Feeding = () => {
         <button className="btn btn-secondary" onClick={() => setIsReminderOpen(true)}>
           <span>⏰</span>
           <span>Reminder</span>
-        </button>
-        <button className="btn btn-secondary" onClick={() => setIsExportOpen(true)}>
-          <span>📥</span>
-          <span>Export</span>
         </button>
       </div>
 
@@ -613,18 +595,12 @@ const Feeding = () => {
       {/* Timer Modal */}
       {isTimerOpen && (
         <FeedingTimer
+          canShowSolidFood={canShowSolidFood}
           onComplete={handleTimerComplete}
           onClose={() => setIsTimerOpen(false)}
         />
       )}
 
-      {/* Analytics Modal */}
-      {isAnalyticsOpen && (
-        <FeedingAnalytics
-          feedings={feedings}
-          onClose={() => setIsAnalyticsOpen(false)}
-        />
-      )}
 
       {/* Reminder Modal */}
       {isReminderOpen && (
@@ -634,21 +610,7 @@ const Feeding = () => {
         />
       )}
 
-      {/* Export Modal */}
-      {isExportOpen && (
-        <FeedingExport
-          feedings={feedings}
-          onClose={() => setIsExportOpen(false)}
-        />
-      )}
 
-      {/* Advanced Analytics Modal */}
-      {isAdvancedAnalyticsOpen && (
-        <FeedingAdvancedAnalytics
-          feedings={feedings}
-          onClose={() => setIsAdvancedAnalyticsOpen(false)}
-        />
-      )}
 
       {/* Calendar Modal */}
       {isCalendarOpen && (

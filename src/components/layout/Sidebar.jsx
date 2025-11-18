@@ -30,8 +30,9 @@ const Sidebar = ({ isOpen, isCollapsed, onHoverChange, onClose }) => {
       items: [
         { path: '/feeding', icon: '🍼', label: 'Feeding' },
         { path: '/sleep', icon: '🌙', label: 'Sleep' },
-        { path: '/diaper', icon: '🧷', label: 'Diaper' },
         { path: '/health', icon: '🩺', label: 'Health' },
+        { path: '/reminders', icon: '⏰', label: 'Reminders' },
+        { path: '/activities', icon: '🎨', label: 'Activities' },
       ],
     },
     {
@@ -45,12 +46,7 @@ const Sidebar = ({ isOpen, isCollapsed, onHoverChange, onClose }) => {
     {
       section: 'More',
       items: [
-        { path: '/reminders', icon: '⏰', label: 'Reminders' },
-        { path: '/timeline', icon: '🕒', label: 'Timeline' },
-        { path: '/activities', icon: '🎨', label: 'Activities' },
         { path: '/mother-health', icon: '💗', label: 'Mother Wellness' },
-        { path: '/breastfeeding', icon: '🤱', label: 'Breastfeeding' },
-        { path: '/education', icon: '📚', label: 'Education' },
         { path: '/tips', icon: '💡', label: 'Tips' },
         ...(isBaby6MonthsOrOlder ? [{ path: '/recipes', icon: '🥣', label: 'Recipes' }] : []),
       ],

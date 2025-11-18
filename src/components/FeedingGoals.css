@@ -227,3 +227,10 @@
 .goals-modal::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
 }
+.goals-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-xl);
+  align-items: flex-start;
+  margin-bottom: var(--spacing-xxl);
+}

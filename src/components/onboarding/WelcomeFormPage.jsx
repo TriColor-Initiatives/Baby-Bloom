@@ -250,7 +250,7 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
                                             type="number"
                                             step="0.1"
                                             placeholder="e.g., 50"
-                                            value={formData.height}
+                                             value={formData.height}
                                             onChange={(e) => handleChange('height', e.target.value)}
                                         />
                                     </div>

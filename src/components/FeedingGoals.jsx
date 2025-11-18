@@ -66,78 +66,80 @@ const FeedingGoals = ({ feedings, onClose }) => {
         </div>
 
         <div className="goals-content">
-          {/* Today's Progress */}
-          <section className="goals-section">
-            <h3>Today's Progress</h3>
-            <div className="progress-grid">
-              <div className="progress-card">
-                <div className="progress-header">
-                  <span>Total Feedings</span>
-                  <span className="progress-value">{todayFeedings.length}/{goals.dailyFeedings}</span>
+          <div className="goals-layout">
+            {/* Set Goals */}
+            <section className="goals-section goals-set">
+              <h3>Set Your Goals</h3>
+              <div className="goals-inputs">
+                <div className="goal-input-group">
+                  <label>Daily Feedings Target</label>
+                  <input
+                    type="number"
+                    value={goals.dailyFeedings}
+                    onChange={(e) => handleGoalChange('dailyFeedings', e.target.value)}
+                    min="1"
+                    max="20"
+                  />
                 </div>
-                <div className="progress-bar-container">
-                  <div className="progress-bar" style={{ width: `${feedingsProgress}%` }}></div>
+                <div className="goal-input-group">
+                  <label>Target Breast Duration (min)</label>
+                  <input
+                    type="number"
+                    value={goals.breastfeedingMinutes}
+                    onChange={(e) => handleGoalChange('breastfeedingMinutes', e.target.value)}
+                    min="5"
+                    max="60"
+                  />
+                </div>
+                <div className="goal-input-group">
+                  <label>Target Bottle Amount (ml)</label>
+                  <input
+                    type="number"
+                    value={goals.bottleAmount}
+                    onChange={(e) => handleGoalChange('bottleAmount', e.target.value)}
+                    min="30"
+                    max="300"
+                  />
                 </div>
               </div>
+            </section>
 
-              <div className="progress-card">
-                <div className="progress-header">
-                  <span>Avg. Breast Duration</span>
-                  <span className="progress-value">{Math.round(avgDuration)}/{goals.breastfeedingMinutes} min</span>
+            {/* Today's Progress */}
+            <section className="goals-section goals-progress">
+              <h3>Today's Progress</h3>
+              <div className="progress-grid">
+                <div className="progress-card">
+                  <div className="progress-header">
+                    <span>Total Feedings</span>
+                    <span className="progress-value">{todayFeedings.length}/{goals.dailyFeedings}</span>
+                  </div>
+                  <div className="progress-bar-container">
+                    <div className="progress-bar" style={{ width: `${feedingsProgress}%` }}></div>
+                  </div>
                 </div>
-                <div className="progress-bar-container">
-                  <div className="progress-bar" style={{ width: `${durationProgress}%` }}></div>
-                </div>
-              </div>
 
-              <div className="progress-card">
-                <div className="progress-header">
-                  <span>Avg. Bottle Amount</span>
-                  <span className="progress-value">{Math.round(avgBottleAmount)}/{goals.bottleAmount} ml</span>
+                <div className="progress-card">
+                  <div className="progress-header">
+                    <span>Avg. Breast Duration</span>
+                    <span className="progress-value">{Math.round(avgDuration)}/{goals.breastfeedingMinutes} min</span>
+                  </div>
+                  <div className="progress-bar-container">
+                    <div className="progress-bar" style={{ width: `${durationProgress}%` }}></div>
+                  </div>
                 </div>
-                <div className="progress-bar-container">
-                  <div className="progress-bar" style={{ width: `${amountProgress}%` }}></div>
-                </div>
-              </div>
-            </div>
-          </section>
 
-          {/* Set Goals */}
-          <section className="goals-section">
-            <h3>Set Your Goals</h3>
-            <div className="goals-inputs">
-              <div className="goal-input-group">
-                <label>Daily Feedings Target</label>
-                <input
-                  type="number"
-                  value={goals.dailyFeedings}
-                  onChange={(e) => handleGoalChange('dailyFeedings', e.target.value)}
-                  min="1"
-                  max="20"
-                />
+                <div className="progress-card">
+                  <div className="progress-header">
+                    <span>Avg. Bottle Amount</span>
+                    <span className="progress-value">{Math.round(avgBottleAmount)}/{goals.bottleAmount} ml</span>
+                  </div>
+                  <div className="progress-bar-container">
+                    <div className="progress-bar" style={{ width: `${amountProgress}%` }}></div>
+                  </div>
+                </div>
               </div>
-              <div className="goal-input-group">
-                <label>Target Breast Duration (min)</label>
-                <input
-                  type="number"
-                  value={goals.breastfeedingMinutes}
-                  onChange={(e) => handleGoalChange('breastfeedingMinutes', e.target.value)}
-                  min="5"
-                  max="60"
-                />
-              </div>
-              <div className="goal-input-group">
-                <label>Target Bottle Amount (ml)</label>
-                <input
-                  type="number"
-                  value={goals.bottleAmount}
-                  onChange={(e) => handleGoalChange('bottleAmount', e.target.value)}
-                  min="30"
-                  max="300"
-                />
-              </div>
-            </div>
-          </section>
+            </section>
+          </div>
 
           {/* Achievements */}
           {badges.length > 0 && (

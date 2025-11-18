@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import AppointmentManager from '../components/health/AppointmentManager';
-import VaccinationTracker from '../components/health/VaccinationTracker';
-import GrowthTracker from '../components/health/GrowthTracker';
 import MedicationManager from '../components/health/MedicationManager';
 import SymptomLogger from '../components/health/SymptomLogger';
-import GrowthCharts from '../components/health/GrowthCharts';
-import HealthAnalytics from '../components/health/HealthAnalytics';
-import HealthExport from '../components/health/HealthExport';
 import EmergencyInfo from '../components/health/EmergencyInfo';
 import '../styles/pages.css';
 import './Health.css';
@@ -16,14 +10,8 @@ const Health = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [records, setRecords] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAppointmentsOpen, setIsAppointmentsOpen] = useState(false);
-  const [isVaccinationsOpen, setIsVaccinationsOpen] = useState(false);
-  const [isGrowthOpen, setIsGrowthOpen] = useState(false);
   const [isMedicationsOpen, setIsMedicationsOpen] = useState(false);
   const [isSymptomsOpen, setIsSymptomsOpen] = useState(false);
-  const [isChartsOpen, setIsChartsOpen] = useState(false);
-  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
-  const [isExportOpen, setIsExportOpen] = useState(false);
   const [isEmergencyOpen, setIsEmergencyOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [formData, setFormData] = useState({
@@ -199,18 +187,6 @@ const Health = () => {
           <span>➕</span>
           <span>Add Record</span>
         </button>
-        <button className="btn btn-secondary" onClick={() => setIsAppointmentsOpen(true)}>
-          <span>📅</span>
-          <span>Appointments</span>
-        </button>
-        <button className="btn btn-secondary" onClick={() => setIsVaccinationsOpen(true)}>
-          <span>💉</span>
-          <span>Vaccinations</span>
-        </button>
-        <button className="btn btn-secondary" onClick={() => setIsGrowthOpen(true)}>
-          <span>📏</span>
-          <span>Growth</span>
-        </button>
         <button className="btn btn-secondary" onClick={() => setIsMedicationsOpen(true)}>
           <span>💊</span>
           <span>Medications</span>
@@ -218,18 +194,6 @@ const Health = () => {
         <button className="btn btn-secondary" onClick={() => setIsSymptomsOpen(true)}>
           <span>🩺</span>
           <span>Symptoms</span>
-        </button>
-        <button className="btn btn-secondary" onClick={() => setIsChartsOpen(true)}>
-          <span>📊</span>
-          <span>Charts</span>
-        </button>
-        <button className="btn btn-secondary" onClick={() => setIsAnalyticsOpen(true)}>
-          <span>📈</span>
-          <span>Analytics</span>
-        </button>
-        <button className="btn btn-secondary" onClick={() => setIsExportOpen(true)}>
-          <span>📥</span>
-          <span>Export</span>
         </button>
         <button className="btn btn-secondary" onClick={() => setIsEmergencyOpen(true)}>
           <span>🚨</span>
@@ -532,18 +496,6 @@ const Health = () => {
       )}
 
       {/* Component Modals */}
-      {isAppointmentsOpen && (
-        <AppointmentManager onClose={() => setIsAppointmentsOpen(false)} />
-      )}
-
-      {isVaccinationsOpen && (
-        <VaccinationTracker onClose={() => setIsVaccinationsOpen(false)} />
-      )}
-
-      {isGrowthOpen && (
-        <GrowthTracker records={records} onClose={() => setIsGrowthOpen(false)} />
-      )}
-
       {isMedicationsOpen && (
         <MedicationManager onClose={() => setIsMedicationsOpen(false)} />
       )}
@@ -552,21 +504,10 @@ const Health = () => {
         <SymptomLogger onClose={() => setIsSymptomsOpen(false)} />
       )}
 
-      {isChartsOpen && (
-        <GrowthCharts records={records} onClose={() => setIsChartsOpen(false)} />
-      )}
-
-      {isAnalyticsOpen && (
-        <HealthAnalytics records={records} onClose={() => setIsAnalyticsOpen(false)} />
-      )}
-
-      {isExportOpen && (
-        <HealthExport records={records} onClose={() => setIsExportOpen(false)} />
-      )}
-
       {isEmergencyOpen && (
         <EmergencyInfo onClose={() => setIsEmergencyOpen(false)} />
       )}
+
     </div>
   );
 };
