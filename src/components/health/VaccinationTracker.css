@@ -11,10 +11,10 @@
 }
 
 .vaccination-page {
-    background: var(--surface);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    padding: var(--spacing-xl);
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
 }
 
 .vaccination-page .vaccination-content {
@@ -118,7 +118,7 @@
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: var(--spacing-xs);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
 }
 
 .vaccination-dose {

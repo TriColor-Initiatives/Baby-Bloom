@@ -28,6 +28,8 @@
   border: none;
   padding: 0;
   box-shadow: none;
+}
+
 .appointment-modal,
 .appointment-page {
   position: relative;
@@ -135,6 +137,19 @@
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.checkbox-group input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary, #5c6ac4);
 }
 
 .appointment-actions {
@@ -282,11 +297,6 @@
 }
 
 @media (max-width: 768px) {
-  .appointment-page {
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-  }
-
   .appointment-panel {
     padding: var(--spacing-lg);
   }

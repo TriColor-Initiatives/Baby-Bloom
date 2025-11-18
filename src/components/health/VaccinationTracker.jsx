@@ -49,14 +49,14 @@ const VaccinationTracker = ({ onClose }) => {
 
   const content = (
     <>
-      <div className="modal-header">
-        <h2>💉 Vaccination Tracker</h2>
-        {isModal && (
+      {isModal && (
+        <div className="modal-header">
+          <h2>💉 Vaccinations</h2>
           <button className="close-btn" onClick={handleClose} aria-label="Close">
             ×
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="vaccination-content">
         <div className="vaccination-info">
@@ -107,4 +107,3 @@ const VaccinationTracker = ({ onClose }) => {
 };
 
 export default VaccinationTracker;
-
