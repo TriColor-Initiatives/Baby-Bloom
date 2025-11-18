@@ -6,6 +6,8 @@ import Feeding from './pages/Feeding';
 import Sleep from './pages/Sleep';
 import Diaper from './pages/Diaper';
 import Health from './pages/Health';
+import Appointments from './pages/Appointments';
+import Vaccinations from './pages/Vaccinations';
 import Growth from './pages/Growth';
 import Milestones from './pages/Milestones';
 import Activities from './pages/Activities';
@@ -33,6 +35,8 @@ function App() {
         <Route path="sleep" element={<Sleep />} />
         <Route path="diaper" element={<Diaper />} />
         <Route path="health" element={<Health />} />
+        <Route path="appointments" element={<Appointments />} />
+        <Route path="vaccinations" element={<Vaccinations />} />
         <Route path="growth" element={<Growth />} />
         <Route path="milestones" element={<Milestones />} />
         <Route path="activities" element={<Activities />} />

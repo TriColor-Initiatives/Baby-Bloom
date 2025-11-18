@@ -10,6 +10,51 @@
     animation: slideUp 0.3s ease;
 }
 
+.vaccination-page {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--spacing-xl);
+}
+
+.vaccination-page .vaccination-content {
+    padding: var(--spacing-lg) 0 0;
+    overflow: visible;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    margin: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: var(--font-size-lg, 1.1rem);
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: var(--spacing-xs);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background: var(--error);
+    color: white;
+}
+
 .vaccination-content {
     padding: var(--spacing-lg);
     overflow-y: auto;

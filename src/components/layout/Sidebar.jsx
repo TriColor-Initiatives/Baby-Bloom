@@ -1,12 +1,11 @@
 ﻿import { Link, useLocation } from 'react-router-dom';
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useBaby } from '../../contexts/BabyContext';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, isCollapsed, onHoverChange, onClose }) => {
   const location = useLocation();
   const { activeBaby } = useBaby();
-  const [moreExpanded, setMoreExpanded] = useState(false);
 
   // Check if baby is 6 months or older
   const isBaby6MonthsOrOlder = useMemo(() => {
@@ -46,6 +45,8 @@ const Sidebar = ({ isOpen, isCollapsed, onHoverChange, onClose }) => {
     {
       section: 'More',
       items: [
+        { path: '/appointments', icon: '📅', label: 'Appointments' },
+        { path: '/vaccinations', icon: '💉', label: 'Vaccinations' },
         { path: '/mother-health', icon: '💗', label: 'Mother Wellness' },
         { path: '/tips', icon: '💡', label: 'Tips' },
         ...(isBaby6MonthsOrOlder ? [{ path: '/recipes', icon: '🥣', label: 'Recipes' }] : []),
@@ -99,59 +100,27 @@ const Sidebar = ({ isOpen, isCollapsed, onHoverChange, onClose }) => {
       <nav className="sidebar-nav">
         {navItems.map((section) => (
           <div key={section.section} className="nav-section">
-            {section.section === 'More' ? (
-              <>
-                <button
-                  className="nav-section-title nav-section-toggle"
-                  onClick={() => setMoreExpanded(!moreExpanded)}
-                  aria-expanded={moreExpanded}
-                >
-                  <span>{section.section}</span>
-                  <span className={`toggle-icon ${moreExpanded ? 'expanded' : ''}`}>
-                    {moreExpanded ? '▼' : '▶'}
+            <div className="nav-section-title">{section.section}</div>
+            {section.items.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
+                onClick={() => window.innerWidth <= 768 && onClose?.()}
+                title={item.label}
+                aria-label={item.label}
+              >
+                <span className="nav-item-icon" aria-hidden="true">{item.icon}</span>
+                <span className="nav-item-label" aria-hidden={isCollapsed}>
+                  {item.label}
+                </span>
+                {item.badge && (
+                  <span className="nav-item-badge" aria-hidden={isCollapsed}>
+                    {item.badge}
                   </span>
-                </button>
-                {moreExpanded && section.items.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
-                    onClick={() => window.innerWidth <= 768 && onClose?.()}
-                    title={item.label}
-                    aria-label={item.label}
-                  >
-                    <span className="nav-item-icon" aria-hidden="true">{item.icon}</span>
-                    <span className="nav-item-label" aria-hidden={isCollapsed}>
-                      {item.label}
-                    </span>
-                  </Link>
-                ))}
-              </>
-            ) : (
-              <>
-                <div className="nav-section-title">{section.section}</div>
-                {section.items.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
-                    onClick={() => window.innerWidth <= 768 && onClose?.()}
-                    title={item.label}
-                    aria-label={item.label}
-                  >
-                    <span className="nav-item-icon" aria-hidden="true">{item.icon}</span>
-                    <span className="nav-item-label" aria-hidden={isCollapsed}>
-                      {item.label}
-                    </span>
-                    {item.badge && (
-                      <span className="nav-item-badge" aria-hidden={isCollapsed}>
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
-                ))}
-              </>
-            )}
+                )}
+              </Link>
+            ))}
           </div>
         ))}
       </nav>
@@ -169,3 +138,5 @@ const Sidebar = ({ isOpen, isCollapsed, onHoverChange, onClose }) => {
 };
 
 export default Sidebar;
+
+
