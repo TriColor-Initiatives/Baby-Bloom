@@ -19,28 +19,43 @@ export default function Reminders() {
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(defaultForm);
 
+    // Track if initial load is complete to prevent overwriting on mount
+    const [isLoaded, setIsLoaded] = useState(false);
+
     // Load existing reminders
     useEffect(() => {
         try {
             const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            const reminders = Array.isArray(saved) ? saved : [];
+            const loadedReminders = Array.isArray(saved) ? saved : [];
             // Ensure all reminders have a completed property
-            const normalizedReminders = reminders.map(r => ({
+            const normalizedReminders = loadedReminders.map(r => ({
                 ...r,
                 completed: r.completed === true ? true : false
             }));
             console.log('Loaded reminders from localStorage:', normalizedReminders);
             setReminders(normalizedReminders);
+            setIsLoaded(true);
         } catch (error) {
             console.error('Error loading reminders:', error);
             setReminders([]);
+            setIsLoaded(true);
         }
     }, []);
 
-    // Save changes
+    // Save changes (only after initial load is complete)
     useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(reminders));
-    }, [reminders]);
+        if (!isLoaded) return; // Don't save until initial load is done
+        
+        if (reminders.length > 0) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(reminders));
+        } else {
+            localStorage.removeItem(STORAGE_KEY);
+        }
+        
+        // Dispatch custom event to notify Dashboard and other components
+        console.log('Reminders: Dispatching reminders-updated event');
+        window.dispatchEvent(new CustomEvent('reminders-updated'));
+    }, [reminders, isLoaded]);
 
     // Auto-open on ?add=true
     useEffect(() => {

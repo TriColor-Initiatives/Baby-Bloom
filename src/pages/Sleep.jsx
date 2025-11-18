@@ -18,7 +18,7 @@ const Sleep = () => {
 
   // Load sleep data
   useEffect(() => {
-    const saved = localStorage.getItem('babySleep');
+    const saved = localStorage.getItem('baby-bloom-sleep');
     if (saved) {
       setSleeps(JSON.parse(saved));
     }
@@ -27,7 +27,9 @@ const Sleep = () => {
   // Save sleep data
   useEffect(() => {
     if (sleeps.length > 0) {
-      localStorage.setItem('babySleep', JSON.stringify(sleeps));
+      localStorage.setItem('baby-bloom-sleep', JSON.stringify(sleeps));
+    } else {
+      localStorage.removeItem('baby-bloom-sleep');
     }
   }, [sleeps]);
 
@@ -173,7 +175,7 @@ const Sleep = () => {
                 </div>
               </div>
 
-              <button className="btn btn-primary btn-large" onClick={() => setShowModal(true)}>
+              <button className="btn btn-primary btn-large" onClick={() => setIsModalOpen(true)}>
                 <span>➕</span>
                 <span>Log Your First Sleep</span>
               </button>

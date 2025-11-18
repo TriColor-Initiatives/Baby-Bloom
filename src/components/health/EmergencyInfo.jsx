@@ -43,7 +43,7 @@ const EmergencyInfo = ({ onClose }) => {
     const [addingTo, setAddingTo] = useState(null);
 
     useEffect(() => {
-        const saved = localStorage.getItem('babyEmergencyInfo');
+        const saved = localStorage.getItem('baby-bloom-emergency-info');
         if (saved) {
             setEmergencyData(JSON.parse(saved));
         }
@@ -51,7 +51,7 @@ const EmergencyInfo = ({ onClose }) => {
 
     const saveData = (data) => {
         setEmergencyData(data);
-        localStorage.setItem('babyEmergencyInfo', JSON.stringify(data));
+        localStorage.setItem('baby-bloom-emergency-info', JSON.stringify(data));
     };
 
     const handleInputChange = (section, field, value) => {

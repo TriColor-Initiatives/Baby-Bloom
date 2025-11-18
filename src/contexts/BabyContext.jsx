@@ -12,25 +12,29 @@ export const useBaby = () => {
 
 export const BabyProvider = ({ children }) => {
   const [babies, setBabies] = useState(() => {
-    const saved = localStorage.getItem('baby_profiles');
+    const saved = localStorage.getItem('baby-bloom-profiles');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [activeBabyId, setActiveBabyId] = useState(() => {
-    return localStorage.getItem('active_baby_id') || null;
+    return localStorage.getItem('baby-bloom-active-baby-id') || null;
   });
 
   // Save babies to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('baby_profiles', JSON.stringify(babies));
+    if (babies.length > 0) {
+      localStorage.setItem('baby-bloom-profiles', JSON.stringify(babies));
+    } else {
+      localStorage.removeItem('baby-bloom-profiles');
+    }
   }, [babies]);
 
   // Save active baby ID to localStorage
   useEffect(() => {
     if (activeBabyId) {
-      localStorage.setItem('active_baby_id', activeBabyId);
+      localStorage.setItem('baby-bloom-active-baby-id', activeBabyId);
     } else {
-      localStorage.removeItem('active_baby_id');
+      localStorage.removeItem('baby-bloom-active-baby-id');
     }
   }, [activeBabyId]);
 
@@ -52,7 +56,7 @@ export const BabyProvider = ({ children }) => {
     };
 
     setBabies(prev => [...prev, newBaby]);
-    
+
     // If this is the first baby, make it active
     if (babies.length === 0) {
       setActiveBabyId(newBaby.id);
@@ -73,7 +77,7 @@ export const BabyProvider = ({ children }) => {
   // Delete a baby
   const deleteBaby = (babyId) => {
     setBabies(prev => prev.filter(baby => baby.id !== babyId));
-    
+
     // If deleted baby was active, switch to first remaining baby
     if (activeBabyId === babyId) {
       const remaining = babies.filter(baby => baby.id !== babyId);

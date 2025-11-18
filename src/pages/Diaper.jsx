@@ -13,7 +13,7 @@ const Diaper = () => {
   });
 
   useEffect(() => {
-    const saved = localStorage.getItem('babyDiapers');
+    const saved = localStorage.getItem('baby-bloom-diapers');
     if (saved) {
       setDiapers(JSON.parse(saved));
     }
@@ -21,7 +21,9 @@ const Diaper = () => {
 
   useEffect(() => {
     if (diapers.length > 0) {
-      localStorage.setItem('babyDiapers', JSON.stringify(diapers));
+      localStorage.setItem('baby-bloom-diapers', JSON.stringify(diapers));
+    } else {
+      localStorage.removeItem('baby-bloom-diapers');
     }
   }, [diapers]);
 
@@ -122,7 +124,7 @@ const Diaper = () => {
                 </div>
               </div>
 
-              <button className="btn btn-primary btn-large" onClick={() => setShowModal(true)}>
+              <button className="btn btn-primary btn-large" onClick={() => setIsModalOpen(true)}>
                 <span>➕</span>
                 <span>Log Your First Diaper Change</span>
               </button>

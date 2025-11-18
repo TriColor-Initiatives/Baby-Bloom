@@ -52,13 +52,13 @@ const getHealthIcon = (t) => {
 // Load real data from localStorage
 const loadTimelineData = () => {
   const getAllFeedings = () => {
-    try { return JSON.parse(localStorage.getItem('babyFeedings') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('baby-bloom-feedings') || '[]'); } catch { return []; }
   };
   const getAllSleep = () => {
-    try { return JSON.parse(localStorage.getItem('babySleep') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('baby-bloom-sleep') || '[]'); } catch { return []; }
   };
   const getAllDiapers = () => {
-    try { return JSON.parse(localStorage.getItem('babyDiapers') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('baby-bloom-diapers') || '[]'); } catch { return []; }
   };
   const getAllHealth = () => {
     try { return JSON.parse(localStorage.getItem('baby-bloom-health') || '[]'); } catch { return []; }
@@ -245,8 +245,8 @@ const Timeline = () => {
     activeRange === 'today'
       ? 'No activities logged yet today. Log feeding, sleep, diaper, or health records to see them here.'
       : timelineEntries.length === 0
-      ? 'No activities recorded yet. Start logging feeding, sleep, diaper, or health records to build your timeline.'
-      : 'No activities recorded in the last 7 days.';
+        ? 'No activities recorded yet. Start logging feeding, sleep, diaper, or health records to build your timeline.'
+        : 'No activities recorded in the last 7 days.';
 
   return (
     <div className="page-container">

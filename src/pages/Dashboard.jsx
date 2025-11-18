@@ -1,5 +1,6 @@
-﻿import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+
 import { useAuth } from '../contexts/AuthContext';
 import { useBaby } from '../contexts/BabyContext';
 import WelcomeScreen from '../components/onboarding/WelcomeScreen';
@@ -9,8 +10,10 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { babies, activeBaby } = useBaby();
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showWelcome, setShowWelcome] = useState(false);
+  const [reminders, setReminders] = useState([]);
 
   // Check if user needs to add a baby
   useEffect(() => {
@@ -25,6 +28,70 @@ const Dashboard = () => {
     }, 60000); // Update every minute
 
     return () => clearInterval(timer);
+  }, []);
+
+  // Load reminders from localStorage
+  const loadReminders = () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('baby-bloom-reminders') || '[]');
+      const loadedReminders = Array.isArray(saved) ? saved : [];
+      console.log('Dashboard: Loaded reminders:', loadedReminders);
+      setReminders(loadedReminders);
+    } catch (error) {
+      console.error('Error loading reminders:', error);
+      setReminders([]);
+    }
+  };
+
+  // Reload reminders when navigating to Dashboard
+  useEffect(() => {
+    if (location.pathname === '/') {
+      loadReminders();
+    }
+  }, [location.pathname]);
+
+  // Load reminders on mount and when page becomes visible
+  useEffect(() => {
+    loadReminders();
+
+    // Listen for storage events (from other tabs/windows)
+    const handleStorageChange = (e) => {
+      if (e.key === 'baby-bloom-reminders') {
+        loadReminders();
+      }
+    };
+
+    // Listen for focus/visibility changes (when user navigates back to this tab)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadReminders();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Also listen for custom event from Reminders page (same tab)
+    const handleReminderUpdate = () => {
+      console.log('Dashboard: Received reminders-updated event');
+      loadReminders();
+    };
+
+    window.addEventListener('reminders-updated', handleReminderUpdate);
+    
+    // Also reload when navigating back to Dashboard (using focus event)
+    const handleFocus = () => {
+      loadReminders();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('reminders-updated', handleReminderUpdate);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Check if baby is younger than 6 months (0-6 months)
@@ -67,13 +134,13 @@ const Dashboard = () => {
 
   // Build Recent Activity from real data across modules
   const getAllFeedings = () => {
-    try { return JSON.parse(localStorage.getItem('babyFeedings') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('baby-bloom-feedings') || '[]'); } catch { return []; }
   };
   const getAllSleep = () => {
-    try { return JSON.parse(localStorage.getItem('babySleep') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('baby-bloom-sleep') || '[]'); } catch { return []; }
   };
   const getAllDiapers = () => {
-    try { return JSON.parse(localStorage.getItem('babyDiapers') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('baby-bloom-diapers') || '[]'); } catch { return []; }
   };
   const getAllHealth = () => {
     try { return JSON.parse(localStorage.getItem('baby-bloom-health') || '[]'); } catch { return []; }
@@ -211,10 +278,6 @@ const Dashboard = () => {
       .map((i) => ({ ...i, time: getTimeAgo(i.when) }));
   })();
 
-  // Reminders from localStorage
-  const getReminders = () => {
-    try { return JSON.parse(localStorage.getItem('baby-bloom-reminders') || '[]'); } catch { return []; }
-  };
   const getTimeUntil = (dateStr) => {
     if (!dateStr) return '';
     const now = new Date();
@@ -229,8 +292,16 @@ const Dashboard = () => {
     if (diffDays === 1) return 'Tomorrow';
     return `In ${diffDays} days`;
   };
-  const upcomingReminders = getReminders()
-    .filter(r => !r.completed && new Date(r.dueAt) > new Date())
+  
+  const upcomingReminders = reminders
+    .filter(r => {
+      // Include reminders that are not completed
+      if (r.completed === true) return false;
+      
+      // Include all non-completed reminders (due now, past due, or future)
+      // This ensures we show reminders even if they're slightly past due
+      return true;
+    })
     .sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt))
     .slice(0, 5)
     .map(r => ({

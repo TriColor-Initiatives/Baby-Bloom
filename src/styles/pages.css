@@ -28,6 +28,7 @@ button.btn,
   font-weight: 600;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   transition: all var(--transition-normal);
   border: none;
@@ -288,6 +289,10 @@ button.btn,
   text-align: center;
   padding: var(--spacing-2xl) var(--spacing-lg);
   color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .empty-icon {
@@ -354,6 +359,25 @@ button.btn,
   gap: 6px;
   min-height: 40px !important;
   max-height: 44px !important;
+}
+
+.reminder-time {
+  font-size: 18px !important;
+  font-weight: 500;
+}
+
+.reminder-title {
+  font-size: 16px !important;
+  font-weight: 600;
+}
+
+.reminder-icon {
+  font-size: 32px !important;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (max-width: 1024px) {
@@ -490,4 +514,30 @@ button.btn,
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* Center buttons in empty states */
+.empty-state-actions,
+.reminder-empty-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.empty-state .btn,
+.empty-state button.btn {
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Center button in info-panel too if needed */
+.info-panel .btn,
+.info-panel button.btn {
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
