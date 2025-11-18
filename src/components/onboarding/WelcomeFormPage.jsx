@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useBaby } from '../../contexts/BabyContext';
 import TopBar from '../layout/TopBar';
 import CustomDatePicker from './CustomDatePicker';
@@ -34,13 +34,6 @@ const appFeatures = [
         gradient: 'linear-gradient(135deg, #FFD9A3 0%, #FFE8C5 100%)'
     },
     {
-        title: 'Diaper Log',
-        description: 'Record diaper changes and track patterns.',
-        icon: '\u{1F9FD}',
-        color: '#FFB3D1',
-        gradient: 'linear-gradient(135deg, #FFB3D1 0%, #FFD1E8 100%)'
-    },
-    {
         title: 'Daily Activities',
         description: 'Track playtime, tummy time, and developmental activities.',
         icon: '\u{1F3B2}',
@@ -68,13 +61,6 @@ const appFeatures = [
         color: '#FFE5B4',
         gradient: 'linear-gradient(135deg, #FFE5B4 0%, #FFF0D4 100%)'
     },
-    {
-        title: 'Timeline',
-        description: 'View all major baby milestones and daily activities in a clean chronological timeline.',
-        icon: '\u{1F4C5}',
-        color: '#C8E6D5',
-        gradient: 'linear-gradient(135deg, #C8E6D5 0%, #E0F4E8 100%)'
-    }
 ];
 
 const WelcomeFormPage = ({ onComplete, onBack }) => {
@@ -294,3 +280,6 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
 };
 
 export default WelcomeFormPage;
+
+
+
