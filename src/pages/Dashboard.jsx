@@ -348,12 +348,11 @@ const Dashboard = () => {
       </div>
 
       <div className="section-card" style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <div className="section-header">
-          <h3 className="section-title">Daily Log Overview</h3>
-        </div>
         <div className="analysis-overview">
           <div className="analysis-donut-card">
-            <p className="analysis-donut-title">Today's Overview</p>
+            <div className="section-header">
+              <h3 className="section-title">Today's Overview</h3>
+            </div>
             <div className="analysis-donut-ring" style={{ backgroundImage: donutGradient }}>
               <div className="analysis-donut-inner">
                 <span className="analysis-total">{totalLogs}</span>
@@ -375,8 +374,10 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="analysis-stats-card">
-            <p className="analysis-stats-title">Category breakdown</p>
+          <div className="analysis-stats-card category-card">
+            <div className="section-header" style={{ marginBottom: 'var(--spacing-sm)' }}>
+              <h3 className="section-title">Category Breakdown</h3>
+            </div>
             <div className="analysis-stats-list">
               {analysisStats.map((stat) => (
                 <div
