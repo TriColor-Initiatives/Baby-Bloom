@@ -123,6 +123,8 @@ const Dashboard = () => {
     return user?.displayName?.split(' ')[0] || 'Parent';
   };
 
+  const getRoleEmoji = () => (parentRole === 'mommy' ? '🤱' : '👨‍🍼');
+
   const getTimeAgo = (date) => {
     if (!date) return 'No data';
     const now = new Date();
@@ -343,14 +345,17 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <div className="dashboard-welcome">
-        <h2>{getGreeting()}, {getParentSalutation()}! 👋</h2>
-        <p>
-          {activeBaby ? (
-            <>Tracking <strong>{activeBaby.name}</strong>'s day</>
-          ) : (
-            <>Here's what's happening with your little one today</>
-          )}
-        </p>
+        <h2 className="dashboard-greeting">
+          <span>{getGreeting()}, {getParentSalutation()}!</span>
+          <span className="greeting-emoji" aria-hidden="true">{getRoleEmoji()}</span>
+          <span className="greeting-tracking">
+            {activeBaby ? (
+              <>Tracking <strong>{activeBaby.name}</strong>'s day</>
+            ) : (
+              <>Here's what's happening with your little one today</>
+            )}
+          </span>
+        </h2>
       </div>
 
       <div className="section-card" style={{ marginBottom: 'var(--spacing-xl)' }}>
@@ -455,7 +460,6 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="cry-helper-cta">
-              <div className="cry-helper-icon">🤱</div>
               <a
                 className="btn btn-primary cry-helper-btn"
                 href="https://app.tricolorinitiatives.com/baby-cry-reason-finder/"
