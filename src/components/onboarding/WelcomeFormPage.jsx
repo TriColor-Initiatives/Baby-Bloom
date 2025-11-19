@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { useBaby } from '../../contexts/BabyContext';
 import TopBar from '../layout/TopBar';
 import CustomDatePicker from './CustomDatePicker';
@@ -63,7 +64,13 @@ const appFeatures = [
     },
 ];
 
+const parentRoleOptions = [
+    { value: 'mommy', label: 'Mommy' },
+    { value: 'daddy', label: 'Daddy' }
+];
+
 const WelcomeFormPage = ({ onComplete, onBack }) => {
+    const { parentRole, setParentRole } = useAuth();
     const { addBaby } = useBaby();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -77,6 +84,10 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
 
     const handleChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleRoleSelect = (role) => {
+        setParentRole(role);
     };
 
     const openModal = () => {
@@ -218,6 +229,21 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
                                     </div>
                                 </div>
 
+                                <div className="profile-form-group">
+                                    <label>Select your role</label>
+                                    <select
+                                        value={parentRole}
+                                        onChange={(e) => handleRoleSelect(e.target.value)}
+                                    >
+                                        <option value="">Select your role</option>
+                                        {parentRoleOptions.map((option) => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
                                 <div className="profile-form-row">
                                     <div className="profile-form-group">
                                         <label>Birth weight (kg)</label>
@@ -280,6 +306,7 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
 };
 
 export default WelcomeFormPage;
+
 
 
 
