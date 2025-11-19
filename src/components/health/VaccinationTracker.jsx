@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useBaby } from '../../contexts/BabyContext';
 import './VaccinationTracker.css';
 
@@ -12,12 +12,21 @@ const vaccinesSchedule = [
 
 const getStatusIcon = (status) => {
   if (status === 'completed') return '✅';
-  if (status === 'upcoming') return '⏰';
-  return '🕒';
+  return '⏳';
 };
+
+const STORAGE_KEY = 'baby-bloom-vaccinations';
 
 const VaccinationTracker = ({ onClose }) => {
   const { activeBaby } = useBaby();
+  const [completedVaccines, setCompletedVaccines] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    } catch (error) {
+      console.error('Failed to parse stored vaccinations', error);
+      return {};
+    }
+  });
 
   const babyAgeInMonths = useMemo(() => {
     if (!activeBaby?.dateOfBirth) return 0;
@@ -30,14 +39,42 @@ const VaccinationTracker = ({ onClose }) => {
     return months + Math.max(0, days) / daysInMonth;
   }, [activeBaby]);
 
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(completedVaccines));
+  }, [completedVaccines]);
+
+  const toggleVaccine = (id) => {
+    setCompletedVaccines((prev) => {
+      const next = { ...prev };
+      if (next[id]) {
+        delete next[id];
+      } else {
+        next[id] = true;
+      }
+      return next;
+    });
+  };
+
+  const handleStatusKey = (event, id) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleVaccine(id);
+    }
+  };
+
   const vaccines = vaccinesSchedule.map((vaccine) => {
-    const status =
-      babyAgeInMonths >= vaccine.months
-        ? 'completed'
-        : babyAgeInMonths >= vaccine.months - 0.5
-        ? 'upcoming'
-        : 'pending';
-    return { ...vaccine, status };
+    const id = `${vaccine.name}-${vaccine.dose}`;
+    const isCompleted = !!completedVaccines[id];
+    let status = 'pending';
+
+    if (!isCompleted && babyAgeInMonths >= vaccine.months - 0.5) {
+      status = 'upcoming';
+    }
+    if (isCompleted) {
+      status = 'completed';
+    }
+
+    return { ...vaccine, status, id };
   });
 
   const isModal = typeof onClose === 'function';
@@ -51,9 +88,9 @@ const VaccinationTracker = ({ onClose }) => {
     <>
       {isModal && (
         <div className="modal-header">
-          <h2>💉 Vaccinations</h2>
+          <h2>🍼 Vaccinations</h2>
           <button className="close-btn" onClick={handleClose} aria-label="Close">
-            ×
+            ✕
           </button>
         </div>
       )}
@@ -61,8 +98,7 @@ const VaccinationTracker = ({ onClose }) => {
       <div className="vaccination-content">
         <div className="vaccination-info">
           <p>
-            Keep track of recommended vaccines for your baby. Status updates automatically based on
-            your little one&apos;s age.
+            Keep track of recommended vaccines for your baby. Tap the icon to mark a dose as done.
           </p>
         </div>
 
@@ -74,8 +110,18 @@ const VaccinationTracker = ({ onClose }) => {
                 <div className="vaccination-name">{vaccine.name}</div>
                 <div className="vaccination-dose">{vaccine.dose}</div>
               </div>
-              <div className={`vaccination-status ${vaccine.status}`}>
-                {getStatusIcon(vaccine.status)}
+              <div
+                className={`vaccination-status ${vaccine.status}`}
+                role="button"
+                tabIndex={0}
+                aria-pressed={vaccine.status === 'completed'}
+                aria-label={vaccine.status === 'completed' ? 'Mark as not done' : 'Mark as done'}
+                onClick={() => toggleVaccine(vaccine.id)}
+                onKeyDown={(event) => handleStatusKey(event, vaccine.id)}
+              >
+                <span className="status-icon" aria-hidden="true">
+                  {getStatusIcon(vaccine.status)}
+                </span>
               </div>
             </div>
           ))}
