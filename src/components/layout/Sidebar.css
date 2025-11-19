@@ -131,16 +131,6 @@
 }
 
 .nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: -var(--spacing-md);
-  width: 4px;
-  height: 70%;
-  background: var(--primary-dark);
-  border-radius: var(--radius-full);
-}
-
-.sidebar.collapsed .nav-item.active::before {
   display: none;
 }
 
