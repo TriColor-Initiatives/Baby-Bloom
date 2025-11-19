@@ -19,6 +19,10 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [parentRole, setParentRole] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem('baby-bloom-parent-role') || '';
+  });
 
   useEffect(() => {
     // If Firebase is not configured, just set loading to false
@@ -34,6 +38,14 @@ export const AuthProvider = ({ children }) => {
 
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    if (parentRole) {
+      localStorage.setItem('baby-bloom-parent-role', parentRole);
+    } else {
+      localStorage.removeItem('baby-bloom-parent-role');
+    }
+  }, [parentRole]);
 
   const signInWithGoogle = async () => {
     if (!auth || !googleProvider) {
@@ -65,7 +77,9 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     signInWithGoogle,
-    signOut
+    signOut,
+    parentRole,
+    setParentRole
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -7,7 +7,7 @@ import WelcomeScreen from '../components/onboarding/WelcomeScreen';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, parentRole } = useAuth();
   const { babies, activeBaby } = useBaby();
   const navigate = useNavigate();
   const location = useLocation();
@@ -115,6 +115,12 @@ const Dashboard = () => {
     if (hour < 12) return 'Good Morning';
     if (hour < 18) return 'Good Afternoon';
     return 'Good Evening';
+  };
+
+  const getParentSalutation = () => {
+    if (parentRole === 'mommy') return 'Mommy';
+    if (parentRole === 'daddy') return 'Daddy';
+    return user?.displayName?.split(' ')[0] || 'Parent';
   };
 
   const getTimeAgo = (date) => {
@@ -337,7 +343,7 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <div className="dashboard-welcome">
-        <h2>{getGreeting()}, {user?.displayName?.split(' ')[0] || 'Parent'}! 👋</h2>
+        <h2>{getGreeting()}, {getParentSalutation()}! 👋</h2>
         <p>
           {activeBaby ? (
             <>Tracking <strong>{activeBaby.name}</strong>'s day</>
@@ -548,5 +554,6 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
 
 
