@@ -380,6 +380,8 @@
     color: #2D3748;
     font-weight: 500;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .profile-form-group input:hover,
@@ -396,15 +398,87 @@
     background: rgba(255, 255, 255, 1);
 }
 
+.profile-form-group {
+    position: relative;
+}
+
 .profile-form-group select {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235568C9' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
+    background-size: 12px 12px;
     background-position: right 1rem center;
     padding-right: 2.5rem;
     cursor: pointer;
+    position: relative;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    border-radius: 12px;
+}
+
+.profile-form-group select:focus,
+.profile-form-group select:active,
+.profile-form-group select:hover,
+.profile-form-group select:invalid,
+.profile-form-group select[open] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235568C9' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-size: 12px 12px;
+    background-position: right 1rem center;
+    background-repeat: no-repeat;
+    padding-right: 2.5rem;
+    transform: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Style dropdown menu options */
+.profile-form-group select option {
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 1);
+    color: #2D3748;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 0;
+    margin: 0;
+}
+
+.profile-form-group select option:hover {
+    background: rgba(85, 104, 201, 0.1);
+    color: #5568C9;
+}
+
+.profile-form-group select option:checked,
+.profile-form-group select option:focus {
+    background: rgba(85, 104, 201, 0.15);
+    color: #3B4DA8;
+    font-weight: 600;
+}
+
+/* Webkit-specific dropdown menu styling */
+.profile-form-group select::-webkit-select-menu {
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+    border: 2px solid rgba(85, 104, 201, 0.2);
+    padding: 0.5rem 0;
+    margin-top: 0.25rem;
+    background: rgba(255, 255, 255, 1);
+    overflow: hidden;
+}
+
+/* Firefox dropdown menu styling */
+@-moz-document url-prefix() {
+    .profile-form-group select {
+        border-radius: 12px;
+    }
+    
+    .profile-form-group select option {
+        border-radius: 8px;
+        margin: 0.125rem 0.25rem;
+    }
 }
 
 .profile-age-display {

@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useBaby } from '../../contexts/BabyContext';
 import TopBar from '../layout/TopBar';
 import CustomDatePicker from './CustomDatePicker';
+import CustomSelect from './CustomSelect';
 import './WelcomeFormPage.css';
 
 const appFeatures = [
@@ -230,18 +231,13 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
                                 </div>
 
                                 <div className="profile-form-group">
-                                    <label>Select your role</label>
-                                    <select
+                                    <label>Who's on duty? 👶</label>
+                                    <CustomSelect
                                         value={parentRole}
-                                        onChange={(e) => handleRoleSelect(e.target.value)}
-                                    >
-                                        <option value="">Select your role</option>
-                                        {parentRoleOptions.map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        onChange={handleRoleSelect}
+                                        options={parentRoleOptions}
+                                        placeholder="Please select"
+                                    />
                                 </div>
 
                                 <div className="profile-form-row">
@@ -270,20 +266,21 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
 
                                 <div className="profile-form-group">
                                     <label>Blood group</label>
-                                    <select
+                                    <CustomSelect
                                         value={formData.bloodType}
-                                        onChange={(e) => handleChange('bloodType', e.target.value)}
-                                    >
-                                        <option value="">Select blood group</option>
-                                        <option value="A+">A+</option>
-                                        <option value="A-">A-</option>
-                                        <option value="B+">B+</option>
-                                        <option value="B-">B-</option>
-                                        <option value="AB+">AB+</option>
-                                        <option value="AB-">AB-</option>
-                                        <option value="O+">O+</option>
-                                        <option value="O-">O-</option>
-                                    </select>
+                                        onChange={(value) => handleChange('bloodType', value)}
+                                        options={[
+                                            { value: 'A+', label: 'A+' },
+                                            { value: 'A-', label: 'A-' },
+                                            { value: 'B+', label: 'B+' },
+                                            { value: 'B-', label: 'B-' },
+                                            { value: 'AB+', label: 'AB+' },
+                                            { value: 'AB-', label: 'AB-' },
+                                            { value: 'O+', label: 'O+' },
+                                            { value: 'O-', label: 'O-' }
+                                        ]}
+                                        placeholder="Select blood group"
+                                    />
                                 </div>
                             </div>
 
