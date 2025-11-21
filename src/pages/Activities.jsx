@@ -236,6 +236,7 @@ const Activities = () => {
                 <label className="form-label">Activity Title *</label>
                 <input
                   className="form-input"
+                  style={{ fontSize: "1rem" }}
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -247,10 +248,11 @@ const Activities = () => {
                 <label className="form-label">Icon</label>
                 <input
                   className="form-input"
+                  style={{ fontSize: "1rem" }}
                   type="text"
                   value={formData.icon}
                   onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                  placeholder="🎨"
+                  placeholder="??"
                   maxLength="2"
                 />
               </div>
@@ -258,6 +260,7 @@ const Activities = () => {
                 <label className="form-label">Duration</label>
                 <input
                   className="form-input"
+                  style={{ fontSize: "1rem" }}
                   type="text"
                   value={formData.duration}
                   onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
@@ -268,6 +271,7 @@ const Activities = () => {
                 <label className="form-label">Date & Time</label>
                 <input
                   className="form-input"
+                  style={{ fontSize: "0.95rem" }}
                   type="datetime-local"
                   value={formData.timestamp}
                   onChange={(e) => setFormData({ ...formData, timestamp: e.target.value })}
@@ -278,6 +282,7 @@ const Activities = () => {
                 <label className="form-label">Notes</label>
                 <textarea
                   className="form-input"
+                  style={{ fontSize: "1rem" }}
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Optional notes about the activity"

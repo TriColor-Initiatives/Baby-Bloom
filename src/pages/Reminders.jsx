@@ -253,16 +253,24 @@ export default function Reminders() {
                         <form onSubmit={handleSubmit} className="modal-body" style={{ display: 'grid', gap: 'var(--spacing-md)' }}>
                             <div>
                                 <label className="form-label">Title</label>
-                                <input className="form-input" name="title" value={form.title} onChange={handleChange} placeholder="Reminder title" required />
+                                <input className="form-input" style={{ fontSize: "1rem" }} name="title" value={form.title} onChange={handleChange} placeholder="Reminder title" required />
                             </div>
                             <div>
                                 <label className="form-label">Due</label>
-                                <input className="form-input" type="datetime-local" name="dueAt" value={form.dueAt} onChange={handleChange} required />
+                                <input
+                                  className="form-input"
+                                  style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}
+                                  type="datetime-local"
+                                  name="dueAt"
+                                  value={form.dueAt}
+                                  onChange={handleChange}
+                                  required
+                                />
                             </div>
                             <div>
                                 <label className="form-label">Category</label>
                                 <CustomSelect
-                                  className="form-input"
+                                  className="small"
                                   value={form.category}
                                   onChange={(val) => setForm((f) => ({ ...f, category: val }))}
                                   options={[
@@ -278,11 +286,11 @@ export default function Reminders() {
                             </div>
                             <div>
                                 <label className="form-label">Icon</label>
-                                <input className="form-input" name="icon" value={form.icon} onChange={handleChange} placeholder="e.g., ⏰" />
+                                <input className="form-input" style={{ fontSize: "1rem" }} name="icon" value={form.icon} onChange={handleChange} placeholder="e.g., ?" />
                             </div>
                             <div>
                                 <label className="form-label">Notes</label>
-                                <textarea className="form-input" name="notes" value={form.notes} onChange={handleChange} placeholder="Optional"></textarea>
+                                <textarea className="form-input" style={{ fontSize: "1rem" }} name="notes" value={form.notes} onChange={handleChange} placeholder="Optional"></textarea>
                             </div>
 
                             <div style={{ display: 'flex', gap: 'var(--spacing-sm)', justifyContent: 'flex-end' }}>

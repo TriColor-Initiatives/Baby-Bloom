@@ -201,7 +201,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem;
+  padding: 1.25rem;
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
@@ -218,8 +218,8 @@
 .advanced-analytics-header h2,
 .calendar-header h2,
 .goals-header h2 {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.35rem;
+  font-weight: 800;
   margin: 0;
   color: var(--text-primary);
   letter-spacing: -0.01em;
@@ -259,7 +259,7 @@
 .advanced-analytics-content,
 .calendar-content,
 .goals-content {
-  padding: 1.5rem;
+  padding: 1.25rem;
   flex: 1;
   overflow-y: auto;
   min-height: 0;
@@ -280,32 +280,32 @@
 
 /* Form Styles */
 .feeding-form {
-  padding: 1.5rem;
+  padding: 1.25rem;
   flex: 1;
   overflow-y: auto;
   min-height: 0;
 }
 
 .form-group {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
 }
 
 .form-group label {
   display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.9375rem;
+  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.7rem 0.95rem;
   border: 2px solid var(--border);
   border-radius: 12px;
-  font-size: 0.9375rem;
+  font-size: 0.95rem;
   color: var(--text-primary);
   background: var(--surface-variant);
   transition: all var(--transition-normal);
@@ -327,12 +327,12 @@
 }
 
 .form-group .custom-select-trigger {
-  padding: 0.75rem 1rem;
+  padding: 0.7rem 0.95rem;
   border-radius: 12px;
   border: 2px solid var(--border);
   background: var(--surface-variant);
   color: var(--text-primary);
-  font-size: 0.9375rem;
+  font-size: 0.95rem;
   transition: all var(--transition-normal);
 }
 
@@ -377,7 +377,7 @@
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 
 /* Type Selector */
@@ -421,7 +421,7 @@
 .modal-actions {
   display: flex;
   gap: 0.75rem;
-  padding: 1.5rem;
+  padding: 1.25rem;
   border-top: 1px solid var(--border);
   position: sticky;
   bottom: 0;

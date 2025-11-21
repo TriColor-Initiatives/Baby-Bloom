@@ -11,7 +11,7 @@
     padding: 0.75rem 1rem;
     border-radius: 12px;
     border: 2px solid var(--border);
-    background: var(--surface-variant);
+    background: var(--surface);
     color: var(--text-primary);
     font-size: 0.9375rem;
     cursor: pointer;
@@ -40,6 +40,10 @@
     font-weight: 600;
 }
 
+.custom-select-value {
+    color: var(--text-primary);
+}
+
 .custom-select-icon {
     margin-left: 0.75rem;
     font-size: 0.9rem;
@@ -49,6 +53,12 @@
 
 .custom-select.open .custom-select-icon {
     transform: rotate(180deg);
+}
+
+.custom-select.small .custom-select-trigger {
+    font-size: 0.95rem;
+    background: var(--surface);
+    color: var(--text-primary);
 }
 
 .custom-select-menu {

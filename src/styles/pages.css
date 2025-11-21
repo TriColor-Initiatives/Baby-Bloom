@@ -488,6 +488,29 @@ button.btn,
   font-size: var(--font-size-sm);
 }
 
+/* Consistent modal form sizing */
+.modal .form-label {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.35rem;
+}
+
+.modal .form-input {
+  padding: 0.7rem 0.95rem;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-size: 0.95rem;
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.modal .form-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+  outline: none;
+}
+
 .form-input:focus {
   outline: none;
   border-color: var(--primary);
