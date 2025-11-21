@@ -5,6 +5,7 @@ import FeedingTimer from '../components/FeedingTimer';
 import FeedingReminder from '../components/FeedingReminder';
 import FeedingCalendar from '../components/FeedingCalendar';
 import FeedingGoals from '../components/FeedingGoals';
+import CustomSelect from '../components/onboarding/CustomSelect';
 import '../styles/pages.css';
 import './Feeding.css';
 
@@ -493,14 +494,15 @@ const Feeding = () => {
                   </div>
                   <div className="form-group">
                     <label>Type</label>
-                    <select
+                    <CustomSelect
                       value={formData.foodType}
-                      onChange={(e) => setFormData({ ...formData, foodType: e.target.value })}
-                    >
-                      <option value="">Select type</option>
-                      <option value="formula">Formula</option>
-                      <option value="breast-milk">Breast Milk</option>
-                    </select>
+                      onChange={(val) => setFormData({ ...formData, foodType: val })}
+                      options={[
+                        { value: 'formula', label: 'Formula' },
+                        { value: 'breast-milk', label: 'Breast Milk' },
+                      ]}
+                      placeholder="Select type"
+                    />
                   </div>
                 </>
               )}
@@ -520,14 +522,16 @@ const Feeding = () => {
                     </div>
                     <div className="form-group">
                       <label>Side</label>
-                      <select
+                      <CustomSelect
                         value={formData.side}
-                        onChange={(e) => setFormData({ ...formData, side: e.target.value })}
-                      >
-                        <option value="left">Left</option>
-                        <option value="right">Right</option>
-                        <option value="both">Both</option>
-                      </select>
+                        onChange={(val) => setFormData({ ...formData, side: val })}
+                        options={[
+                          { value: 'left', label: 'Left' },
+                          { value: 'right', label: 'Right' },
+                          { value: 'both', label: 'Both' },
+                        ]}
+                        placeholder="Choose side"
+                      />
                     </div>
                   </div>
                 </>

@@ -1,0 +1,103 @@
+.custom-select {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--surface-variant);
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.custom-select-trigger:hover {
+    border-color: var(--primary);
+    background: var(--surface);
+}
+
+.custom-select-trigger:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+    background: var(--surface);
+}
+
+.custom-select.disabled .custom-select-trigger {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.custom-select-value.placeholder {
+    color: var(--text-tertiary);
+    font-weight: 600;
+}
+
+.custom-select-icon {
+    margin-left: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    transition: transform var(--transition-fast);
+}
+
+.custom-select.open .custom-select-icon {
+    transform: rotate(180deg);
+}
+
+.custom-select-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
+    overflow: hidden;
+    z-index: 20;
+    padding: 0.125rem 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.custom-select-option {
+    padding: 0.55rem 0.9rem;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    line-height: 1.35;
+    transition: background var(--transition-fast), color var(--transition-fast), font-size var(--transition-fast);
+}
+
+.custom-select-option:hover {
+    background: var(--primary-light);
+}
+
+.custom-select-option.selected {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .custom-select-trigger {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .custom-select-menu {
+    background: var(--surface);
+    border-color: var(--border);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .custom-select-option:hover {
+    background: var(--border);
+}

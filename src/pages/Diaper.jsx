@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import CustomSelect from '../components/onboarding/CustomSelect';
 import '../styles/pages.css';
 
 const Diaper = () => {
@@ -199,15 +200,17 @@ const Diaper = () => {
             <form onSubmit={handleSubmit} style={{ padding: 'var(--spacing-lg)' }}>
               <div className="form-group">
                 <label>Change Type *</label>
-                <select
+                <CustomSelect
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  onChange={(val) => setFormData({ ...formData, type: val })}
+                  options={[
+                    { value: 'wet', label: '?? Wet Only' },
+                    { value: 'dirty', label: '?? Dirty Only' },
+                    { value: 'both', label: '???? Wet & Dirty' },
+                  ]}
+                  placeholder="Select type"
                   required
-                >
-                  <option value="wet">💧 Wet Only</option>
-                  <option value="dirty">💩 Dirty Only</option>
-                  <option value="both">💧💩 Wet & Dirty</option>
-                </select>
+                />
               </div>
 
               <div className="form-group">

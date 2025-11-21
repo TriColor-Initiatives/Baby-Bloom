@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import CustomSelect from '../components/onboarding/CustomSelect';
 import '../styles/pages.css';
 import './sleep.css';
 
@@ -261,14 +262,16 @@ const Sleep = () => {
             <form onSubmit={handleSubmit} className="sleep-form">
               <div className="form-group">
                 <label>Sleep Type *</label>
-                <select
+                <CustomSelect
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  onChange={(val) => setFormData({ ...formData, type: val })}
+                  options={[
+                    { value: 'nap', label: '🛌 Nap' },
+                    { value: 'night', label: '🌙 Night Sleep' },
+                  ]}
+                  placeholder="Select sleep type"
                   required
-                >
-                  <option value="nap">💤 Nap</option>
-                  <option value="night">🌙 Night Sleep</option>
-                </select>
+                />
               </div>
 
               <div className="form-group">
@@ -291,18 +294,20 @@ const Sleep = () => {
                 />
               </div>
 
-              <div className="form-group">
-                <label>Sleep Quality</label>
-                <select
-                  value={formData.quality}
-                  onChange={(e) => setFormData({ ...formData, quality: e.target.value })}
-                >
-                  <option value="excellent">⭐⭐⭐ Excellent</option>
-                  <option value="good">⭐⭐ Good</option>
-                  <option value="fair">⭐ Fair</option>
-                  <option value="poor">Poor</option>
-                </select>
-              </div>
+            <div className="form-group">
+              <label>Sleep Quality</label>
+              <CustomSelect
+                value={formData.quality}
+                onChange={(val) => setFormData({ ...formData, quality: val })}
+                options={[
+                  { value: 'excellent', label: '?????? Excellent' },
+                  { value: 'good', label: '???? Good' },
+                  { value: 'fair', label: '?? Fair' },
+                  { value: 'poor', label: 'Poor' },
+                ]}
+                placeholder="Select quality"
+              />
+            </div>
 
               <div className="form-group">
                 <label>Notes</label>

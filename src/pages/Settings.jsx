@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useBaby } from '../contexts/BabyContext';
+import CustomSelect from '../components/onboarding/CustomSelect';
 import '../styles/pages.css';
 import './Settings.css';
 
@@ -271,21 +272,22 @@ export default function Settings() {
 
             <div className="setting-item-vertical">
               <label className="setting-label">Blood Type</label>
-              <select
+              <CustomSelect
                 className="setting-input"
                 value={babyProfile.bloodType}
-                onChange={(e) => handleProfileChange('bloodType', e.target.value)}
-              >
-                <option value="">Select blood type</option>
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-              </select>
+                onChange={(val) => handleProfileChange('bloodType', val)}
+                options={[
+                  { value: 'A+', label: 'A+' },
+                  { value: 'A-', label: 'A-' },
+                  { value: 'B+', label: 'B+' },
+                  { value: 'B-', label: 'B-' },
+                  { value: 'AB+', label: 'AB+' },
+                  { value: 'AB-', label: 'AB-' },
+                  { value: 'O+', label: 'O+' },
+                  { value: 'O-', label: 'O-' },
+                ]}
+                placeholder="Select blood type"
+              />
             </div>
 
             <div className="setting-item-vertical">
@@ -388,7 +390,7 @@ export default function Settings() {
         {/* Preferences Section */}
         <div className="settings-section">
           <div className="settings-section-header">
-            <h2>⚡ Preferences</h2>
+            <h2>? Preferences</h2>
             <p>Adjust app behavior and display settings</p>
           </div>
 
@@ -400,18 +402,20 @@ export default function Settings() {
                   Choose your preferred language
                 </div>
               </div>
-              <select 
+              <CustomSelect
                 className="setting-select"
                 value={language}
-                onChange={(e) => handleLanguageChange(e.target.value)}
-              >
-                <option value="en">🇺🇸 English</option>
-                <option value="es">🇪🇸 Español</option>
-                <option value="fr">🇫🇷 Français</option>
-                <option value="de">🇩🇪 Deutsch</option>
-                <option value="hi">🇮🇳 हिंदी</option>
-                <option value="zh">🇨🇳 中文</option>
-              </select>
+                onChange={handleLanguageChange}
+                options={[
+                  { value: 'en', label: '???? English' },
+                  { value: 'es', label: '???? Espa?ol' },
+                  { value: 'fr', label: '???? Fran?ais' },
+                  { value: 'de', label: '???? Deutsch' },
+                  { value: 'hi', label: '???? ?????' },
+                  { value: 'zh', label: '???? ??' },
+                ]}
+                placeholder="Select language"
+              />
             </div>
 
             <div className="setting-item">
@@ -427,7 +431,7 @@ export default function Settings() {
                     type="radio"
                     name="timeFormat"
                     value="12h"
-                    checked={timeFormat === '12h'}
+                    checked={timeFormat === "12h"}
                     onChange={(e) => handleTimeFormatChange(e.target.value)}
                   />
                   <span>12-hour</span>
@@ -437,7 +441,7 @@ export default function Settings() {
                     type="radio"
                     name="timeFormat"
                     value="24h"
-                    checked={timeFormat === '24h'}
+                    checked={timeFormat === "24h"}
                     onChange={(e) => handleTimeFormatChange(e.target.value)}
                   />
                   <span>24-hour</span>
@@ -446,7 +450,6 @@ export default function Settings() {
             </div>
           </div>
         </div>
-
         {/* Notifications Section */}
         <div className="settings-section">
           <div className="settings-section-header">

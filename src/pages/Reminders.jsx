@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import CustomSelect from '../components/onboarding/CustomSelect';
 import '../styles/pages.css';
 
 const STORAGE_KEY = 'baby-bloom-reminders';
@@ -260,14 +261,20 @@ export default function Reminders() {
                             </div>
                             <div>
                                 <label className="form-label">Category</label>
-                                <select className="form-input" name="category" value={form.category} onChange={handleChange}>
-                                    <option value="general">General</option>
-                                    <option value="feeding">Feeding</option>
-                                    <option value="sleep">Sleep</option>
-                                    <option value="diaper">Diaper</option>
-                                    <option value="health">Health</option>
-                                    <option value="photos">Photos</option>
-                                </select>
+                                <CustomSelect
+                                  className="form-input"
+                                  value={form.category}
+                                  onChange={(val) => setForm((f) => ({ ...f, category: val }))}
+                                  options={[
+                                    { value: 'general', label: 'General' },
+                                    { value: 'feeding', label: 'Feeding' },
+                                    { value: 'sleep', label: 'Sleep' },
+                                    { value: 'diaper', label: 'Diaper' },
+                                    { value: 'health', label: 'Health' },
+                                    { value: 'photos', label: 'Photos' },
+                                  ]}
+                                  placeholder="Select category"
+                                />
                             </div>
                             <div>
                                 <label className="form-label">Icon</label>

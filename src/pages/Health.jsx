@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import MedicationManager from '../components/health/MedicationManager';
 import SymptomLogger from '../components/health/SymptomLogger';
 import EmergencyInfo from '../components/health/EmergencyInfo';
+import CustomSelect from '../components/onboarding/CustomSelect';
 import '../styles/pages.css';
 import './Health.css';
 
@@ -354,17 +355,19 @@ const Health = () => {
             <form onSubmit={handleSubmit} className="health-form">
               <div className="form-group">
                 <label>Record Type *</label>
-                <select
+                <CustomSelect
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  onChange={(val) => setFormData({ ...formData, type: val })}
+                  options={[
+                    { value: 'checkup', label: '? Check-up' },
+                    { value: 'illness', label: '?? Illness' },
+                    { value: 'medication', label: '?? Medication' },
+                    { value: 'vaccination', label: '?? Vaccination' },
+                    { value: 'symptom', label: '?? Symptom' },
+                  ]}
+                  placeholder="Select record type"
                   required
-                >
-                  <option value="checkup">✅ Check-up</option>
-                  <option value="illness">🤒 Illness</option>
-                  <option value="medication">💊 Medication</option>
-                  <option value="vaccination">💉 Vaccination</option>
-                  <option value="symptom">🩺 Symptom</option>
-                </select>
+                />
               </div>
 
               <div className="form-group">

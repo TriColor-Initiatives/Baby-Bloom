@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useBaby } from '../contexts/BabyContext';
+import CustomSelect from '../components/onboarding/CustomSelect';
 import '../styles/pages.css';
 
 const STORAGE_KEY = 'baby-bloom-milestones';
@@ -378,17 +379,19 @@ const Milestones = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  >
-                    <option value="motor">🏃 Motor</option>
-                    <option value="language">💬 Language</option>
-                    <option value="social">👥 Social</option>
-                    <option value="cognitive">🧠 Cognitive</option>
-                  </select>
-                </div>
+                <label>Category</label>
+                <CustomSelect
+                  value={formData.category}
+                  onChange={(val) => setFormData({ ...formData, category: val })}
+                  options={[
+                    { value: 'motor', label: '?? Motor' },
+                    { value: 'language', label: '??? Language' },
+                    { value: 'social', label: '?? Social' },
+                    { value: 'cognitive', label: '?? Cognitive' },
+                  ]}
+                  placeholder="Select category"
+                />
+              </div>
               </div>
 
               <div className="form-group">
