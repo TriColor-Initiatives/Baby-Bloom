@@ -1,6 +1,7 @@
 import '../styles/pages.css';
 import { useEffect, useMemo, useState } from 'react';
 import { recipeLibrary } from '../data/recipes';
+import CustomSelect from '../components/onboarding/CustomSelect';
 
 const FAVORITES_KEY = 'baby-bloom-recipe-favorites';
 const PLAN_KEY = 'baby-bloom-ai-plan';
@@ -43,6 +44,15 @@ const Recipes = () => {
     mealsPerDay: 3,
     specialRequest: 'Keep prep under 20 minutes and use pantry basics.'
   }));
+  const textureOptions = [
+    { value: 'purees/mashed', label: 'Purees / mashed' },
+    { value: 'mashed/soft-finger', label: 'Mashed / soft finger foods' },
+    { value: 'mixed textures', label: 'Mixed textures' }
+  ];
+  const mealsOptions = [
+    { value: '3', label: '3 meals' },
+    { value: '4', label: '4 small meals' }
+  ];
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -370,26 +380,25 @@ Output valid JSON only, no prose, markdown, or <think> content.`
             <div className="form-row">
               <div className="form-field">
                 <label className="form-label">Texture preference</label>
-                <select
-                  className="form-input"
+                <CustomSelect
                   value={aiForm.texture}
-                  onChange={(e) => setAiForm({ ...aiForm, texture: e.target.value })}
-                >
-                  <option value="purees/mashed">Purees / mashed</option>
-                  <option value="mashed/soft-finger">Mashed / soft finger foods</option>
-                  <option value="mixed textures">Mixed textures</option>
-                </select>
+                  onChange={(val) => setAiForm({ ...aiForm, texture: val })}
+                  options={textureOptions}
+                  placeholder="Select texture"
+                  className="small"
+                  required
+                />
               </div>
               <div className="form-field">
                 <label className="form-label">Meals per day</label>
-                <select
-                  className="form-input"
-                  value={aiForm.mealsPerDay}
-                  onChange={(e) => setAiForm({ ...aiForm, mealsPerDay: Number(e.target.value) })}
-                >
-                  <option value={3}>3 meals</option>
-                  <option value={4}>4 small meals</option>
-                </select>
+                <CustomSelect
+                  value={String(aiForm.mealsPerDay)}
+                  onChange={(val) => setAiForm({ ...aiForm, mealsPerDay: Number(val) })}
+                  options={mealsOptions}
+                  placeholder="Select meals"
+                  className="small"
+                  required
+                />
               </div>
             </div>
 

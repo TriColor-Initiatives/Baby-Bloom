@@ -8,12 +8,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.75rem 1rem;
+    padding: 0.6rem 0.8rem;
     border-radius: 12px;
     border: 2px solid var(--border);
     background: var(--surface);
     color: var(--text-primary);
-    font-size: 0.9375rem;
+    font-size: 0.8rem;
     cursor: pointer;
     transition: all var(--transition-normal);
 }
@@ -42,11 +42,12 @@
 
 .custom-select-value {
     color: var(--text-primary);
+    font-size: 0.78rem;
 }
 
 .custom-select-icon {
     margin-left: 0.75rem;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-secondary);
     transition: transform var(--transition-fast);
 }
@@ -81,7 +82,7 @@
     padding: 0.55rem 0.9rem;
     cursor: pointer;
     color: var(--text-primary);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     line-height: 1.35;
     transition: background var(--transition-fast), color var(--transition-fast), font-size var(--transition-fast);
 }
