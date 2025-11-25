@@ -4,6 +4,14 @@ import { recipeLibrary } from '../data/recipes';
 
 const FAVORITES_KEY = 'baby-bloom-recipe-favorites';
 const PLAN_KEY = 'baby-bloom-ai-plan';
+const PROFILE_AGE_KEY = 'babyAgeMonths';
+
+const getProfileAge = () => {
+  if (typeof window === 'undefined') return 8;
+  const raw = localStorage.getItem(PROFILE_AGE_KEY);
+  const num = Number(raw);
+  return Number.isFinite(num) && num > 0 ? num : 8;
+};
 
 const loadFavorites = () => {
   if (typeof window === 'undefined') return [];
@@ -27,14 +35,14 @@ const Recipes = () => {
   const [aiStatus, setAiStatus] = useState('idle');
   const [aiError, setAiError] = useState('');
   const [dietFilter, setDietFilter] = useState('all');
-  const [aiForm, setAiForm] = useState({
-    ageMonths: 8,
+  const [aiForm, setAiForm] = useState(() => ({
+    ageMonths: getProfileAge(),
     allergens: 'dairy, eggs',
     dislikes: '',
     texture: 'purees/mashed',
     mealsPerDay: 3,
     specialRequest: 'Keep prep under 20 minutes and use pantry basics.'
-  });
+  }));
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -319,7 +327,10 @@ Output valid JSON only, no prose, markdown, or <think> content.`
               </div>
             ) : (
               displayedRecipes.map((recipe) => (
-                <div key={recipe.id} className="card recipe-card">
+                <div
+                  key={recipe.id}
+                  className={`card recipe-card ${recipe.diet === 'vegetarian' ? 'veg' : 'non-veg'}`}
+                >
                   <div className="recipe-icon" aria-hidden="true">{recipe.icon}</div>
                   <div className="recipe-meta">
                     <h4 className="recipe-title">{recipe.name}</h4>
@@ -358,18 +369,6 @@ Output valid JSON only, no prose, markdown, or <think> content.`
           <form className="ai-form" onSubmit={generateAiPlan}>
             <div className="form-row">
               <div className="form-field">
-                <label className="form-label">Baby age (months)</label>
-                <input
-                  className="form-input"
-                  type="number"
-                  min="6"
-                  max="24"
-                  value={aiForm.ageMonths}
-                  onChange={(e) => setAiForm({ ...aiForm, ageMonths: Number(e.target.value) })}
-                  required
-                />
-              </div>
-              <div className="form-field">
                 <label className="form-label">Texture preference</label>
                 <select
                   className="form-input"
@@ -393,6 +392,8 @@ Output valid JSON only, no prose, markdown, or <think> content.`
                 </select>
               </div>
             </div>
+
+            <div className="ai-age-note">Using your saved baby age from profile.</div>
 
             <div className="form-row">
               <div className="form-field">
