@@ -610,6 +610,7 @@ button.btn,
     radial-gradient(circle at 80% 0%, var(--card-speckle-b), transparent 30%);
   opacity: 0;
   transition: opacity 200ms ease;
+  pointer-events: none;
 }
 
 .recipes-page .recipe-card:hover {
