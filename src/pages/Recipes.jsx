@@ -534,7 +534,7 @@ Output valid JSON only, no prose, markdown, or <think> content.`
 
       {selectedRecipe && (
         <div className="modal-overlay" onClick={() => setSelectedRecipe(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal recipe-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{selectedRecipe.name}</h3>
               <button className="modal-close" onClick={() => setSelectedRecipe(null)} aria-label="Close">×</button>

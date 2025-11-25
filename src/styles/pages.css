@@ -712,6 +712,45 @@ button.btn,
   color: var(--text-secondary);
 }
 
+.recipes-page .recipe-modal {
+  background: var(--surface);
+  border-radius: 24px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25), 0 10px 30px rgba(0, 0, 0, 0.15);
+  border: 2px solid rgba(103, 80, 164, 0.08);
+  background-image: radial-gradient(circle at 20% 15%, rgba(103, 80, 164, 0.08), transparent 35%),
+    radial-gradient(circle at 80% 0%, rgba(255, 179, 128, 0.08), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(144, 238, 144, 0.08), transparent 40%);
+}
+
+.recipes-page .recipe-modal h3 {
+  color: #6750a4;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.recipes-page .recipe-modal h4 {
+  color: #ff8c94;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.recipes-page .recipe-modal .recipe-modal-meta span {
+  font-weight: 700;
+  color: #6750a4;
+}
+
+.recipes-page .recipe-modal .recipe-nutrition {
+  color: #1e88e5;
+}
+
+.recipes-page .recipe-modal .recipe-list li {
+  color: #37474f;
+}
+
+.recipes-page .recipe-modal p strong {
+  color: #ffb380;
+}
+
 .recipes-page .recipe-list {
   padding-left: 20px;
   color: var(--text-secondary);
