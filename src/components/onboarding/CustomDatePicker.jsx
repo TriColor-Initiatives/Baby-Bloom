@@ -4,18 +4,29 @@ import './CustomDatePicker.css';
 const CustomDatePicker = ({ value, onChange, maxDate }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [displayDate, setDisplayDate] = useState(value ? new Date(value) : new Date());
+    const [showMonthPicker, setShowMonthPicker] = useState(false);
+    const [showYearPicker, setShowYearPicker] = useState(false);
     const pickerRef = useRef(null);
+    const inputRef = useRef(null);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (pickerRef.current && !pickerRef.current.contains(event.target)) {
                 setIsOpen(false);
+                setShowMonthPicker(false);
+                setShowYearPicker(false);
             }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        if (isOpen && inputRef.current) {
+            inputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, [isOpen]);
 
     const formatDisplayValue = (dateStr) => {
         if (!dateStr) return '';
@@ -81,6 +92,30 @@ const CustomDatePicker = ({ value, onChange, maxDate }) => {
         setDisplayDate(today);
     };
 
+    // Get available years (last 1 year: current year and previous year)
+    const getAvailableYears = () => {
+        const currentYear = new Date().getFullYear();
+        return [currentYear, currentYear - 1];
+    };
+
+    // Get all months
+    const getMonths = () => {
+        return [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+    };
+
+    const handleYearSelect = (year) => {
+        setDisplayDate(new Date(year, displayDate.getMonth(), 1));
+        setShowYearPicker(false);
+    };
+
+    const handleMonthSelect = (monthIndex) => {
+        setDisplayDate(new Date(displayDate.getFullYear(), monthIndex, 1));
+        setShowMonthPicker(false);
+    };
+
     const isDateDisabled = (date) => {
         if (!maxDate) return false;
         return date > new Date(maxDate);
@@ -101,7 +136,7 @@ const CustomDatePicker = ({ value, onChange, maxDate }) => {
 
     return (
         <div className="custom-date-picker" ref={pickerRef}>
-            <div className="date-input-wrapper" onClick={() => setIsOpen(!isOpen)}>
+            <div className="date-input-wrapper" onClick={() => setIsOpen(!isOpen)} ref={inputRef}>
                 <input
                     type="text"
                     value={formatDisplayValue(value)}
@@ -118,9 +153,68 @@ const CustomDatePicker = ({ value, onChange, maxDate }) => {
                         <button type="button" className="nav-btn" onClick={goToPreviousMonth}>
                             ←
                         </button>
-                        <span className="current-month">
-                            {displayDate.toLocaleDateString('default', { month: 'long', year: 'numeric' })}
-                        </span>
+                        <div className="date-header-selectors">
+                            <div className="month-selector-wrapper">
+                                <button
+                                    type="button"
+                                    className="month-year-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowMonthPicker(!showMonthPicker);
+                                        setShowYearPicker(false);
+                                    }}
+                                >
+                                    {displayDate.toLocaleDateString('default', { month: 'long' })}
+                                </button>
+                                {/* Month Picker Popup */}
+                                {showMonthPicker && (
+                                    <div className="month-picker-popup" onClick={(e) => e.stopPropagation()}>
+                                        <div className="month-picker-grid">
+                                            {getMonths().map((month, index) => (
+                                                <button
+                                                    key={index}
+                                                    type="button"
+                                                    className={`month-picker-item ${displayDate.getMonth() === index ? 'selected' : ''}`}
+                                                    onClick={() => handleMonthSelect(index)}
+                                                >
+                                                    {month.substring(0, 3)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="year-selector-wrapper">
+                                <button
+                                    type="button"
+                                    className="month-year-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowYearPicker(true);
+                                        setShowMonthPicker(false);
+                                    }}
+                                >
+                                    {displayDate.getFullYear()}
+                                </button>
+                                {/* Year Picker Popup */}
+                                {showYearPicker && (
+                                    <div className="year-picker-popup" onClick={(e) => e.stopPropagation()}>
+                                        <div className="year-picker-list">
+                                            {getAvailableYears().map((year) => (
+                                                <button
+                                                    key={year}
+                                                    type="button"
+                                                    className={`year-picker-item ${displayDate.getFullYear() === year ? 'selected' : ''}`}
+                                                    onClick={() => handleYearSelect(year)}
+                                                >
+                                                    {year}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                         <button type="button" className="nav-btn" onClick={goToNextMonth}>
                             →
                         </button>

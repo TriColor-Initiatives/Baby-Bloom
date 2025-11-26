@@ -59,12 +59,12 @@
     top: calc(100% + 0.5rem);
     left: 0;
     right: auto;
-    width: min(85vw, 300px);
+    width: min(80vw, 260px);
     background: white;
     border-radius: 12px;
     box-shadow: 0 16px 40px rgba(31, 36, 64, 0.2), 0 0 1px rgba(31, 36, 64, 0.08);
     z-index: 10001;
-    padding: 0.5rem;
+    padding: 0.3rem;
     animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     border: 2px solid rgba(85, 104, 201, 0.1);
 }
@@ -88,6 +88,7 @@
     margin-bottom: 0.5rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid #f0f2f8;
+    position: relative;
 }
 
 .current-month {
@@ -95,6 +96,143 @@
     font-weight: 800;
     color: #1f2440;
     letter-spacing: -0.02em;
+}
+
+.date-header-selectors {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.month-selector-wrapper,
+.year-selector-wrapper {
+    position: relative;
+}
+
+.month-year-btn {
+    background: transparent;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #1f2440;
+    letter-spacing: -0.02em;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.month-year-btn:hover {
+    background: rgba(85, 104, 201, 0.1);
+    color: #5568c9;
+}
+
+.month-picker-popup {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    transform: none;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 16px 40px rgba(31, 36, 64, 0.2), 0 0 1px rgba(31, 36, 64, 0.08);
+    z-index: 10002;
+    padding: 0.5rem;
+    border: 2px solid rgba(85, 104, 201, 0.1);
+    animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Prevent transient tall layout flashes by constraining height and isolating paint/layout */
+    max-height: 240px;
+    overflow-y: auto;
+    transform-origin: top left;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+.year-picker-popup {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    transform: none;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 16px 40px rgba(31, 36, 64, 0.2), 0 0 1px rgba(31, 36, 64, 0.08);
+    z-index: 10002;
+    padding: 0.5rem;
+    border: 2px solid rgba(85, 104, 201, 0.1);
+    animation: none;
+    max-height: 240px;
+    overflow-y: auto;
+    transform-origin: top right;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+.month-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.3rem;
+    width: 160px;
+}
+
+.month-picker-item {
+    padding: 0.35rem 0.5rem;
+    border: 2px solid rgba(85, 104, 201, 0.1);
+    border-radius: 6px;
+    background: #f8f9fe;
+    color: #1f2440;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.month-picker-item:hover {
+    background: rgba(85, 104, 201, 0.1);
+    border-color: rgba(85, 104, 201, 0.3);
+    color: #5568c9;
+    transform: scale(1.05);
+}
+
+.month-picker-item.selected {
+    background: linear-gradient(135deg, #5568c9 0%, #7b9dff 100%);
+    color: white;
+    border-color: #5568c9;
+    box-shadow: 0 4px 12px rgba(85, 104, 201, 0.25);
+}
+
+.year-picker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 90px;
+}
+
+.year-picker-item {
+    padding: 0.4rem 0.7rem;
+    border: 2px solid rgba(85, 104, 201, 0.1);
+    border-radius: 6px;
+    background: #f8f9fe;
+    color: #1f2440;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.year-picker-item:hover {
+    background: rgba(85, 104, 201, 0.1);
+    border-color: rgba(85, 104, 201, 0.3);
+    color: #5568c9;
+    transform: scale(1.05);
+}
+
+.year-picker-item.selected {
+    background: linear-gradient(135deg, #5568c9 0%, #7b9dff 100%);
+    color: white;
+    border-color: #5568c9;
+    box-shadow: 0 4px 12px rgba(85, 104, 201, 0.25);
 }
 
 .nav-btn {
@@ -124,13 +262,13 @@
 .picker-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 0.2rem;
-    margin-bottom: 0.25rem;
+    gap: 0.15rem;
+    margin-bottom: 0.2rem;
 }
 
 .weekday {
     text-align: center;
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     font-weight: 800;
     color: #7b8199;
     text-transform: uppercase;
@@ -141,19 +279,19 @@
 .picker-days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 0.2rem;
-    margin-bottom: 0.45rem;
+    gap: 0.15rem;
+    margin-bottom: 0.35rem;
 }
 
 .day-cell {
-    height: 28px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
     border: none;
     background: transparent;
     border-radius: 10px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 700;
     color: #1f2440;
     cursor: pointer;
@@ -262,5 +400,29 @@
 
     .current-month {
         font-size: 0.9rem;
+    }
+
+    .month-year-btn {
+        font-size: 0.8rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .month-picker-grid {
+        width: 140px;
+        gap: 0.25rem;
+    }
+
+    .month-picker-item {
+        padding: 0.3rem 0.4rem;
+        font-size: 0.65rem;
+    }
+
+    .year-picker-list {
+        min-width: 80px;
+    }
+
+    .year-picker-item {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.7rem;
     }
 }

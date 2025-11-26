@@ -12,56 +12,64 @@ const appFeatures = [
         description: 'Log bottle feeds, breastfeeding, and solid foods with timestamps.',
         icon: '\u{1F37C}',
         color: '#FFB6D9',
-        gradient: 'linear-gradient(135deg, #FFB6D9 0%, #FFD1E8 100%)'
+        gradient: 'linear-gradient(135deg, #FFB6D9 0%, #FFD1E8 100%)',
+        popupDetails: 'Set up feed reminders and track left/right breast, bottle amounts, and solids with notes.'
     },
     {
         title: 'Health Records',
         description: 'Track vaccinations, check-ups, medications, and symptoms.',
         icon: '\u{1FA7A}',
         color: '#B5E5CF',
-        gradient: 'linear-gradient(135deg, #B5E5CF 0%, #D4F4E7 100%)'
+        gradient: 'linear-gradient(135deg, #B5E5CF 0%, #D4F4E7 100%)',
+        popupDetails: 'Keep vaccine dates, medications, symptoms, and doctor notes together with quick reminders.'
     },
     {
         title: 'Sleep Tracking',
         description: 'Monitor naps and nighttime sleep patterns.',
         icon: '\u{1F319}',
         color: '#C5B3F6',
-        gradient: 'linear-gradient(135deg, #C5B3F6 0%, #E0D4FF 100%)'
+        gradient: 'linear-gradient(135deg, #C5B3F6 0%, #E0D4FF 100%)',
+        popupDetails: 'Log naps and bedtime routines, spot patterns, and set gentle wake/nap reminders.'
     },
     {
         title: 'Growth Monitoring',
         description: 'Track weight, height, and head circumference over time.',
         icon: '\u{1F4C8}',
         color: '#FFD9A3',
-        gradient: 'linear-gradient(135deg, #FFD9A3 0%, #FFE8C5 100%)'
+        gradient: 'linear-gradient(135deg, #FFD9A3 0%, #FFE8C5 100%)',
+        popupDetails: 'Add measurements and compare to reference curves; see milestones by age.'
     },
     {
         title: 'Daily Activities',
         description: 'Track playtime, tummy time, and developmental activities.',
         icon: '\u{1F3B2}',
         color: '#A8E6CF',
-        gradient: 'linear-gradient(135deg, #A8E6CF 0%, #C8F4E0 100%)'
+        gradient: 'linear-gradient(135deg, #A8E6CF 0%, #C8F4E0 100%)',
+        popupDetails: 'Log tummy time, play ideas, and milestones with quick timers and notes.'
     },
     {
         title: 'Mother Wellness',
         description: 'Tools for postpartum care, mood tracking, hydration, and self-care reminders.',
         icon: '\u{1F497}',
         color: '#FFC0E3',
-        gradient: 'linear-gradient(135deg, #FFC0E3 0%, #FFD9ED 100%)'
+        gradient: 'linear-gradient(135deg, #FFC0E3 0%, #FFD9ED 100%)',
+        popupDetails: 'Track mood, hydration, and meds; add gentle self-care reminders for you.'
     },
     {
         title: 'Photos',
         description: 'Save, organize, and view baby photos and milestones in a beautiful gallery.',
         icon: '\u{1F4F7}',
         color: '#B8D4F0',
-        gradient: 'linear-gradient(135deg, #B8D4F0 0%, #D4E8FF 100%)'
+        gradient: 'linear-gradient(135deg, #B8D4F0 0%, #D4E8FF 100%)',
+        popupDetails: 'Upload by month, auto-tag milestones, and view a cute timeline gallery.'
     },
     {
         title: 'Reminders',
         description: 'Set reminders for feeding times, doctor visits, medications, and important events.',
         icon: '\u{23F0}',
         color: '#FFE5B4',
-        gradient: 'linear-gradient(135deg, #FFE5B4 0%, #FFF0D4 100%)'
+        gradient: 'linear-gradient(135deg, #FFE5B4 0%, #FFF0D4 100%)',
+        popupDetails: 'Create feeding, vaccine, and appointment alerts with custom times and notes.'
     },
 ];
 
@@ -74,6 +82,8 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
     const { parentRole, setParentRole } = useAuth();
     const { addBaby } = useBaby();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [activeFeature, setActiveFeature] = useState(null);
+    const [popupPos, setPopupPos] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
         dateOfBirth: '',
@@ -89,6 +99,21 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
 
     const handleRoleSelect = (role) => {
         setParentRole(role);
+    };
+
+    const handleFeatureClick = (feature, event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const offset = 10; // gap between popup and card
+        setActiveFeature(feature);
+        setPopupPos({
+            top: rect.top + window.scrollY - offset,
+            left: rect.left + window.scrollX + rect.width / 2
+        });
+    };
+
+    const closeFeaturePopup = () => {
+        setActiveFeature(null);
+        setPopupPos(null);
     };
 
     const openModal = () => {
@@ -151,6 +176,7 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
                                     '--feature-gradient': feature.gradient,
                                     '--feature-color': feature.color
                                 }}
+                                onClick={(e) => handleFeatureClick(feature, e)}
                             >
                                 <div className="feature-card-icon" style={{ background: feature.gradient }}>
                                     <span className="feature-emoji" aria-hidden="true">{feature.icon}</span>
@@ -295,6 +321,25 @@ const WelcomeFormPage = ({ onComplete, onBack }) => {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {activeFeature && popupPos && (
+                <div className="feature-popup-layer" onClick={closeFeaturePopup}>
+                    <div
+                        className="feature-popup"
+                        style={{
+                            top: popupPos.top,
+                            left: popupPos.left,
+                            background: activeFeature.gradient,
+                            transform: 'translate(-50%, calc(-100% - 10px))'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="feature-popup-arrow" style={{ background: activeFeature.gradient }} />
+                        <div className="feature-popup-header" style={{ marginBottom: '0.25rem' }} />
+                        <p className="feature-popup-desc">{activeFeature.popupDetails || activeFeature.description}</p>
                     </div>
                 </div>
             )}

@@ -123,6 +123,119 @@
     opacity: 1;
 }
 
+/* Feature Popup */
+.feature-popup-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: auto;
+    z-index: 11000;
+}
+
+.feature-popup {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    background: linear-gradient(145deg, #ffeaf6 0%, #e9f5ff 50%, #fff8e1 100%);
+    border-radius: 36px;
+    padding: 0.7rem 0.9rem 0.9rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    min-width: 200px;
+    max-width: 240px;
+    pointer-events: auto;
+    animation: bubbleIn 0.25s ease-out;
+}
+
+.feature-popup::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.5), transparent 40%),
+                radial-gradient(circle at 80% 0%, rgba(255,255,255,0.4), transparent 35%),
+                radial-gradient(circle at 20% 80%, rgba(255,255,255,0.4), transparent 35%);
+    pointer-events: none;
+    border-radius: 36px;
+}
+
+.feature-popup-arrow {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 18px;
+    height: 18px;
+    background: linear-gradient(145deg, #ffeaf6 0%, #e9f5ff 100%);
+    border-left: 1px solid rgba(255, 255, 255, 0.7);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    border-bottom-left-radius: 6px;
+}
+
+.feature-popup-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 1;
+}
+
+.feature-popup-emoji {
+    font-size: 1.25rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.feature-popup-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #2D3748;
+}
+
+.feature-popup-sub {
+    font-size: 0.85rem;
+    color: #6B7280;
+    margin-top: 2px;
+}
+
+.feature-popup-desc {
+    margin: 0.5rem 0 0;
+    font-size: 0.85rem;
+    color: #4A5568;
+    position: relative;
+    z-index: 1;
+}
+
+.feature-popup-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.9);
+    color: #4B5563;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    z-index: 2;
+}
+
+.feature-popup-close:hover {
+    transform: scale(1.08);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+}
+
+@keyframes bubbleIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -90%) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -100%) scale(1);
+    }
+}
+
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -223,6 +336,7 @@
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
+    -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
@@ -252,9 +366,7 @@
     position: relative;
     animation: slideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid rgba(255, 255, 255, 0.5);
-    /* Firefox scrollbar */
-    scrollbar-width: thin;
-    scrollbar-color: #5568C9 rgba(85, 104, 201, 0.1);
+    /* Firefox scrollbar (moved into Firefox-only @supports block) */
 }
 
 /* Custom Scrollbar for Profile Modal */
@@ -309,6 +421,7 @@
     transition: all 0.2s ease;
     z-index: 10;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
 }
 
@@ -403,9 +516,9 @@
 }
 
 .profile-form-group select {
-    appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
+    appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235568C9' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-size: 12px 12px;
@@ -469,15 +582,21 @@
     overflow: hidden;
 }
 
-/* Firefox dropdown menu styling */
-@-moz-document url-prefix() {
+/* Firefox-specific enhancements: prefer feature query over vendor-only at-rule */
+@supports (-moz-appearance: none) {
     .profile-form-group select {
         border-radius: 12px;
     }
-    
+
     .profile-form-group select option {
         border-radius: 8px;
         margin: 0.125rem 0.25rem;
+    }
+
+    /* Firefox-only scrollbar styling for profile modal */
+    .profile-modal-content {
+        scrollbar-width: thin;
+        scrollbar-color: #5568C9 rgba(85, 104, 201, 0.1);
     }
 }
 
