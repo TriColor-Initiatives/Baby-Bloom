@@ -4,7 +4,7 @@ const MotherHealth = () => {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1 className="page-title">💝 Mother's Wellness</h1>
+        <h1 className="page-title">dY'? Mother's Wellness</h1>
         <p className="page-subtitle">Track your postpartum health and self-care</p>
       </div>
 
@@ -31,6 +31,16 @@ const MotherHealth = () => {
             </p>
           </div>
 
+          <div className="log-entry" style={{ borderLeftColor: '#f5b14c' }}>
+            <div className="log-entry-type">
+              <span className="log-entry-icon">🧘</span>
+              <span>Mindful Breathing Break</span>
+            </div>
+            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginTop: 'var(--spacing-sm)' }}>
+              Take 5 minutes to inhale for 4 counts, hold for 4, then exhale for 6-8 to reset stress.
+            </p>
+          </div>
+
           <div className="log-entry" style={{ borderLeftColor: 'var(--success)' }}>
             <div className="log-entry-type">
               <span className="log-entry-icon">🥗</span>
@@ -40,12 +50,22 @@ const MotherHealth = () => {
               Eat balanced meals with plenty of fruits and vegetables
             </p>
           </div>
+
+          <div className="log-entry" style={{ borderLeftColor: '#4cb7a5' }}>
+            <div className="log-entry-type">
+              <span className="log-entry-icon">🚶‍♀️</span>
+              <span>Gentle Movement</span>
+            </div>
+            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginTop: 'var(--spacing-sm)' }}>
+              Add a 10-minute walk or light stretch to boost circulation and ease postpartum aches.
+            </p>
+          </div>
         </div>
 
         <div className="info-panel">
           <div className="tip-card" style={{ background: 'linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%)' }}>
             <div className="tip-card-title">
-              <span>💝</span>
+              <span>💜</span>
               <span>Remember</span>
             </div>
             <p className="tip-card-text">

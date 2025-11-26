@@ -32,6 +32,7 @@ const Sidebar = ({ isOpen, isCollapsed, onHoverChange, onClose }) => {
         { path: '/health', icon: '🩺', label: 'Health' },
         { path: '/reminders', icon: '⏰', label: 'Reminders' },
         { path: '/activities', icon: '🎨', label: 'Activities' },
+        ...(isBaby6MonthsOrOlder ? [{ path: '/recipes', icon: '🥣', label: 'Recipes' }] : []),
       ],
     },
     {
@@ -49,7 +50,6 @@ const Sidebar = ({ isOpen, isCollapsed, onHoverChange, onClose }) => {
         { path: '/vaccinations', icon: '💉', label: 'Vaccinations' },
         { path: '/mother-health', icon: '💗', label: 'Mother Wellness' },
         { path: '/tips', icon: '💡', label: 'Tips' },
-        ...(isBaby6MonthsOrOlder ? [{ path: '/recipes', icon: '🥣', label: 'Recipes' }] : []),
       ],
     },
   ];

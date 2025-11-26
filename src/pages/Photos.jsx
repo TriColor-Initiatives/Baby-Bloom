@@ -36,22 +36,29 @@ const Photos = () => {
 
   const ideasForAge = useMemo(() => {
     if (babyAgeMonths === null) return MONTHLY_IDEAS;
+
+    const withDistance = (idea) => {
+      const min = idea.minMonths ?? 0;
+      const max = idea.maxMonths ?? 24;
+      const rangeMid = (min + max) / 2;
+      return { idea, distance: Math.abs(rangeMid - babyAgeMonths) };
+    };
+
     const filtered = MONTHLY_IDEAS.filter((idea) => {
       const min = idea.minMonths ?? 0;
       const max = idea.maxMonths ?? 24;
       return babyAgeMonths >= min && babyAgeMonths <= max;
     });
-    if (filtered.length) return filtered;
-    // Fallback: pick the three closest age ideas
-    return MONTHLY_IDEAS
-      .map((idea) => {
-        const min = idea.minMonths ?? 0;
-        const max = idea.maxMonths ?? 24;
-        const rangeMid = (min + max) / 2;
-        return { ...idea, distance: Math.abs(rangeMid - babyAgeMonths) };
-      })
+
+    if (filtered.length >= 3) return filtered;
+
+    // Always show at least three idea cards: fill with nearest other ideas by age proximity
+    const remaining = MONTHLY_IDEAS.filter((idea) => !filtered.includes(idea))
+      .map(withDistance)
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 3);
+      .map((entry) => entry.idea);
+
+    return [...filtered, ...remaining].slice(0, 3);
   }, [babyAgeMonths]);
 
   // Load photos from localStorage on mount
