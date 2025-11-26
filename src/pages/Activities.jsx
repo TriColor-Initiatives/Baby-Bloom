@@ -1,21 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import '../styles/pages.css';
+import { useBaby } from '../contexts/BabyContext';
 
 const STORAGE_KEY = 'baby-bloom-activities';
 
 const activityIdeas = [
-  { icon: '👶', title: 'Tummy Time', description: 'Help strengthen neck and back muscles', duration: '5-15 min' },
-  { icon: '📚', title: 'Story Time', description: 'Read board books to encourage language development', duration: '10-20 min' },
-  { icon: '🎵', title: 'Music and Dance', description: 'Play music and move together to develop rhythm', duration: '10-15 min' },
-  { icon: '🧩', title: 'Stacking Blocks', description: 'Build fine motor skills with soft blocks', duration: '10-20 min' },
-  { icon: '🪞', title: 'Mirror Play', description: 'Explore self-awareness with safe mirrors', duration: '5-10 min' },
-  { icon: '🎨', title: 'Sensory Bins', description: 'Explore textures with safe materials', duration: '15-30 min' },
-  { icon: '🔔', title: 'Rattle Play', description: 'Shake and explore cause and effect', duration: '5-10 min' },
-  { icon: '🎈', title: 'Ball Rolling', description: 'Track moving objects and develop hand-eye coordination', duration: '10-15 min' },
+  { icon: '👶', title: 'Tummy Time', description: 'Help strengthen neck and back muscles', duration: '5-15 min', minMonths: 0, maxMonths: 8 },
+  { icon: '📚', title: 'Story Time', description: 'Read board books to encourage language development', duration: '10-20 min', minMonths: 0, maxMonths: 24 },
+  { icon: '🎵', title: 'Music and Dance', description: 'Play music and move together to develop rhythm', duration: '10-15 min', minMonths: 6, maxMonths: 24 },
+  { icon: '🧩', title: 'Stacking Blocks', description: 'Build fine motor skills with soft blocks', duration: '10-20 min', minMonths: 7, maxMonths: 24 },
+  { icon: '🪞', title: 'Mirror Play', description: 'Explore self-awareness with safe mirrors', duration: '5-10 min', minMonths: 3, maxMonths: 12 },
+  { icon: '🎨', title: 'Sensory Bins', description: 'Explore textures with safe materials', duration: '15-30 min', minMonths: 6, maxMonths: 24 },
+  { icon: '🔔', title: 'Rattle Play', description: 'Shake and explore cause and effect', duration: '5-10 min', minMonths: 0, maxMonths: 9 },
+  { icon: '🎈', title: 'Ball Rolling', description: 'Track moving objects and develop hand-eye coordination', duration: '10-15 min', minMonths: 5, maxMonths: 18 },
 ];
 
 const Activities = () => {
+  const { activeBaby } = useBaby();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activities, setActivities] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -136,6 +138,34 @@ const Activities = () => {
     setIsIdeasOpen(false);
     setIsModalOpen(true);
   };
+
+  const babyAgeInMonths = useMemo(() => {
+    if (activeBaby?.dateOfBirth) {
+      const today = new Date();
+      const birthDate = new Date(activeBaby.dateOfBirth);
+      const months = (today.getFullYear() - birthDate.getFullYear()) * 12 +
+        (today.getMonth() - birthDate.getMonth());
+      const days = today.getDate() - birthDate.getDate();
+      const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+      return months + Math.max(0, days) / daysInMonth;
+    }
+
+    if (typeof window !== 'undefined') {
+      const stored = Number(localStorage.getItem('babyAgeMonths'));
+      if (Number.isFinite(stored) && stored >= 0) {
+        return stored;
+      }
+    }
+
+    return null;
+  }, [activeBaby]);
+
+  const filteredIdeas = useMemo(() => {
+    if (babyAgeInMonths === null) return activityIdeas;
+    return activityIdeas.filter(({ minMonths = 0, maxMonths = Infinity }) => {
+      return babyAgeInMonths >= minMonths && babyAgeInMonths <= maxMonths;
+    });
+  }, [babyAgeInMonths]);
 
   return (
     <div className="page-container">
@@ -311,7 +341,19 @@ const Activities = () => {
                 Tap on any activity idea to add it to your log
               </p>
               <div style={{ display: 'grid', gap: 'var(--spacing-md)' }}>
-                {activityIdeas.map((idea, index) => (
+                {filteredIdeas.length === 0 && (
+                  <div
+                    className="card"
+                    style={{
+                      padding: 'var(--spacing-md)',
+                      textAlign: 'center',
+                      color: 'var(--text-secondary)'
+                    }}
+                  >
+                    No age-appropriate ideas right now. Update your baby profile to see tailored suggestions.
+                  </div>
+                )}
+                {filteredIdeas.map((idea, index) => (
                   <div
                     key={index}
                     className="card"

@@ -1,9 +1,287 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useBaby } from '../contexts/BabyContext';
 import GrowthCharts from '../components/health/GrowthCharts';
 import '../styles/pages.css';
 
+const REFERENCE_DATA = {
+  '0-6': [
+    {
+      label: '🍼 Newborn (0–1 Month)',
+      ageMonths: 0,
+      weightRange: '2.5–4.5 kg',
+      heightRange: '46–54 cm',
+      headRange: '32–37 cm',
+      weightKg: 3.5,
+      heightCm: 50,
+      headCm: 34.5,
+      sections: [
+        {
+          title: 'Motor Development',
+          items: ['Lifts head briefly while on tummy', 'Reflexes: rooting, sucking, grasp, Moro', 'Movements are jerky & primitive'],
+        },
+        {
+          title: 'Cognitive / Social',
+          items: ['Recognizes mother’s voice', 'Stares at faces', 'Prefers high-contrast shapes'],
+        },
+        {
+          title: 'Sensory',
+          items: ['Can see best at 20–30 cm', 'Tracks slow-moving objects for a second'],
+        },
+        {
+          title: 'Feeding',
+          items: ['8–12 feeds/day (breast)', 'Growth spurts common'],
+        },
+      ],
+    },
+    {
+      label: '🌙 1 Month Old',
+      ageMonths: 1,
+      weightRange: '3.4–5.5 kg',
+      heightRange: '50–58 cm',
+      headRange: '34–38 cm',
+      weightKg: 4.45,
+      heightCm: 54,
+      headCm: 36,
+      sections: [
+        {
+          title: 'Motor',
+          items: ['Slight head control when upright', 'Arms & legs more relaxed', 'Begins tummy-time toleration'],
+        },
+        {
+          title: 'Cognitive / Social',
+          items: ['Looks at caregivers longer', 'Responds to sound & begins cooing'],
+        },
+        {
+          title: 'Sensory',
+          items: ['Follows objects slowly side to side'],
+        },
+      ],
+    },
+    {
+      label: '😊 2 Months Old',
+      ageMonths: 2,
+      weightRange: '4.0–6.5 kg',
+      heightRange: '54–60 cm',
+      headRange: '36–39.5 cm',
+      weightKg: 5.25,
+      heightCm: 57,
+      headCm: 37.75,
+      sections: [
+        {
+          title: 'Motor',
+          items: ['Holds head up longer during tummy time', 'Smoother limb movement', 'Attempts mini push-ups'],
+        },
+        {
+          title: 'Cognitive / Social',
+          items: ['Smiles socially ⭐', 'Makes cooing sounds', 'Recognizes parents visually'],
+        },
+        {
+          title: 'Sensory',
+          items: ['Tracks moving objects 180°'],
+        },
+      ],
+    },
+    {
+      label: '🎶 3 Months Old',
+      ageMonths: 3,
+      weightRange: '4.8–7.2 kg',
+      heightRange: '57–64 cm',
+      headRange: '38–41 cm',
+      weightKg: 6,
+      heightCm: 60.5,
+      headCm: 39.5,
+      sections: [
+        {
+          title: 'Motor',
+          items: ['Holds head steady', 'Opens & closes hands intentionally', 'Brings hands to mouth', 'Begins rolling attempts (tummy → side)'],
+        },
+        {
+          title: 'Cognitive / Social',
+          items: ['Laughs softly', 'Enjoys face-to-face interaction', 'Recognizes familiar routines'],
+        },
+        {
+          title: 'Sensory',
+          items: ['Better eye–hand coordination', 'Tracks fast-moving objects'],
+        },
+      ],
+    },
+    {
+      label: '✨ 4 Months Old',
+      ageMonths: 4,
+      weightRange: '5.4–7.8 kg',
+      heightRange: '60–66 cm',
+      headRange: '39–42.5 cm',
+      weightKg: 6.6,
+      heightCm: 63,
+      headCm: 40.75,
+      sections: [
+        {
+          title: 'Motor',
+          items: ['Rolls tummy → back ⭐', 'Pushes up on elbows', 'Reaches for toys', 'Stronger neck & back'],
+        },
+        {
+          title: 'Cognitive / Social',
+          items: ['Laughs louder', 'Copies sounds', 'Shows excitement when seeing caregivers'],
+        },
+      ],
+    },
+    {
+      label: '🧸 5 Months Old',
+      ageMonths: 5,
+      weightRange: '6.0–8.4 kg',
+      heightRange: '62–68 cm',
+      headRange: '40–43.5 cm',
+      weightKg: 7.2,
+      heightCm: 65,
+      headCm: 41.75,
+      sections: [
+        {
+          title: 'Motor',
+          items: ['Sits with support', 'Rolls back → tummy sometimes', 'Transfers toys between hands'],
+        },
+        {
+          title: 'Cognitive / Social',
+          items: ['Recognizes own name', 'Expressive giggles & squeals', 'Shows curiosity about objects'],
+        },
+      ],
+    },
+    {
+      label: '🌟 6 Months Old',
+      ageMonths: 6,
+      weightRange: '6.4–9.0 kg',
+      heightRange: '63–70 cm',
+      headRange: '41–44.5 cm',
+      weightKg: 7.7,
+      heightCm: 66.5,
+      headCm: 42.75,
+      sections: [
+        {
+          title: 'Motor',
+          items: ['Rolls both ways ⭐', 'Sits with minimal support', 'Bears weight on legs when held', 'Begins crawling attempts (rocking on knees)'],
+        },
+        {
+          title: 'Cognitive / Social',
+          items: ['Babbling (“ba-ba,” “ma-ma” sounds)', 'Responds to emotions', 'Plays with cause-and-effect toys'],
+        },
+        {
+          title: 'Feeding Milestones',
+          items: ['Ready for solid foods (purees)', 'Can swallow thicker textures', 'Shows interest in family meals'],
+        },
+      ],
+    },
+  ],
+  '6-12': [
+    {
+      label: '🌟 6 Months Old',
+      ageMonths: 6,
+      weightRange: '6.4–9.0 kg',
+      heightRange: '63–70 cm',
+      headRange: '41–44.5 cm',
+      weightKg: 7.7,
+      heightCm: 66.5,
+      headCm: 42.75,
+      sections: [
+        { title: 'Motor', items: ['Rolls both ways', 'Sits with support', 'Rocks on hands & knees', 'Tries crawling motions'] },
+        { title: 'Cognitive/Social', items: ['Responds to emotions', 'Recognizes strangers vs familiar faces', 'Babbling “ba-ba / da-da”'] },
+        { title: 'Feeding', items: ['Starts purees', 'Shows interest in table food'] },
+      ],
+    },
+    {
+      label: '🦷 7 Months Old',
+      ageMonths: 7,
+      weightRange: '6.8–9.5 kg',
+      heightRange: '65–72 cm',
+      headRange: '41.5–45.2 cm',
+      weightKg: 8.2,
+      heightCm: 68.5,
+      headCm: 43.35,
+      sections: [
+        { title: 'Motor', items: ['Sits without support', 'Begins army crawling', 'Uses hands to push up to sit'] },
+        { title: 'Cognitive/Social', items: ['Responds to name', 'Enjoys peek-a-boo', 'Explores with hands & mouth'] },
+        { title: 'Feeding', items: ['Eats thicker purees', 'Begins self-feeding attempts'] },
+      ],
+    },
+    {
+      label: '🧩 8 Months Old',
+      ageMonths: 8,
+      weightRange: '7.0–10.0 kg',
+      heightRange: '66–74 cm',
+      headRange: '42–46 cm',
+      weightKg: 8.5,
+      heightCm: 70,
+      headCm: 44,
+      sections: [
+        { title: 'Motor', items: ['Crawling or scooting', 'Stands with support', 'Picks up objects with thumb & finger'] },
+        { title: 'Cognitive/Social', items: ['Understands simple “no”', 'Recognizes familiar people', 'Imitates sounds and gestures'] },
+        { title: 'Feeding', items: ['Eats mashed foods', 'Drinks water from sippy cup'] },
+      ],
+    },
+    {
+      label: '🚼 9 Months Old',
+      ageMonths: 9,
+      weightRange: '7.3–10.5 kg',
+      heightRange: '67–75 cm',
+      headRange: '43–47 cm',
+      weightKg: 8.9,
+      heightCm: 71,
+      headCm: 45,
+      sections: [
+        { title: 'Motor', items: ['Pulls to stand', 'Crawls well', 'Uses pincer grasp (thumb + finger)'] },
+        { title: 'Cognitive/Social', items: ['Says “mama/dada” (non-specific)', 'Understands simple instructions', 'Stranger anxiety begins'] },
+        { title: 'Feeding', items: ['Finger foods introduced', 'Chews soft foods'] },
+      ],
+    },
+    {
+      label: '🎉 10 Months Old',
+      ageMonths: 10,
+      weightRange: '7.6–11.0 kg',
+      heightRange: '69–76 cm',
+      headRange: '43.5–47.5 cm',
+      weightKg: 9.3,
+      heightCm: 72.5,
+      headCm: 45.5,
+      sections: [
+        { title: 'Motor', items: ['Cruises along furniture', 'Sits confidently', 'Points at objects'] },
+        { title: 'Cognitive/Social', items: ['Enjoys interactive games', 'Responds to gestures', 'Understands “bye-bye”'] },
+        { title: 'Feeding', items: ['Mixed textures', 'Self-feeding improves'] },
+      ],
+    },
+    {
+      label: '🚶 11 Months Old',
+      ageMonths: 11,
+      weightRange: '7.8–11.2 kg',
+      heightRange: '70–78 cm',
+      headRange: '44–48 cm',
+      weightKg: 9.5,
+      heightCm: 74,
+      headCm: 46,
+      sections: [
+        { title: 'Motor', items: ['Stands momentarily', 'May take first steps', 'Climbs small obstacles'] },
+        { title: 'Cognitive/Social', items: ['Says simple words intentionally', 'Shows preferences in toys', 'Follows simple 1-step commands'] },
+        { title: 'Feeding', items: ['Eats soft solids', 'Uses hands well to feed'] },
+      ],
+    },
+    {
+      label: '🎂 12 Months (1 Year)',
+      ageMonths: 12,
+      weightRange: '8.0–11.5 kg',
+      heightRange: '72–80 cm',
+      headRange: '44.5–48.5 cm',
+      weightKg: 9.75,
+      heightCm: 76,
+      headCm: 46.5,
+      sections: [
+        { title: 'Motor', items: ['Independent walking begins', 'Climbs furniture', 'Stacks objects'] },
+        { title: 'Cognitive/Social', items: ['Says “mama/dada” meaningfully', 'Responds to own name perfectly', 'Waves, claps, points'] },
+        { title: 'Feeding', items: ['Eats chopped foods', 'Drinks from sippy cup', 'Weaning process may begin'] },
+      ],
+    },
+  ]
+};
+
 const Growth = () => {
+  const { activeBaby } = useBaby();
   const [searchParams, setSearchParams] = useSearchParams();
   const [records, setRecords] = useState([]);
   const [isMeasurementModalOpen, setIsMeasurementModalOpen] = useState(false);
@@ -79,6 +357,70 @@ const Growth = () => {
   // Get latest measurements
   const latestRecord = growthRecords.length > 0 ? growthRecords[0] : null;
 
+  const referenceCurve = useMemo(() => {
+    const merged = [...REFERENCE_DATA['0-6'], ...REFERENCE_DATA['6-12']];
+    return merged.sort((a, b) => a.ageMonths - b.ageMonths);
+  }, []);
+
+  const getAgeInMonths = (dateString, fallbackIndex) => {
+    if (activeBaby?.dateOfBirth) {
+      const date = new Date(dateString);
+      const birth = new Date(activeBaby.dateOfBirth);
+      const months = (date.getFullYear() - birth.getFullYear()) * 12 + (date.getMonth() - birth.getMonth());
+      const days = date.getDate() - birth.getDate();
+      const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+      return months + Math.max(0, days) / daysInMonth;
+    }
+    // Fallback: space by 1 month using order of entry
+    return fallbackIndex;
+  };
+
+  const babyAgeMonths = useMemo(() => {
+    if (!activeBaby?.dateOfBirth) return null;
+    const today = new Date();
+    const birth = new Date(activeBaby.dateOfBirth);
+    const months = (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
+    const days = today.getDate() - birth.getDate();
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    return months + Math.max(0, days) / daysInMonth;
+  }, [activeBaby]);
+
+  const ageMatchedReference = useMemo(() => {
+    const combined = [...REFERENCE_DATA['0-6'], ...REFERENCE_DATA['6-12']];
+    if (babyAgeMonths === null) return combined;
+    if (babyAgeMonths < 1) {
+      // Keep newborn/0–1 month only when under 1 month old
+      return [REFERENCE_DATA['0-6'][0]];
+    }
+    const closest = combined.reduce((best, current) => {
+      const dist = Math.abs(current.ageMonths - babyAgeMonths);
+      if (!best || dist < best.dist) return { item: current, dist };
+      return best;
+    }, null);
+    return closest ? [closest.item] : combined.slice(0, 1);
+  }, [babyAgeMonths]);
+
+  const CARD_STYLES = [
+    'linear-gradient(135deg, #f3e9ff, #e0d7ff)',
+    'linear-gradient(135deg, #e0f4ff, #d7e9ff)',
+    'linear-gradient(135deg, #fff0f3, #ffd6e0)',
+    'linear-gradient(135deg, #f0f5ff, #dbe7ff)',
+  ];
+
+  const chartPoints = useMemo(() => {
+    return growthRecords
+      .slice()
+      .reverse()
+      .map((record, index) => ({
+        ageMonths: getAgeInMonths(record.date, index),
+        weight: record.weight ? Number(record.weight) : null,
+        height: record.height ? Number(record.height) : null,
+        head: record.headCircumference ? Number(record.headCircumference) : null,
+        date: record.date
+      }))
+      .filter(p => p.weight !== null);
+  }, [growthRecords, activeBaby]);
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -131,42 +473,94 @@ const Growth = () => {
           </div>
         ) : (
           <div className="empty-state">
-            <div className="empty-icon">📏</div>
-            <h3>No measurements yet</h3>
-            <p>Add your first growth measurement to start tracking</p>
-            <button className="btn btn-primary btn-large" onClick={openMeasurementModal}>
-              <span>➕</span>
+          <div className="empty-icon">📏</div>
+          <h3>No measurements yet</h3>
+          <p>Add your first growth measurement to start tracking</p>
+          <button className="btn btn-primary btn-large" onClick={openMeasurementModal}>
+            <span>➕</span>
               <span>Add Measurement</span>
             </button>
           </div>
         )}
       </div>
 
+      <div className="section-card" style={{ marginBottom: 'var(--spacing-xl)' }}>
+        <h3 style={{ marginBottom: 'var(--spacing-md)' }}>
+          {babyAgeMonths !== null ? 'Age-matched Growth & Milestones' : 'Growth & Milestones (0–12 months)'}
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 'var(--spacing-md)' }}>
+          {ageMatchedReference.map((item, idx) => {
+            const bg = CARD_STYLES[idx % CARD_STYLES.length];
+            return (
+              <div
+                key={item.label}
+                className="card"
+                style={{
+                  padding: 'var(--spacing-lg)',
+                  background: bg,
+                  border: '1px solid rgba(255,255,255,0.5)',
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.08)',
+                  display: 'grid',
+                  gap: 'var(--spacing-sm)',
+                  minHeight: '220px'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontWeight: 700, fontSize: '1.05rem' }}>{item.label}</div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text)' }}>
+                  <span style={{ background: 'rgba(255,255,255,0.6)', padding: '4px 10px', borderRadius: '999px' }}>Weight {item.weightRange || `${item.weightKg} kg`}</span>
+                  <span style={{ background: 'rgba(255,255,255,0.6)', padding: '4px 10px', borderRadius: '999px' }}>Height {item.heightRange || `${item.heightCm} cm`}</span>
+                  <span style={{ background: 'rgba(255,255,255,0.6)', padding: '4px 10px', borderRadius: '999px' }}>Head circ. {item.headRange || `${item.headCm} cm`}</span>
+                </div>
+                <div style={{ display: 'grid', gap: 'var(--spacing-sm)', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                  {item.sections?.map((section) => (
+                    <div key={section.title} style={{ fontSize: 'var(--font-size-sm)', background: 'rgba(255,255,255,0.4)', borderRadius: '12px', padding: '8px 10px', height: '100%' }}>
+                      <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '4px' }}>✨ {section.title}</div>
+                      <ul style={{ margin: 0, paddingLeft: '1rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                        {section.items.map((m) => (<li key={m}>{m}</li>))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="section-card">
         <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Growth Chart</h3>
         <div style={{ 
           padding: 'var(--spacing-2xl)', 
-          background: 'var(--surface-variant)', 
+          background: 'linear-gradient(135deg, #fff6c3, #ffe594)', 
           borderRadius: 'var(--radius-md)',
           textAlign: 'center',
           minHeight: '300px',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center'
+          gap: 'var(--spacing-md)'
         }}>
-          <div style={{ fontSize: '64px', marginBottom: 'var(--spacing-md)' }}>📈</div>
-          <p style={{ color: 'var(--text-secondary)' }}>Growth chart visualization will appear here</p>
-          {growthRecords.length > 0 && (
-            <button 
-              className="btn btn-primary" 
-              onClick={() => setIsChartsOpen(true)}
-              style={{ marginTop: 'var(--spacing-md)' }}
-            >
-              <span>📊</span>
-              <span>View Detailed Charts</span>
+          <GrowthCharts
+            records={records}
+            referenceCurve={referenceCurve}
+            chartPoints={chartPoints}
+            onClose={() => {}}
+            embed
+          />
+          <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
+            Overlay shows your baby's weight vs. typical reference curve (0–12 months). Add measurements to keep the line updated.
+          </div>
+          <div style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
+            <button className="btn btn-secondary" onClick={() => setIsChartsOpen(true)}>
+              <span>🔍</span>
+              <span>Open in Fullscreen</span>
             </button>
-          )}
+            <button className="btn btn-primary" onClick={openMeasurementModal}>
+              <span>➕</span>
+              <span>Add Measurement</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -249,7 +643,12 @@ const Growth = () => {
 
       {/* View Charts Modal */}
       {isChartsOpen && (
-        <GrowthCharts records={records} onClose={() => setIsChartsOpen(false)} />
+        <GrowthCharts
+          records={records}
+          referenceCurve={referenceCurve}
+          chartPoints={chartPoints}
+          onClose={() => setIsChartsOpen(false)}
+        />
       )}
     </div>
   );

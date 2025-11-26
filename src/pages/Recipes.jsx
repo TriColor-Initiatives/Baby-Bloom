@@ -44,6 +44,7 @@ const Recipes = () => {
     mealsPerDay: 3,
     specialRequest: 'Keep prep under 20 minutes and use pantry basics.'
   }));
+
   const textureOptions = [
     { value: 'purees/mashed', label: 'Purees / mashed' },
     { value: 'mashed/soft-finger', label: 'Mashed / soft finger foods' },
@@ -109,57 +110,99 @@ const Recipes = () => {
     });
   };
 
+  const tryParseJson = (value) => {
+    if (!value) return null;
+    const attempts = [
+      value,
+      value
+        .replace(/[“”]/g, '"')
+        .replace(/[‘’]/g, "'")
+        .replace(/,\s*([}\]])/g, '$1')
+        .trim()
+    ];
+
+    for (const attempt of attempts) {
+      try {
+        return JSON.parse(attempt);
+      } catch {
+        continue;
+      }
+    }
+    return null;
+  };
+
   const parsePlanContent = (text) => {
     if (!text) return null;
 
-    const tryParse = (value) => {
-      if (!value) return null;
-      const attempts = [
-        value,
-        value
-          .replace(/[“”]/g, '"')
-          .replace(/[‘’]/g, "'")
-          .replace(/,\s*([}\]])/g, '$1')
-          .trim()
-      ];
+    // 1) direct parse
+    const direct = tryParseJson(text.trim());
+    if (direct) return direct;
 
-      for (const attempt of attempts) {
-        try {
-          return JSON.parse(attempt);
-        } catch {
-          continue;
-        }
-      }
-      return null;
-    };
-
-    const candidates = [];
+    // 2) extract code block
     const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
     if (codeBlock?.[1]) {
-      candidates.push(codeBlock[1].trim());
+      const p = tryParseJson(codeBlock[1].trim());
+      if (p) return p;
     }
 
+    // 3) remove <think> blocks and try
     const withoutThoughts = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
     if (withoutThoughts && withoutThoughts !== text) {
-      candidates.push(withoutThoughts);
+      const p = tryParseJson(withoutThoughts);
+      if (p) return p;
     }
 
-    candidates.push(text.trim());
-
-    for (const candidate of candidates) {
-      const parsed = tryParse(candidate);
-      if (parsed) return parsed;
+    // 4) Balanced-brace extraction (try larger slices first)
+    const extracts = [];
+    for (let i = 0; i < text.length; i++) {
+      if (text[i] !== '{') continue;
+      let depth = 0;
+      for (let j = i; j < text.length; j++) {
+        if (text[j] === '{') depth += 1;
+        else if (text[j] === '}') depth -= 1;
+        if (depth === 0) {
+          extracts.push(text.slice(i, j + 1));
+          break;
+        }
+      }
     }
-
-    const firstBrace = text.indexOf('{');
-    const lastBrace = text.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-      const slice = text.slice(firstBrace, lastBrace + 1);
-      const parsed = tryParse(slice);
-      if (parsed) return parsed;
+    extracts.sort((a, b) => b.length - a.length);
+    for (const ex of extracts) {
+      const p = tryParseJson(ex);
+      if (p) return p;
     }
 
     return null;
+  };
+
+  const extractResponseText = (data) => {
+    // Normalize common Perplexity/OpenAI-like shapes to a single string
+    if (!data) return '';
+    // choices[0].message.content (chat format)
+    const choiceMsg = data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text ?? null;
+    if (typeof choiceMsg === 'string') return choiceMsg;
+    if (Array.isArray(choiceMsg)) return choiceMsg.map((r) => (typeof r === 'string' ? r : r?.text ?? JSON.stringify(r))).join('\n');
+    if (choiceMsg && typeof choiceMsg === 'object') {
+      if (Array.isArray(choiceMsg.content)) return choiceMsg.content.map((c) => c.text ?? JSON.stringify(c)).join('\n');
+      if (Array.isArray(choiceMsg.parts) || Array.isArray(choiceMsg.segments)) {
+        const parts = choiceMsg.parts ?? choiceMsg.segments;
+        return parts.map((p) => p.text ?? JSON.stringify(p)).join('\n');
+      }
+      if (typeof choiceMsg.text === 'string') return choiceMsg.text;
+      return JSON.stringify(choiceMsg);
+    }
+
+    // Perplexity older shape: answer -> array of segments
+    if (data?.answer && Array.isArray(data.answer) && data.answer[0]?.content) {
+      return data.answer[0].content.map((c) => c.text ?? JSON.stringify(c)).join('\n');
+    }
+
+    // Fallback: stringify entire response
+    try {
+      return JSON.stringify(data);
+    } catch (err) {
+      return String(data);
+    }
   };
 
   const generateAiPlan = async (event) => {
@@ -168,80 +211,114 @@ const Recipes = () => {
     setAiError('');
 
     const perplexityKey = import.meta.env.VITE_PERPLEXITY_API_KEY;
-    const openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
-    const provider = perplexityKey ? 'perplexity' : openAiKey ? 'openai' : '';
-
-    if (!provider) {
-      setAiError('Add VITE_PERPLEXITY_API_KEY (or VITE_OPENAI_API_KEY) to your .env for live AI results.');
-      setAiPlan(null);
+    if (!perplexityKey) {
+      // Demo fallback
+      setAiPlan({
+        days: [
+          {
+            day: 'Day 1',
+            meals: [
+              {
+                name: 'Avocado & Banana Puree',
+                timeOfDay: 'Breakfast',
+                ingredients: ['avocado', 'banana'],
+                prep: 'Mash and thin with breastmilk or formula',
+                portionGrams: 120,
+                notes: 'Rich in healthy fats',
+                allergens: []
+              }
+            ]
+          }
+        ],
+        summary: { calciumMg: 100, ironMg: 2.5, proteinG: 12, fiberG: 8, reminders: ['Avoid honey', 'Check texture for choking hazards'] }
+      });
       setAiStatus('ready');
+      setAiError('Using demo plan — set VITE_PERPLEXITY_API_KEY to generate live plans.');
       return;
     }
 
-    const messages = [
-      {
-        role: 'system',
-        content:
-          'You are a pediatric nutritionist. Respond with ONE JSON object only (no markdown, no code fences, no <think>, no prose, no citations, no URLs). Shape: {days:[{day, meals:[{name, timeOfDay, ingredients, prep, portionGrams, notes, allergens}]}], summary:{calciumMg, ironMg, proteinG, fiberG, reminders}}. Keep prep under 20 minutes; avoid honey and choking hazards. Ensure the JSON is valid for JavaScript JSON.parse.'
-      },
-      {
-        role: 'user',
-        content: `Baby age: ${aiForm.ageMonths} months
-Avoid: ${aiForm.allergens || 'none'}
-Texture: ${aiForm.texture}
-Meals per day: ${aiForm.mealsPerDay} + 1 snack if appropriate
-Dislikes/notes: ${aiForm.dislikes || 'none'}
-Special request: ${aiForm.specialRequest || 'none'}
-Output valid JSON only, no prose, markdown, or <think> content.`
+    const systemMessage = {
+      role: 'system',
+      content:
+        'You are a pediatric nutritionist. RESPOND WITH ONLY A SINGLE VALID JSON OBJECT AND NOTHING ELSE. Do not include markdown, code fences, prose, analysis, <think> tags, citations, URLs, or any surrounding text. The response MUST begin with "{" and end with "}" and be directly parseable by JavaScript JSON.parse. If you cannot produce valid JSON, reply with the exact string: ERROR_NON_JSON.\n\nJSON shape (must match): {"days":[{"day":"Day 1","meals":[{"name":"...","timeOfDay":"...","ingredients":["..."],"prep":"...","portionGrams":0,"notes":"...","allergens":["..."]}]}],"summary":{"calciumMg":0,"ironMg":0,"proteinG":0,"fiberG":0,"reminders":["..."]}}.\n\nKeep prep under 20 minutes; avoid honey and choking hazards.'
+    };
+
+    const userMessage = {
+      role: 'user',
+      content: `Baby age: ${aiForm.ageMonths} months\nAvoid: ${aiForm.allergens || 'none'}\nTexture: ${aiForm.texture}\nMeals per day: ${aiForm.mealsPerDay} + 1 snack if appropriate\nDislikes/notes: ${aiForm.dislikes || 'none'}\nSpecial request: ${aiForm.specialRequest || 'none'}\nOutput valid JSON only, no prose, markdown, or <think> content.`
+    };
+
+    const sendRequest = async (messages, signal) => {
+      const res = await fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${perplexityKey}`
+        },
+        body: JSON.stringify({
+          model: 'sonar',
+          messages,
+          temperature: 0,
+          max_tokens: 2000
+        }),
+        signal
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error('Perplexity 400 response body:', errText);
+        throw new Error(`Perplexity error: ${res.status} ${res.statusText}`);
       }
-    ];
+      return res.json();
+    };
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
-      const isPerplexity = provider === 'perplexity';
-      const response = await fetch(isPerplexity ? 'https://api.perplexity.ai/chat/completions' : 'https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${isPerplexity ? perplexityKey : openAiKey}`
-        },
-        body: JSON.stringify({
-          model: isPerplexity ? 'sonar-reasoning' : 'gpt-4o-mini',
-          messages,
-          temperature: 0,
-          max_tokens: 2000,
-          ...(isPerplexity ? { return_citations: false } : { response_format: { type: 'json_object' } })
-        }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
+      const first = await sendRequest([systemMessage, userMessage], controller.signal);
+      console.debug('Perplexity first response:', first);
+      const firstText = extractResponseText(first);
+      let parsed = parsePlanContent(firstText);
 
-      if (!response.ok) {
-        throw new Error(`${isPerplexity ? 'Perplexity' : 'OpenAI'} error: ${response.statusText}`);
+      // If parse failed, attempt one follow-up asking for strict JSON-only output
+      if (!parsed) {
+        console.warn('Initial parse failed, attempting follow-up. Raw firstText:', firstText);
+
+        if (typeof firstText === 'string' && firstText.trim().startsWith('ERROR_NON_JSON')) {
+          setAiError('Perplexity indicated it could not produce JSON (ERROR_NON_JSON).');
+          setAiStatus('error');
+          setAiPlan(null);
+          return;
+        }
+
+        const followUpUser = {
+          role: 'user',
+          content: 'Previous response included analysis or metadata. NOW OUTPUT ONLY THE JSON OBJECT that matches the required shape and nothing else. If you cannot, reply with ERROR_NON_JSON. Output must begin with { and end with }.'
+        };
+
+        const second = await sendRequest([systemMessage, { role: 'assistant', content: firstText }, followUpUser], controller.signal);
+        console.debug('Perplexity second response:', second);
+        const secondText = extractResponseText(second);
+        parsed = parsePlanContent(secondText);
+
+        if (!parsed) {
+          console.error('Follow-up parse failure. secondText:', secondText, 'first:', first);
+          setAiError('Perplexity returned unexpected output — not valid JSON after retry.');
+          setAiPlan(null);
+          setAiStatus('error');
+          return;
+        }
       }
 
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      const parsed = parsePlanContent(content);
-
-      if (parsed) {
-        setAiPlan(parsed);
-        setAiStatus('ready');
-        setAiError('');
-      } else {
-        console.error('AI plan parse failure. Raw content:', content);
-        setAiError('AI response was not valid JSON.');
-        setAiPlan(null);
-        setAiStatus('error');
-      }
+      setAiPlan(parsed);
+      setAiStatus('ready');
+      setAiError('');
     } catch (err) {
       console.error('AI planner error', err);
       if (err.name === 'AbortError') {
         setAiError('AI request timed out. Please try again.');
       } else {
-        setAiError('AI meal plan failed.');
+        setAiError(`AI meal plan failed: ${err.message || String(err)}`);
       }
       setAiPlan(null);
       setAiStatus('error');
@@ -249,6 +326,7 @@ Output valid JSON only, no prose, markdown, or <think> content.`
       clearTimeout(timeoutId);
     }
   };
+
 
   return (
     <div className="page-container recipes-page">

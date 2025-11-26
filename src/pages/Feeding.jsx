@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useBaby } from '../contexts/BabyContext';
 import FeedingTimer from '../components/FeedingTimer';
-import FeedingReminder from '../components/FeedingReminder';
 import FeedingCalendar from '../components/FeedingCalendar';
 import FeedingGoals from '../components/FeedingGoals';
 import CustomSelect from '../components/onboarding/CustomSelect';
@@ -16,7 +15,6 @@ const Feeding = () => {
   const [feedings, setFeedings] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTimerOpen, setIsTimerOpen] = useState(false);
-  const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isGoalsOpen, setIsGoalsOpen] = useState(false);
   const [editingFeeding, setEditingFeeding] = useState(null);
@@ -259,10 +257,6 @@ const Feeding = () => {
           <span>🎯</span>
           <span>Goals</span>
         </button>
-        <button className="btn btn-secondary" onClick={() => setIsReminderOpen(true)}>
-          <span>⏰</span>
-          <span>Reminder</span>
-        </button>
       </div>
 
       <div className="content-grid">
@@ -310,10 +304,6 @@ const Feeding = () => {
                   <div className="empty-tip">
                     <span>📊</span>
                     <span>See patterns and analytics</span>
-                  </div>
-                  <div className="empty-tip">
-                    <span>⏰</span>
-                    <span>Set reminders for next feeding</span>
                   </div>
                 </div>
                 <button className="btn btn-primary btn-large" onClick={() => openModal()}>
@@ -604,18 +594,6 @@ const Feeding = () => {
           onClose={() => setIsTimerOpen(false)}
         />
       )}
-
-
-      {/* Reminder Modal */}
-      {isReminderOpen && (
-        <FeedingReminder
-          feedings={feedings}
-          onClose={() => setIsReminderOpen(false)}
-        />
-      )}
-
-
-
       {/* Calendar Modal */}
       {isCalendarOpen && (
         <FeedingCalendar
