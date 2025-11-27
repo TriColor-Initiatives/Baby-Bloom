@@ -40,9 +40,10 @@ const Recipes = () => {
     ageMonths: getProfileAge(),
     allergens: 'dairy, eggs',
     dislikes: '',
-    texture: 'purees/mashed',
+    texture: ['purees/mashed'],
     mealsPerDay: 3,
-    specialRequest: 'Keep prep under 20 minutes and use pantry basics.'
+    specialRequest: 'Keep prep under 20 minutes and use pantry basics.',
+    planDays: 7
   }));
 
   const textureOptions = [
@@ -176,7 +177,7 @@ const Recipes = () => {
   };
 
   const extractResponseText = (data) => {
-    // Normalize common Perplexity/OpenAI-like shapes to a single string
+    // Normalize common provider response shapes to a single string
     if (!data) return '';
     // choices[0].message.content (chat format)
     const choiceMsg = data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text ?? null;
@@ -192,7 +193,7 @@ const Recipes = () => {
       return JSON.stringify(choiceMsg);
     }
 
-    // Perplexity older shape: answer -> array of segments
+    // Legacy shape: answer -> array of segments
     if (data?.answer && Array.isArray(data.answer) && data.answer[0]?.content) {
       return data.answer[0].content.map((c) => c.text ?? JSON.stringify(c)).join('\n');
     }
@@ -210,8 +211,8 @@ const Recipes = () => {
     setAiStatus('loading');
     setAiError('');
 
-    const perplexityKey = import.meta.env.VITE_PERPLEXITY_API_KEY;
-    if (!perplexityKey) {
+    const openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    if (!openAiKey) {
       // Demo fallback
       setAiPlan({
         days: [
@@ -233,30 +234,40 @@ const Recipes = () => {
         summary: { calciumMg: 100, ironMg: 2.5, proteinG: 12, fiberG: 8, reminders: ['Avoid honey', 'Check texture for choking hazards'] }
       });
       setAiStatus('ready');
-      setAiError('Using demo plan — set VITE_PERPLEXITY_API_KEY to generate live plans.');
+      setAiError('Using demo plan - set VITE_OPENAI_API_KEY to generate live plans.');
       return;
     }
 
     const systemMessage = {
       role: 'system',
-      content:
-        'You are a pediatric nutritionist. RESPOND WITH ONLY A SINGLE VALID JSON OBJECT AND NOTHING ELSE. Do not include markdown, code fences, prose, analysis, <think> tags, citations, URLs, or any surrounding text. The response MUST begin with "{" and end with "}" and be directly parseable by JavaScript JSON.parse. If you cannot produce valid JSON, reply with the exact string: ERROR_NON_JSON.\n\nJSON shape (must match): {"days":[{"day":"Day 1","meals":[{"name":"...","timeOfDay":"...","ingredients":["..."],"prep":"...","portionGrams":0,"notes":"...","allergens":["..."]}]}],"summary":{"calciumMg":0,"ironMg":0,"proteinG":0,"fiberG":0,"reminders":["..."]}}.\n\nKeep prep under 20 minutes; avoid honey and choking hazards.'
+      content: `You are a pediatric nutritionist. RESPOND WITH ONLY A SINGLE VALID JSON OBJECT AND NOTHING ELSE. Do not include markdown, code fences, prose, analysis, <think> tags, citations, URLs, or any surrounding text. The response MUST begin with "{" and end with "}" and be directly parseable by JavaScript JSON.parse. If you cannot produce valid JSON, reply with the exact string: ERROR_NON_JSON.
+
+JSON shape (must match): {"days":[{"day":"Day 1","meals":[{"name":"...","timeOfDay":"...","ingredients":["..."],"prep":"...","portionGrams":0,"notes":"...","allergens":["..."]}]}],"summary":{"calciumMg":0,"ironMg":0,"proteinG":0,"fiberG":0,"reminders":["..."]}}.
+
+Keep prep under 20 minutes; avoid honey and choking hazards.`
     };
 
     const userMessage = {
       role: 'user',
-      content: `Baby age: ${aiForm.ageMonths} months\nAvoid: ${aiForm.allergens || 'none'}\nTexture: ${aiForm.texture}\nMeals per day: ${aiForm.mealsPerDay} + 1 snack if appropriate\nDislikes/notes: ${aiForm.dislikes || 'none'}\nSpecial request: ${aiForm.specialRequest || 'none'}\nOutput valid JSON only, no prose, markdown, or <think> content.`
+      content: `Baby age: ${aiForm.ageMonths} months
+Plan length: ${aiForm.planDays} day(s)
+Avoid: ${aiForm.allergens || 'none'}
+Texture: ${Array.isArray(aiForm.texture) ? aiForm.texture.join(', ') : aiForm.texture}
+Meals per day: ${aiForm.mealsPerDay} + 1 snack if appropriate
+Dislikes/notes: ${aiForm.dislikes || 'none'}
+Special request: ${aiForm.specialRequest || 'none'}
+Output valid JSON only, no prose, markdown, or <think> content.`
     };
 
     const sendRequest = async (messages, signal) => {
-      const res = await fetch('https://api.perplexity.ai/chat/completions', {
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${perplexityKey}`
+          Authorization: `Bearer ${openAiKey}`
         },
         body: JSON.stringify({
-          model: 'sonar',
+          model: 'gpt-4o-mini',
           messages,
           temperature: 0,
           max_tokens: 2000
@@ -265,8 +276,10 @@ const Recipes = () => {
       });
       if (!res.ok) {
         const errText = await res.text();
-        console.error('Perplexity 400 response body:', errText);
-        throw new Error(`Perplexity error: ${res.status} ${res.statusText}`);
+        console.error('OpenAI response body:', errText);
+        const error = new Error(`OpenAI error: ${res.status} ${res.statusText}`);
+        error.status = res.status;
+        throw error;
       }
       return res.json();
     };
@@ -276,7 +289,7 @@ const Recipes = () => {
 
     try {
       const first = await sendRequest([systemMessage, userMessage], controller.signal);
-      console.debug('Perplexity first response:', first);
+      console.debug('OpenAI first response:', first);
       const firstText = extractResponseText(first);
       let parsed = parsePlanContent(firstText);
 
@@ -285,7 +298,7 @@ const Recipes = () => {
         console.warn('Initial parse failed, attempting follow-up. Raw firstText:', firstText);
 
         if (typeof firstText === 'string' && firstText.trim().startsWith('ERROR_NON_JSON')) {
-          setAiError('Perplexity indicated it could not produce JSON (ERROR_NON_JSON).');
+          setAiError('OpenAI indicated it could not produce JSON (ERROR_NON_JSON).');
           setAiStatus('error');
           setAiPlan(null);
           return;
@@ -297,13 +310,13 @@ const Recipes = () => {
         };
 
         const second = await sendRequest([systemMessage, { role: 'assistant', content: firstText }, followUpUser], controller.signal);
-        console.debug('Perplexity second response:', second);
+        console.debug('OpenAI second response:', second);
         const secondText = extractResponseText(second);
         parsed = parsePlanContent(secondText);
 
         if (!parsed) {
           console.error('Follow-up parse failure. secondText:', secondText, 'first:', first);
-          setAiError('Perplexity returned unexpected output — not valid JSON after retry.');
+          setAiError('OpenAI returned unexpected output - not valid JSON after retry.');
           setAiPlan(null);
           setAiStatus('error');
           return;
@@ -317,6 +330,12 @@ const Recipes = () => {
       console.error('AI planner error', err);
       if (err.name === 'AbortError') {
         setAiError('AI request timed out. Please try again.');
+      } else if (err.status === 429) {
+        setAiError('OpenAI rate limit or quota reached. Try again in a bit or update your API key/billing.');
+        // Optional soft fallback: keep any existing plan so the UI isn’t empty
+        if (!aiPlan) {
+          setAiPlan(null);
+        }
       } else {
         setAiError(`AI meal plan failed: ${err.message || String(err)}`);
       }
@@ -326,6 +345,7 @@ const Recipes = () => {
       clearTimeout(timeoutId);
     }
   };
+
 
 
   return (
@@ -362,11 +382,7 @@ const Recipes = () => {
         </button>
       </div>
 
-      <div className="page-meta">
-        {viewMode === 'library' && <p>Browse age-appropriate recipes and open any card to see ingredients and steps.</p>}
-        {viewMode === 'favorites' && <p>Saved recipes live here for quick reuse.</p>}
-        {viewMode === 'planner' && <p>Ask Perplexity for a 7-day plan tailored to your baby. We never store your key.</p>}
-      </div>
+      <div className="page-meta"></div>
 
       {viewMode !== 'planner' && (
         <div className="section-card">
@@ -459,12 +475,25 @@ const Recipes = () => {
               <div className="form-field">
                 <label className="form-label">Texture preference</label>
                 <CustomSelect
+                  multiple
                   value={aiForm.texture}
-                  onChange={(val) => setAiForm({ ...aiForm, texture: val })}
+                  onChange={(val) => setAiForm({ ...aiForm, texture: Array.isArray(val) ? val : [val].filter(Boolean) })}
                   options={textureOptions}
                   placeholder="Select texture"
                   className="small"
                   required
+                />
+              </div>
+              <div className="form-field">
+                <label className="form-label">Plan length (days)</label>
+                <input
+                  className="form-input"
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={aiForm.planDays}
+                  onChange={(e) => setAiForm({ ...aiForm, planDays: Math.max(1, Math.min(30, Number(e.target.value) || 1)) })}
+                  placeholder="e.g., 1 for a single day, 7 for a week"
                 />
               </div>
               <div className="form-field">
@@ -480,7 +509,7 @@ const Recipes = () => {
               </div>
             </div>
 
-            <div className="ai-age-note">Using your saved baby age from profile.</div>
+            <div className="ai-age-note"></div>
 
             <div className="form-row">
               <div className="form-field">

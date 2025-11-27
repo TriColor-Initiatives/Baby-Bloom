@@ -1,28 +1,130 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useBaby } from '../contexts/BabyContext';
-import '../styles/pages.css';
+import { useAuth } from '../contexts/AuthContext';
+import { uploadPhoto, subscribeToPhotos, deletePhoto } from '../services/photoService';
 
-const STORAGE_KEY = 'baby-bloom-photos';
+// Monthly photo ideas based on baby's age
 const MONTHLY_IDEAS = [
-  { title: 'Sleepy snuggle', emoji: '🧸', color: 'linear-gradient(135deg, #f3e9ff, #e0d7ff)', prompt: 'Upload a peaceful sleeping photo.', minMonths: 0, maxMonths: 2 },
-  { title: 'Bedtime stretch', emoji: '🌙', color: 'linear-gradient(135deg, #e0f4ff, #d7e9ff)', prompt: 'Upload a sleepy stretch with tiny toes in the air.', minMonths: 0, maxMonths: 3 },
-  { title: 'Tiny hands & feet', emoji: '👐', color: 'linear-gradient(135deg, #fff0f3, #ffd6e0)', prompt: 'Upload a close-up of tiny hands and feet.', minMonths: 0, maxMonths: 4 },
-  { title: 'Rolling practice', emoji: '🤸', color: 'linear-gradient(135deg, #f0f5ff, #dbe7ff)', prompt: 'Upload a mid-roll capture on a cozy mat.', minMonths: 4, maxMonths: 7 },
-  { title: 'Playtime on the bed', emoji: '🎈', color: 'linear-gradient(135deg, #fff3e6, #ffe0c2)', prompt: 'Upload a playful kick-and-wiggle moment on the bed.', minMonths: 3, maxMonths: 6 },
-  { title: 'Mirror giggles', emoji: '🔍', color: 'linear-gradient(135deg, #fff0f3, #ffd6e0)', prompt: 'Upload a mirror giggle with tiny hands reaching.', minMonths: 6, maxMonths: 9 },
-  { title: 'Book nook', emoji: '📚', color: 'linear-gradient(135deg, #e8f7ff, #d5ecff)', prompt: 'Upload a board-book cuddle with curious eyes.', minMonths: 8, maxMonths: 12 },
-  { title: 'Standing hero', emoji: '🧷', color: 'linear-gradient(135deg, #f2f7ff, #dfe7ff)', prompt: 'Upload a first stand-and-reach moment.', minMonths: 9, maxMonths: 13 },
-  { title: 'Family meal buddy', emoji: '🍽️', color: 'linear-gradient(135deg, #fff8e1, #ffe9a8)', prompt: 'Upload a highchair snack or family meal smile.', minMonths: 10, maxMonths: 14 },
+  {
+    title: 'First Smiles',
+    emoji: '😊',
+    prompt: 'Capture those precious early smiles',
+    cta: 'Upload here',
+    color: 'linear-gradient(135deg, #FFE5B4 0%, #FFCCCB 100%)',
+    minMonths: 0,
+    maxMonths: 3
+  },
+  {
+    title: 'Tummy Time',
+    emoji: '🔄',
+    prompt: 'Document tummy time progress',
+    cta: 'Upload here',
+    color: 'linear-gradient(135deg, #E0BBE4 0%, #D291BC 100%)',
+    minMonths: 1,
+    maxMonths: 6
+  },
+  {
+    title: 'Rolling Over',
+    emoji: '🎯',
+    prompt: 'Milestone: Rolling over!',
+    cta: 'Upload here',
+    color: 'linear-gradient(135deg, #B4E5FF 0%, #87CEEB 100%)',
+    minMonths: 3,
+    maxMonths: 6
+  },
+  {
+    title: 'Sitting Up',
+    emoji: '🧘',
+    prompt: 'Baby sitting independently',
+    cta: 'Upload here',
+    color: 'linear-gradient(135deg, #FFE5B4 0%, #FFD700 100%)',
+    minMonths: 4,
+    maxMonths: 8
+  },
+  {
+    title: 'Crawling',
+    emoji: '🐛',
+    prompt: 'On the move! Crawling adventures',
+    cta: 'Upload here',
+    color: 'linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 100%)',
+    minMonths: 6,
+    maxMonths: 10
+  },
+  {
+    title: 'Standing',
+    emoji: '🧍',
+    prompt: 'Pulling up and standing',
+    cta: 'Upload here',
+    color: 'linear-gradient(135deg, #FFE5E5 0%, #FFB6C1 100%)',
+    minMonths: 7,
+    maxMonths: 12
+  },
+  {
+    title: 'First Foods',
+    emoji: '🍎',
+    prompt: 'Exploring new foods',
+    cta: 'Upload here',
+    color: 'linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%)',
+    minMonths: 4,
+    maxMonths: 12
+  },
+  {
+    title: 'Playtime',
+    emoji: '🧸',
+    prompt: 'Fun play moments',
+    cta: 'Upload here',
+    color: 'linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%)',
+    minMonths: 0,
+    maxMonths: 12
+  },
+  {
+    title: 'Bath Time',
+    emoji: '🛁',
+    prompt: 'Splish splash fun',
+    cta: 'Upload here',
+    color: 'linear-gradient(135deg, #BBDEFB 0%, #90CAF9 100%)',
+    minMonths: 0,
+    maxMonths: 12
+  },
+  {
+    title: 'Sleeping',
+    emoji: '😴',
+    prompt: 'Peaceful sleep moments',
+    cta: 'Upload here',
+    color: 'linear-gradient(135deg, #C5CAE9 0%, #9FA8DA 100%)',
+    minMonths: 0,
+    maxMonths: 12
+  },
+  {
+    title: 'Family Time',
+    emoji: '👨‍👩‍👧',
+    prompt: 'Precious family moments',
+    cta: 'Upload here',
+    color: 'linear-gradient(135deg, #FFCCBC 0%, #FFAB91 100%)',
+    minMonths: 0,
+    maxMonths: 24
+  },
+  {
+    title: 'Outdoor Adventures',
+    emoji: '🌳',
+    prompt: 'Exploring the world outside',
+    cta: 'Upload here',
+    color: 'linear-gradient(135deg, #C8E6C9 0%, #A5D6A7 100%)',
+    minMonths: 3,
+    maxMonths: 24
+  }
 ];
 
 const Photos = () => {
   const { activeBaby } = useBaby();
+  const { user } = useAuth();
   const [photos, setPhotos] = useState([]);
   const [viewMode, setViewMode] = useState('grid');
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const fileInputRef = useRef(null);
   const [uploadIdeaTag, setUploadIdeaTag] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const babyAgeMonths = useMemo(() => {
     if (!activeBaby?.dateOfBirth) return null;
@@ -35,7 +137,7 @@ const Photos = () => {
   }, [activeBaby]);
 
   const ideasForAge = useMemo(() => {
-    if (babyAgeMonths === null) return MONTHLY_IDEAS;
+    if (babyAgeMonths === null) return MONTHLY_IDEAS.slice(0, 3);
 
     const withDistance = (idea) => {
       const min = idea.minMonths ?? 0;
@@ -61,94 +163,90 @@ const Photos = () => {
     return [...filtered, ...remaining].slice(0, 3);
   }, [babyAgeMonths]);
 
-  // Load photos from localStorage on mount
+  // Load photos from Firebase on mount
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setPhotos(parsed);
-      }
-    } catch (error) {
-      console.error('Error loading photos:', error);
+    if (!user?.uid) {
       setPhotos([]);
+      return;
     }
-  }, []);
 
-  // Save photos to localStorage whenever they change
-  useEffect(() => {
-    if (photos.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(photos));
-      } catch (error) {
-        // Handle quota exceeded error
-        if (error.name === 'QuotaExceededError') {
-          alert('Storage limit reached! Please delete some photos to free up space.');
-        } else {
-          console.error('Error saving photos:', error);
-        }
-      }
-    } else {
-      // Clear storage if no photos
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  }, [photos]);
-
-  const convertFileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = error => reject(error);
+    const unsubscribe = subscribeToPhotos(user.uid, (loadedPhotos) => {
+      setPhotos(loadedPhotos);
     });
-  };
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [user]);
 
   const handleFiles = async (event) => {
     const pickedFiles = Array.from(event.target.files || []);
     if (!pickedFiles.length) return;
 
+    if (!user?.uid) {
+      alert('Please log in to upload photos.');
+      return;
+    }
+
+    setUploading(true);
+
     try {
-      const newPhotos = await Promise.all(
-        pickedFiles.map(async (file) => {
-          // Check file size (limit to 2MB per photo to avoid localStorage quota issues)
-          if (file.size > 2 * 1024 * 1024) {
-            alert(`${file.name} is too large. Please use images under 2MB.`);
-            return null;
-          }
+      const uploadPromises = pickedFiles.map(async (file) => {
+        // Check file size (limit to 5MB per photo for Firebase Storage)
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`${file.name} is too large. Please use images under 5MB.`);
+          return null;
+        }
 
-          // Convert to base64 for storage
-          const base64 = await convertFileToBase64(file);
+        try {
+          const photoData = await uploadPhoto(
+            file,
+            user.uid,
+            activeBaby?.id || null,
+            { ideaTag: uploadIdeaTag || null }
+          );
+          return photoData;
+        } catch (error) {
+          console.error(`Error uploading ${file.name}:`, error);
+          alert(`Failed to upload ${file.name}. Please try again.`);
+          return null;
+        }
+      });
 
-          return {
-            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            url: base64, // Store as base64 data URL
-            name: file.name,
-            date: new Date().toISOString(),
-            timestamp: Date.now(),
-            ideaTag: uploadIdeaTag || null
-          };
-        })
-      );
-
-      // Filter out null values (failed conversions)
-      const validPhotos = newPhotos.filter(photo => photo !== null);
+      const uploadedPhotos = await Promise.all(uploadPromises);
+      const validPhotos = uploadedPhotos.filter(photo => photo !== null);
 
       if (validPhotos.length > 0) {
-        setPhotos((prev) => [...validPhotos, ...prev]);
+        // Photos are automatically added via the Firebase subscription
+        // No need to manually update state
       }
     } catch (error) {
       console.error('Error processing photos:', error);
       alert('Error uploading photos. Please try again.');
+    } finally {
+      setUploading(false);
+      event.target.value = '';
+      setUploadIdeaTag(null);
+      setZoomLevel(1);
     }
-
-    event.target.value = '';
-    setUploadIdeaTag(null);
-    setZoomLevel(1);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (photoId, storagePath) => {
+    if (!user?.uid) {
+      alert('Please log in to delete photos.');
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this photo?')) {
-      setPhotos(photos.filter(p => p.id !== id));
+      try {
+        await deletePhoto(photoId, user.uid, storagePath);
+        // Photo will be automatically removed via Firebase subscription
+      } catch (error) {
+        console.error('Error deleting photo:', error);
+        alert('Failed to delete photo. Please try again.');
+      }
     }
   };
 
@@ -166,6 +264,10 @@ const Photos = () => {
   };
 
   const triggerUpload = (ideaTag = null) => {
+    if (!user?.uid) {
+      alert('Please log in to upload photos.');
+      return;
+    }
     setUploadIdeaTag(ideaTag);
     fileInputRef.current?.click();
   };
@@ -177,9 +279,9 @@ const Photos = () => {
           <div className="empty-icon">📷</div>
           <h3>No Photos Yet</h3>
           <p>Start capturing your baby's precious moments</p>
-          <button className="btn btn-primary btn-large" onClick={triggerUpload}>
+          <button className="btn btn-primary btn-large" onClick={triggerUpload} disabled={uploading}>
             <span>➕</span>
-            <span>Upload Your First Photo</span>
+            <span>{uploading ? 'Uploading...' : 'Upload Your First Photo'}</span>
           </button>
         </div>
       );
@@ -214,7 +316,7 @@ const Photos = () => {
               className="action-btn delete-btn"
               onClick={(e) => {
                 e.stopPropagation();
-                handleDelete(photo.id);
+                handleDelete(photo.id, photo.storagePath);
               }}
               style={{
                 position: 'absolute',
@@ -331,6 +433,7 @@ const Photos = () => {
                     fontSize: '0.95rem'
                   }}
                   onClick={() => triggerUpload(idea.title)}
+                  disabled={uploading}
                 >
                   <span>➕</span>
                   <span>{idea.cta || 'Upload here'}</span>
@@ -385,7 +488,7 @@ const Photos = () => {
                           className="action-btn delete-btn"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDelete(photo.id);
+                            handleDelete(photo.id, photo.storagePath);
                           }}
                           style={{
                             position: 'absolute',
@@ -426,9 +529,9 @@ const Photos = () => {
       </div>
 
       <div className="page-actions">
-        <button className="btn btn-primary" onClick={triggerUpload}>
+        <button className="btn btn-primary" onClick={triggerUpload} disabled={uploading}>
           <span>➕</span>
-          <span>Upload Photo</span>
+          <span>{uploading ? 'Uploading...' : 'Upload Photo'}</span>
         </button>
         <button
           className={`btn btn-secondary ${viewMode === 'grid' ? 'is-active' : ''}`}

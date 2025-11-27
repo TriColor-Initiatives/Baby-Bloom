@@ -3,9 +3,9 @@ import './GrowthCharts.css';
 
 const GrowthCharts = ({ referenceCurve = [], chartPoints = [], onClose, embed = false }) => {
   const hasMeasurements = chartPoints?.length > 0;
-  const width = 760;
-  const height = 320;
-  const padding = 48;
+  const width = 640;
+  const height = 240;
+  const padding = 40;
 
   const nearestRefWeight = (age) => {
     if (!referenceCurve.length) return null;
@@ -105,7 +105,7 @@ const GrowthCharts = ({ referenceCurve = [], chartPoints = [], onClose, embed = 
                 y={yScale(bar.reference || 0)}
                 width={barWidth}
                 height={refHeight}
-                fill="#ffd166"
+                fill="#c7d3ff"
                 opacity="0.7"
                 rx="4"
               />
@@ -143,14 +143,14 @@ const GrowthCharts = ({ referenceCurve = [], chartPoints = [], onClose, embed = 
         )}
       </svg>
 
-      <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center', marginTop: 'var(--spacing-md)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '16px', height: '10px', background: '#ffd166', display: 'inline-block', borderRadius: '4px' }}></span>
-          <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Reference weight</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '16px', height: '10px', background: 'var(--accent)', display: 'inline-block', borderRadius: '4px' }}></span>
-          <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Your baby</span>
+        <div style={{ display: 'flex', gap: 'var(--spacing-md)', alignItems: 'center', marginTop: 'var(--spacing-md)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ width: '16px', height: '10px', background: '#c7d3ff', display: 'inline-block', borderRadius: '4px' }}></span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Reference weight</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ width: '16px', height: '10px', background: 'var(--accent)', display: 'inline-block', borderRadius: '4px' }}></span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Your baby</span>
         </div>
       </div>
     </div>

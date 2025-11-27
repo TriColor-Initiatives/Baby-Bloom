@@ -10,10 +10,25 @@ const CustomSelect = ({
     className = '',
     name,
     required = false,
+    multiple = false,
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef(null);
-    const selectedOption = options.find((opt) => opt.value === value);
+
+    const isSelected = (optValue) => {
+        if (multiple && Array.isArray(value)) return value.includes(optValue);
+        return value === optValue;
+    };
+
+    const selectedLabels = () => {
+        if (multiple && Array.isArray(value)) {
+            return options
+                .filter((opt) => value.includes(opt.value))
+                .map((opt) => opt.label);
+        }
+        const found = options.find((opt) => opt.value === value);
+        return found ? [found.label] : [];
+    };
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -28,12 +43,22 @@ const CustomSelect = ({
 
     const handleSelect = (optionValue) => {
         if (typeof onChange === 'function') {
-            onChange(optionValue);
+            if (multiple) {
+                const current = Array.isArray(value) ? value : [];
+                const exists = current.includes(optionValue);
+                const next = exists ? current.filter((v) => v !== optionValue) : [...current, optionValue];
+                onChange(next);
+            } else {
+                onChange(optionValue);
+                setIsOpen(false);
+            }
         }
-        setIsOpen(false);
+        if (!multiple) {
+            setIsOpen(false);
+        }
     };
 
-    const selectClasses = ['custom-select', isOpen ? 'open' : '', disabled ? 'disabled' : '', className]
+    const selectClasses = ['custom-select', isOpen ? 'open' : '', disabled ? 'disabled' : '', multiple ? 'multiple' : '', className]
         .filter(Boolean)
         .join(' ');
 
@@ -42,7 +67,8 @@ const CustomSelect = ({
             <select
                 tabIndex={-1}
                 aria-hidden="true"
-                value={value ?? ''}
+                multiple={multiple}
+                value={value ?? (multiple ? [] : '')}
                 required={required}
                 name={name}
                 disabled={disabled}
@@ -66,8 +92,8 @@ const CustomSelect = ({
                 aria-expanded={isOpen}
                 aria-required={required}
             >
-                <span className={`custom-select-value ${selectedOption ? '' : 'placeholder'}`}>
-                    {selectedOption ? selectedOption.label : placeholder}
+                <span className={`custom-select-value ${selectedLabels().length ? '' : 'placeholder'}`}>
+                    {selectedLabels().length ? selectedLabels().join(', ') : placeholder}
                 </span>
                 <span className="custom-select-icon" aria-hidden="true">▾</span>
             </button>
@@ -77,12 +103,17 @@ const CustomSelect = ({
                     {options.map((option) => (
                         <li
                             key={option.value}
-                            className={`custom-select-option ${option.value === value ? 'selected' : ''}`}
+                            className={`custom-select-option ${isSelected(option.value) ? 'selected' : ''}`}
                             role="option"
-                            aria-selected={option.value === value}
+                            aria-selected={isSelected(option.value)}
                             onClick={() => handleSelect(option.value)}
                         >
-                            {option.label}
+                            <span>{option.label}</span>
+                            {multiple && (
+                                <span className="custom-select-check" aria-hidden="true">
+                                    {isSelected(option.value) ? '✓' : ''}
+                                </span>
+                            )}
                         </li>
                     ))}
                 </ul>

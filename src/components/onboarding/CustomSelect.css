@@ -16,6 +16,7 @@
     font-size: 0.8rem;
     cursor: pointer;
     transition: all var(--transition-normal);
+    min-height: 48px;
 }
 
 .custom-select-trigger:hover {
@@ -95,6 +96,20 @@
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: #fff;
     font-weight: 600;
+}
+
+.custom-select.multiple .custom-select-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.custom-select-check {
+    font-weight: 700;
+    color: inherit;
+    min-width: 16px;
+    text-align: right;
 }
 
 [data-theme="dark"] .custom-select-trigger {

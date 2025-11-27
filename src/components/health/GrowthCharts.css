@@ -11,8 +11,8 @@
 }
 
 .charts-content {
-  padding: var(--spacing-lg);
-  min-height: 400px;
+  padding: var(--spacing-md);
+  min-height: 260px;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);

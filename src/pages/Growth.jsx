@@ -401,10 +401,10 @@ const Growth = () => {
   }, [babyAgeMonths]);
 
   const CARD_STYLES = [
-    'linear-gradient(135deg, #f3e9ff, #e0d7ff)',
-    'linear-gradient(135deg, #e0f4ff, #d7e9ff)',
-    'linear-gradient(135deg, #fff0f3, #ffd6e0)',
-    'linear-gradient(135deg, #f0f5ff, #dbe7ff)',
+    'linear-gradient(135deg, #eef2ff, #dfe7ff)',
+    'linear-gradient(135deg, #e7ecff, #d5defc)',
+    'linear-gradient(135deg, #edf2ff, #dce6ff)',
+    'linear-gradient(135deg, #e8eeff, #d8e4ff)',
   ];
 
   const chartPoints = useMemo(() => {
@@ -494,7 +494,7 @@ const Growth = () => {
             return (
               <div
                 key={item.label}
-                className="card"
+                className="card milestone-card"
                 style={{
                   padding: 'var(--spacing-lg)',
                   background: bg,
@@ -506,7 +506,10 @@ const Growth = () => {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontWeight: 700, fontSize: '1.05rem' }}>{item.label}</div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontWeight: 700, fontSize: '1.05rem' }}>
+                    <span className="milestone-icon floating-icon">👶</span>
+                    <span>{item.label}</span>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text)' }}>
                   <span style={{ background: 'rgba(255,255,255,0.6)', padding: '4px 10px', borderRadius: '999px' }}>Weight {item.weightRange || `${item.weightKg} kg`}</span>
@@ -514,9 +517,23 @@ const Growth = () => {
                   <span style={{ background: 'rgba(255,255,255,0.6)', padding: '4px 10px', borderRadius: '999px' }}>Head circ. {item.headRange || `${item.headCm} cm`}</span>
                 </div>
                 <div style={{ display: 'grid', gap: 'var(--spacing-sm)', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-                  {item.sections?.map((section) => (
-                    <div key={section.title} style={{ fontSize: 'var(--font-size-sm)', background: 'rgba(255,255,255,0.4)', borderRadius: '12px', padding: '8px 10px', height: '100%' }}>
-                      <div style={{ fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '4px' }}>✨ {section.title}</div>
+                  {item.sections?.map((section, sectionIdx) => (
+                    <div
+                      key={section.title}
+                      className="milestone-subcard"
+                      style={{
+                        fontSize: 'var(--font-size-sm)',
+                        background: 'rgba(255,255,255,0.6)',
+                        borderRadius: '12px',
+                        padding: '8px 10px',
+                        height: '100%',
+                        animationDelay: `${sectionIdx * 80}ms`
+                      }}
+                    >
+                      <div className="milestone-section-title">
+                        <span className="milestone-icon floating-icon">✨</span>
+                        <span>{section.title}</span>
+                      </div>
                       <ul style={{ margin: 0, paddingLeft: '1rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                         {section.items.map((m) => (<li key={m}>{m}</li>))}
                       </ul>
@@ -532,14 +549,16 @@ const Growth = () => {
       <div className="section-card">
         <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Growth Chart</h3>
         <div style={{ 
-          padding: 'var(--spacing-2xl)', 
-          background: 'linear-gradient(135deg, #fff6c3, #ffe594)', 
+          padding: 'var(--spacing-xl)', 
+          background: 'linear-gradient(135deg, #eef2ff, #dfe7ff)', 
           borderRadius: 'var(--radius-md)',
           textAlign: 'center',
-          minHeight: '300px',
+          minHeight: '220px',
           display: 'flex',
           flexDirection: 'column',
-          gap: 'var(--spacing-md)'
+          gap: 'var(--spacing-md)',
+          maxWidth: '820px',
+          margin: '0 auto'
         }}>
           <GrowthCharts
             records={records}

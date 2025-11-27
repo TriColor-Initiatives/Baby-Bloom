@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useBaby } from '../contexts/BabyContext';
 import CustomSelect from '../components/onboarding/CustomSelect';
@@ -161,7 +161,7 @@ const Milestones = () => {
     }
   };
 
-  const getTimeAgo = (date) => {
+const getTimeAgo = (date) => {
     if (!date) return 'Not achieved yet';
     const now = new Date();
     const past = new Date(date);
@@ -185,6 +185,59 @@ const Milestones = () => {
     };
     return icons[category] || '⭐';
   };
+
+  const parseAgeMonths = (ageLabel) => {
+    if (!ageLabel) return null;
+    const match = ageLabel.match(/([0-9]+(?:\.[0-9]+)?)\s*month/i);
+    return match ? Number(match[1]) : null;
+  };
+
+  const babyAgeMonths = useMemo(() => {
+    if (!activeBaby?.dateOfBirth) return null;
+    const today = new Date();
+    const birth = new Date(activeBaby.dateOfBirth);
+    const months = (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
+    const days = today.getDate() - birth.getDate();
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    return months + Math.max(0, days) / daysInMonth;
+  }, [activeBaby]);
+
+  const sortedTemplates = useMemo(() => {
+    const withAge = MILESTONE_TEMPLATES.map((tpl, idx) => ({
+      ...tpl,
+      ageValue: parseAgeMonths(tpl.age),
+      idx
+    }));
+    if (babyAgeMonths === null) {
+      return withAge.sort((a, b) => (a.ageValue ?? Infinity) - (b.ageValue ?? Infinity));
+    }
+    return withAge
+      .slice()
+      .sort((a, b) => {
+        const distA = Math.abs((a.ageValue ?? babyAgeMonths) - babyAgeMonths);
+        const distB = Math.abs((b.ageValue ?? babyAgeMonths) - babyAgeMonths);
+        if (distA === distB) return (a.ageValue ?? Infinity) - (b.ageValue ?? Infinity);
+        return distA - distB;
+      });
+  }, [babyAgeMonths]);
+
+  const displayedTemplates = useMemo(() => {
+    if (babyAgeMonths === null) return sortedTemplates;
+    const currentMonth = Math.max(0, Math.round(babyAgeMonths));
+    const exact = sortedTemplates.filter((tpl) =>
+      tpl.ageValue !== null ? Math.round(tpl.ageValue) === currentMonth : false
+    );
+    if (exact.length) return exact;
+    // Fallback: closest three by distance
+    return sortedTemplates
+      .slice()
+      .sort((a, b) => {
+        const distA = Math.abs((a.ageValue ?? babyAgeMonths) - babyAgeMonths);
+        const distB = Math.abs((b.ageValue ?? babyAgeMonths) - babyAgeMonths);
+        return distA - distB;
+      })
+      .slice(0, 3);
+  }, [babyAgeMonths, sortedTemplates]);
 
   const achievedCount = milestones.filter(m => m.achieved).length;
   const totalCount = milestones.length;
@@ -314,11 +367,11 @@ const Milestones = () => {
               <button className="modal-close" onClick={closeModal}>✕</button>
             </div>
             <div style={{ padding: 'var(--spacing-lg)', maxHeight: '60vh', overflowY: 'auto' }}>
-              {MILESTONE_TEMPLATES.map((template, idx) => {
+              {displayedTemplates.map((template, idx) => {
                 const exists = milestones.some(m => m.title === template.title);
                 return (
                   <div
-                    key={idx}
+                    key={`${template.title}-${template.age}-${idx}`}
                     className="log-entry"
                     style={{
                       marginBottom: 'var(--spacing-md)',
@@ -384,10 +437,10 @@ const Milestones = () => {
                   value={formData.category}
                   onChange={(val) => setFormData({ ...formData, category: val })}
                   options={[
-                    { value: 'motor', label: '?? Motor' },
-                    { value: 'language', label: '??? Language' },
-                    { value: 'social', label: '?? Social' },
-                    { value: 'cognitive', label: '?? Cognitive' },
+                    { value: 'motor', label: '🏃 Motor' },
+                    { value: 'language', label: '💬 Language' },
+                    { value: 'social', label: '👥 Social' },
+                    { value: 'cognitive', label: '🧠 Cognitive' },
                   ]}
                   placeholder="Select category"
                 />

@@ -772,8 +772,107 @@ button.btn,
 
 .recipes-page .form-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--spacing-md);
+  align-items: end;
+}
+
+/* Growth Milestones animations */
+.milestone-card {
+  position: relative;
+  overflow: hidden;
+  animation: milestoneFadeIn 700ms ease both;
+  transition: transform 280ms ease, box-shadow 280ms ease;
+}
+
+.milestone-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.16), transparent 45%),
+    radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.12), transparent 40%);
+  mix-blend-mode: screen;
+  opacity: 0.6;
+  animation: gradientShift 14s ease-in-out infinite alternate;
+}
+
+.milestone-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+}
+
+.milestone-card:hover::before {
+  opacity: 0.8;
+}
+
+.milestone-subcard {
+  animation: milestonePop 480ms ease both;
+  transition: transform 240ms ease, box-shadow 240ms ease;
+}
+
+.milestone-subcard:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.milestone-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.floating-icon {
+  display: inline-block;
+  animation: softFloat 3.6s ease-in-out infinite alternate;
+}
+
+@keyframes milestoneFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes milestonePop {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes softFloat {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .recipes-page .form-field {
@@ -792,6 +891,7 @@ button.btn,
 .recipes-page .form-field textarea,
 .recipes-page .form-field select {
   font-size: 0.85rem;
+  min-height: 48px;
 }
 
 .recipes-page .ai-age-note {
@@ -828,7 +928,7 @@ button.btn,
   border-radius: var(--radius-lg);
   padding: var(--spacing-md);
   box-shadow: var(--shadow-sm);
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  transition: transform 220ms ease, box-shadow 220ms ease, background 220ms ease;
 }
 
 .recipes-page .ai-day-header {
@@ -854,6 +954,26 @@ button.btn,
 .recipes-page .ai-day:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+  background: linear-gradient(145deg, rgba(255, 186, 150, 0.12), rgba(255, 210, 170, 0.16));
+}
+
+.recipes-page .ai-day::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(255, 153, 102, 0.25);
+  transition: box-shadow 220ms ease, transform 220ms ease;
+}
+
+.recipes-page .ai-day:hover::after {
+  box-shadow: 0 10px 30px rgba(255, 153, 102, 0.25);
+  transform: scale(1.01);
+}
+
+.recipes-page .ai-day:hover .ai-meal {
+  transform: translateY(-1px);
 }
 
 .recipes-page .ai-meals {
@@ -866,6 +986,7 @@ button.btn,
   background: var(--surface-variant);
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
+  transition: transform 180ms ease;
 }
 
 .recipes-page .ai-meal-title {
