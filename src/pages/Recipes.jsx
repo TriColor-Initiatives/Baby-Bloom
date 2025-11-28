@@ -319,35 +319,35 @@ To get personalized AI responses with more recipes and meal plans, set up your V
   return (
     <div className="page-container recipes-page">
       <div className="page-header">
-        <h1 className="page-title">
-          <span className="page-title-icon" aria-hidden="true">🥗</span>
-          Meal Recipes & AI Planner
-        </h1>
-        <p className="page-subtitle">Wholesome meals with quick prep, plus an AI-powered weekly plan.</p>
-      </div>
-
-      <div className={`page-actions ${viewMode === 'planner' ? 'planner-mode' : ''}`}>
-        <button
-          className={`nav-tab ${viewMode === 'library' ? 'active' : ''}`}
-          onClick={() => setViewMode('library')}
-        >
-          <span aria-hidden="true">🔎</span>
-          <span>Recipe Library</span>
-        </button>
-        <button
-          className={`nav-tab ${viewMode === 'favorites' ? 'active' : ''}`}
-          onClick={() => setViewMode('favorites')}
-        >
-          <span aria-hidden="true">⭐</span>
-          <span>Favorites</span>
-        </button>
-        <button
-          className={`nav-tab ${viewMode === 'planner' ? 'active' : ''}`}
-          onClick={() => setViewMode('planner')}
-        >
-          <span aria-hidden="true">🧠</span>
-          <span>AI Meal Planner</span>
-        </button>
+        <div className="page-header-top">
+          <h1 className="page-title">
+            <span className="page-title-icon" aria-hidden="true">🥗</span>
+            Meal Recipes & AI Planner
+          </h1>
+          <div className={`page-actions ${viewMode === 'planner' ? 'planner-mode' : ''}`}>
+            <button
+              className={`nav-tab ${viewMode === 'library' ? 'active' : ''}`}
+              onClick={() => setViewMode('library')}
+            >
+              <span aria-hidden="true">🔎</span>
+              <span>Recipe Library</span>
+            </button>
+            <button
+              className={`nav-tab ${viewMode === 'favorites' ? 'active' : ''}`}
+              onClick={() => setViewMode('favorites')}
+            >
+              <span aria-hidden="true">⭐</span>
+              <span>Favorites</span>
+            </button>
+            <button
+              className={`nav-tab ${viewMode === 'planner' ? 'active' : ''}`}
+              onClick={() => setViewMode('planner')}
+            >
+              <span aria-hidden="true">🧠</span>
+              <span>AI Meal Planner</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="page-meta"></div>
@@ -438,42 +438,6 @@ To get personalized AI responses with more recipes and meal plans, set up your V
 
       {viewMode === 'planner' && (
         <div className="ai-planner-container">
-          {/* Quick Suggestions */}
-          <div className="quick-suggestions">
-            <div className="suggestion-chip" onClick={() => {
-              if (suggestionClickRef.current) {
-                suggestionClickRef.current('Quick puree ideas for my baby');
-              }
-            }}>
-              <span>🍎</span>
-              <span>Quick Puree Ideas</span>
-            </div>
-            <div className="suggestion-chip" onClick={() => {
-              if (suggestionClickRef.current) {
-                suggestionClickRef.current('Create a 7-day meal plan');
-              }
-            }}>
-              <span>📅</span>
-              <span>7-Day Meal Plan</span>
-            </div>
-            <div className="suggestion-chip" onClick={() => {
-              if (suggestionClickRef.current) {
-                suggestionClickRef.current('Allergen-free recipe suggestions');
-              }
-            }}>
-              <span>🌾</span>
-              <span>Allergen-Free</span>
-            </div>
-            <div className="suggestion-chip" onClick={() => {
-              if (suggestionClickRef.current) {
-                suggestionClickRef.current('Quick prep meals under 15 minutes');
-              }
-            }}>
-              <span>⏱️</span>
-              <span>Quick Prep</span>
-            </div>
-          </div>
-
           {/* Chat Container */}
           <div className="ai-chat-wrapper">
             <BabyMealChat

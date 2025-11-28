@@ -171,12 +171,17 @@ const BabyMealChat = ({ onSendMessage, isLoading, error, onSuggestionClick }) =>
                         key={message.id}
                         className={`chat-message ${message.role === 'user' ? 'user-message' : 'assistant-message'} ${message.isError ? 'error-message' : ''}`}
                     >
-                        {message.role === 'assistant' && (
-                            <div className="message-avatar">
-                                <span className="avatar-icon">👶</span>
-                            </div>
-                        )}
                         <div className="message-bubble">
+                            {message.role === 'user' && (
+                                <div className="message-indicator user-indicator">
+                                    <span>You</span>
+                                </div>
+                            )}
+                            {message.role === 'assistant' && (
+                                <div className="message-indicator assistant-indicator">
+                                    <span>👶 Assistant</span>
+                                </div>
+                            )}
                             {message.isLoading ? (
                                 <div className="typing-indicator">
                                     <span></span>
@@ -193,15 +198,9 @@ const BabyMealChat = ({ onSendMessage, isLoading, error, onSuggestionClick }) =>
                                             </React.Fragment>
                                         ))}
                                     </div>
-                                    <div className="message-time">{formatTime(message.timestamp)}</div>
                                 </>
                             )}
                         </div>
-                        {message.role === 'user' && (
-                            <div className="message-avatar user-avatar">
-                                <span className="avatar-icon">👤</span>
-                            </div>
-                        )}
                     </div>
                 ))}
                 <div ref={messagesEndRef} />
