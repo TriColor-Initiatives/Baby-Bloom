@@ -6,10 +6,14 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { BabyProvider } from './contexts/BabyContext';
 import { migrateStorage } from './utils/storageMigration';
+import { initializeNotificationService } from './services/notificationService';
 import './styles/globals.css';
 
 // Run storage migration on app start
 migrateStorage();
+
+// Initialize notification service
+initializeNotificationService();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

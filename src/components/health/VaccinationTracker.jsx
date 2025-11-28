@@ -1,5 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useBaby } from '../../contexts/BabyContext';
+import { scheduleReminder, cancelReminder } from '../../services/notificationService';
+import { syncVaccinationReminders } from '../../services/reminderSyncService';
 import './VaccinationTracker.css';
 
 const vaccinesSchedule = [
@@ -41,7 +43,83 @@ const VaccinationTracker = ({ onClose }) => {
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(completedVaccines));
-  }, [completedVaccines]);
+    scheduleVaccinationReminders();
+
+    // Sync to reminders page
+    if (activeBaby?.dateOfBirth) {
+      const vaccines = vaccinesSchedule.map((vaccine) => {
+        const id = `${vaccine.name}-${vaccine.dose}`;
+        const isCompleted = !!completedVaccines[id];
+        let status = 'pending';
+        if (!isCompleted && babyAgeInMonths >= vaccine.months - 0.5) {
+          status = 'upcoming';
+        }
+        if (isCompleted) {
+          status = 'completed';
+        }
+        return { ...vaccine, status, id };
+      });
+      syncVaccinationReminders(vaccines, activeBaby.dateOfBirth);
+    }
+  }, [completedVaccines, activeBaby, babyAgeInMonths]);
+
+  const scheduleVaccinationReminders = () => {
+    if (!activeBaby?.dateOfBirth) return;
+
+    // Cancel all existing vaccination reminders
+    vaccinesSchedule.forEach(vaccine => {
+      const id = `${vaccine.name}-${vaccine.dose}`;
+      cancelReminder(`vaccination-${id}`);
+    });
+
+    const birthDate = new Date(activeBaby.dateOfBirth);
+    const today = new Date();
+
+    vaccinesSchedule.forEach(vaccine => {
+      const id = `${vaccine.name}-${vaccine.dose}`;
+      const isCompleted = !!completedVaccines[id];
+
+      // Skip if already completed
+      if (isCompleted) return;
+
+      // Calculate due date (baby's birth date + vaccine months)
+      const dueDate = new Date(birthDate);
+      dueDate.setMonth(dueDate.getMonth() + vaccine.months);
+
+      // Only schedule if due date is in the future
+      if (dueDate <= today) return;
+
+      // Schedule reminder 1 week before due date
+      const reminderDate = new Date(dueDate);
+      reminderDate.setDate(reminderDate.getDate() - 7);
+
+      // Only schedule if reminder date is in the future
+      if (reminderDate <= today) {
+        // If less than 7 days away, schedule for 1 day before
+        const oneDayBefore = new Date(dueDate);
+        oneDayBefore.setDate(oneDayBefore.getDate() - 1);
+        if (oneDayBefore > today) {
+          scheduleReminder({
+            id: `vaccination-${id}`,
+            title: `💉 Upcoming Vaccination: ${vaccine.name}`,
+            dueAt: oneDayBefore.toISOString(),
+            body: `${vaccine.name} (${vaccine.dose}) is due soon. Schedule with your pediatrician.`,
+            icon: '💉',
+            category: 'vaccination'
+          });
+        }
+      } else {
+        scheduleReminder({
+          id: `vaccination-${id}`,
+          title: `💉 Upcoming Vaccination: ${vaccine.name}`,
+          dueAt: reminderDate.toISOString(),
+          body: `${vaccine.name} (${vaccine.dose}) is due in 1 week. Schedule with your pediatrician.`,
+          icon: '💉',
+          category: 'vaccination'
+        });
+      }
+    });
+  };
 
   const toggleVaccine = (id) => {
     setCompletedVaccines((prev) => {

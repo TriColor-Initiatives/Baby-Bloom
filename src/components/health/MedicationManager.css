@@ -1,19 +1,660 @@
-.medication-modal {
-    background: var(--surface);
-    border-radius: var(--radius-lg);
-    width: 90%;
-    max-width: 600px;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    animation: slideUp 0.3s ease;
+import React,
+{
+useState,
+useEffect
 }
 
-.medication-content {
-    padding: var(--spacing-lg);
-    min-height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+from 'react';
+
+import {
+    scheduleReminder,
+    cancelReminder,
+    getNotificationPermission,
+    requestNotificationPermission,
+    showNotification
 }
+
+from '../../services/notificationService';
+
+import {
+    syncMedicationReminders
+}
+
+from '../../services/reminderSyncService';
+import './MedicationManager.css';
+
+const STORAGE_KEY='baby-bloom-medications';
+
+const MedicationManager=({
+    onClose
+
+})=> {
+
+    const [medications,
+    setMedications]=useState(()=> {
+            try {
+                const saved=localStorage.getItem(STORAGE_KEY);
+                return saved ? JSON.parse(saved) : [];
+            }
+
+            catch {
+                return [];
+            }
+        });
+
+    const [formData,
+    setFormData]=useState({
+        name: '',
+        dosage: '',
+        frequency: 'daily', // daily, twice-daily, every-6-hours, every-8-hours, as-needed
+        startDate: new Date().toISOString().slice(0, 10),
+        endDate: '',
+        times: ['09:00'], // Array of times
+        notes: '',
+        enabled: true
+    });
+
+const [isEditing,
+setIsEditing]=useState(false);
+const [editingId,
+setEditingId]=useState(null);
+
+useEffect(()=> {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(medications));
+        scheduleMedicationReminders();
+
+        // Sync to reminders page
+        syncMedicationReminders(medications);
+    }
+
+    , [medications]);
+
+const scheduleMedicationReminders=()=> {
+
+    // Cancel all existing medication reminders
+    medications.forEach(med=> {
+            if (med.scheduledReminderIds) {
+                med.scheduledReminderIds.forEach(id=> cancelReminder(id));
+            }
+        });
+
+    const today=new Date();
+    today.setHours(0, 0, 0, 0);
+
+    medications.forEach(med=> {
+            if ( !med.enabled) return;
+
+            const startDate=new Date(med.startDate);
+            const endDate=med.endDate ? new Date(med.endDate) : null;
+
+            // Skip if medication hasn't started or has ended
+            if (startDate > today || (endDate && endDate < today)) return;
+
+            const scheduledIds=[];
+
+            // Schedule reminders for each time
+            med.times.forEach((time, index)=> {
+                    const [hours, minutes]=time.split(':').map(Number);
+                    const reminderTime=new Date();
+                    reminderTime.setHours(hours, minutes, 0, 0);
+
+                    // If time has passed today, schedule for tomorrow
+                    if (reminderTime < new Date()) {
+                        reminderTime.setDate(reminderTime.getDate() + 1);
+                    }
+
+                    // Check if within date range
+                    if (endDate && reminderTime > endDate) return;
+
+                    const reminderId=`medication-$ {
+                        med.id
+                    }
+
+                    -$ {
+                        index
+                    }
+
+                    -$ {
+                        reminderTime.getTime()
+                    }
+
+                    `;
+                    scheduledIds.push(reminderId);
+
+                    scheduleReminder({
+
+                        id: reminderId,
+                        title: `💊 Medication: $ {
+                            med.name
+                        }
+
+                        `,
+                        dueAt: reminderTime.toISOString(),
+                        body: `Time to give $ {
+                            med.name
+                        }
+
+                        $ {
+                            med.dosage ? ` ($ {
+                                    med.dosage
+                                })` : ''
+                        }
+
+                        `,
+                        icon: '💊',
+                        category: 'medication'
+                    });
+            });
+
+        // Update medication with scheduled reminder IDs
+        med.scheduledReminderIds=scheduledIds;
+    });
+}
+
+;
+
+const handleSubmit=(e)=> {
+    e.preventDefault();
+
+    const medication= {
+        id: editingId || Date.now(),
+            name: formData.name,
+            dosage: formData.dosage,
+            frequency: formData.frequency,
+            startDate: formData.startDate,
+            endDate: formData.endDate || null,
+            times: formData.times,
+            notes: formData.notes,
+            enabled: formData.enabled,
+            createdAt: editingId ? medications.find(m=> m.id===editingId)?.createdAt: new Date().toISOString()
+    }
+
+    ;
+
+    if (isEditing) {
+        setMedications(medications.map(m=> m.id===editingId ? medication : m));
+    }
+
+    else {
+        setMedications([...medications, medication]);
+    }
+
+    resetForm();
+}
+
+;
+
+const resetForm=()=> {
+    setFormData({
+        name: '',
+        dosage: '',
+        frequency: 'daily',
+        startDate: new Date().toISOString().slice(0, 10),
+        endDate: '',
+        times: ['09:00'],
+        notes: '',
+        enabled: true
+    });
+setIsEditing(false);
+setEditingId(null);
+}
+
+;
+
+const handleEdit=(med)=> {
+    setFormData({
+        name: med.name,
+        dosage: med.dosage,
+        frequency: med.frequency,
+        startDate: med.startDate,
+        endDate: med.endDate || '',
+        times: med.times,
+        notes: med.notes || '',
+        enabled: med.enabled !==false
+    });
+setIsEditing(true);
+setEditingId(med.id);
+}
+
+;
+
+const handleDelete=(id)=> {
+    if (window.confirm('Delete this medication?')) {
+        const med=medications.find(m=> m.id===id);
+
+        if (med?.scheduledReminderIds) {
+            med.scheduledReminderIds.forEach(reminderId=> cancelReminder(reminderId));
+        }
+
+        setMedications(medications.filter(m=> m.id !==id));
+    }
+}
+
+;
+
+const handleToggleEnabled=(id)=> {
+    setMedications(medications.map(m=> m.id===id ? {
+                ...m, enabled: !m.enabled
+            }
+
+            : m));
+}
+
+;
+
+const handleAddTime=()=> {
+    setFormData({
+        ...formData,
+        times: [...formData.times, '09:00']
+    });
+}
+
+;
+
+const handleTimeChange=(index, value)=> {
+    const newTimes=[...formData.times];
+    newTimes[index]=value;
+
+    setFormData({
+        ...formData, times: newTimes
+    });
+}
+
+;
+
+const handleRemoveTime=(index)=> {
+    if (formData.times.length > 1) {
+        const newTimes=formData.times.filter((_, i)=> i !==index);
+
+        setFormData({
+            ...formData, times: newTimes
+        });
+}
+}
+
+;
+
+const handleRequestNotificationPermission=async ()=> {
+    const permission=await requestNotificationPermission();
+
+    if (permission==='granted') {
+        showNotification('Baby Bloom', {
+            body: 'Medication reminders enabled!',
+            icon: '💊'
+        });
+}
+}
+
+;
+
+return (<div className="modal-backdrop" onClick= {
+        onClose
+    }
+
+    > <div className="medication-modal" onClick= {
+        (e)=> e.stopPropagation()
+    }
+
+    style= {
+            {
+            maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto'
+        }
+    }
+
+    > <div className="modal-header" > <h2>💊 Medication Manager</h2> <button className="close-btn" onClick= {
+        onClose
+    }
+
+    >✕</button> </div> <div className="medication-content" > {
+        /* Notification Permission */
+    }
+
+        {
+        getNotificationPermission() !=='granted' && (<div style= {
+                    {
+                    padding: 'var(--spacing-md)',
+                    background: 'var(--warning-light)',
+                    borderRadius: 'var(--radius-md)',
+                    marginBottom: 'var(--spacing-md)'
+                }
+            }
+
+            > <p style= {
+                    {
+                    margin: 0, marginBottom: 'var(--spacing-sm)'
+                }
+            }
+
+            > Enable notifications to get medication reminders </p> <button className="btn btn-primary"
+
+            onClick= {
+                handleRequestNotificationPermission
+            }
+
+            style= {
+                    {
+                    fontSize: 'var(--font-size-sm)'
+                }
+            }
+
+            > Enable Notifications </button> </div>)
+    }
+
+        {
+        /* Form */
+    }
+
+    <form onSubmit= {
+        handleSubmit
+    }
+
+    style= {
+            {
+            marginBottom: 'var(--spacing-xl)'
+        }
+    }
+
+    > <div className="form-group" > <label>Medication Name *</label> <input type="text"
+
+    value= {
+        formData.name
+    }
+
+    onChange= {
+        (e)=> setFormData({
+            ...formData, name: e.target.value
+        })
+}
+
+placeholder="e.g., Vitamin D, Paracetamol"
+required /> </div> <div className="form-group" > <label>Dosage</label> <input type="text"
+
+value= {
+    formData.dosage
+}
+
+onChange= {
+    (e)=> setFormData({
+        ...formData, dosage: e.target.value
+    })
+}
+
+placeholder="e.g., 5ml, 1 tablet"
+
+/> </div> <div className="form-group" > <label>Frequency</label> <select value= {
+    formData.frequency
+}
+
+onChange= {
+    (e)=> setFormData({
+        ...formData, frequency: e.target.value
+    })
+}
+
+> <option value="daily" >Daily</option> <option value="twice-daily" >Twice Daily</option> <option value="every-6-hours" >Every 6 Hours</option> <option value="every-8-hours" >Every 8 Hours</option> <option value="as-needed" >As Needed</option> <option value="custom" >Custom Times</option> </select> </div> {
+    formData.frequency==='custom' && (<div className="form-group" > <label>Times</label> {
+            formData.times.map((time, index)=> (<div key= {
+                        index
+                    }
+
+                    style= {
+                            {
+                            display: 'flex', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)'
+                        }
+                    }
+
+                    > <input type="time"
+
+                    value= {
+                        time
+                    }
+
+                    onChange= {
+                        (e)=> handleTimeChange(index, e.target.value)
+                    }
+
+                    style= {
+                            {
+                            flex: 1
+                        }
+                    }
+
+                    /> {
+                        formData.times.length > 1 && (<button type="button"
+                            className="btn btn-secondary"
+
+                            onClick= {
+                                ()=> handleRemoveTime(index)
+                            }
+
+                            > Remove </button>)
+                    }
+
+                    </div>))
+        }
+
+        <button type="button"
+        className="btn btn-secondary"
+
+        onClick= {
+            handleAddTime
+        }
+
+        > Add Time </button> </div>)
+}
+
+<div className="form-row" > <div className="form-group" > <label>Start Date *</label> <input type="date"
+
+value= {
+    formData.startDate
+}
+
+onChange= {
+    (e)=> setFormData({
+        ...formData, startDate: e.target.value
+    })
+}
+
+required /> </div> <div className="form-group" > <label>End Date (optional)</label> <input type="date"
+
+value= {
+    formData.endDate
+}
+
+onChange= {
+    (e)=> setFormData({
+        ...formData, endDate: e.target.value
+    })
+}
+
+/> </div> </div> <div className="form-group" > <label>Notes</label> <textarea value= {
+    formData.notes
+}
+
+onChange= {
+    (e)=> setFormData({
+        ...formData, notes: e.target.value
+    })
+}
+
+rows= {
+    3
+}
+
+placeholder="Additional notes..."
+
+/> </div> <div className="form-group checkbox-group" > <label> <input type="checkbox"
+checked= {
+    formData.enabled
+}
+
+onChange= {
+    (e)=> setFormData({
+        ...formData, enabled: e.target.checked
+    })
+}
+
+/> <span>Enable reminders</span> </label> </div> <div className="form-actions" > {
+    isEditing && (<button type="button"
+        className="btn btn-secondary"
+
+        onClick= {
+            resetForm
+        }
+
+        > Cancel </button>)
+}
+
+<button type="submit" className="btn btn-primary" > {
+    isEditing ? 'Update' : 'Add'
+}
+
+Medication </button> </div> </form> {
+    /* Medication List */
+}
+
+<div> <h3>Active Medications ({
+    medications.filter(m=> m.enabled).length
+
+})</h3> {
+    medications.length===0 ? (<div className="empty-state" > <p>No medications added yet</p> </div>) : (<div className="medication-list" > {
+            medications.map(med=> (<div key= {
+                        med.id
+                    }
+
+                    className="medication-item" style= {
+                            {
+                            borderLeft: `4px solid $ {
+                                med.enabled ? 'var(--success)' : 'var(--text-secondary)'
+                            }
+
+                            `,
+                            padding: 'var(--spacing-md)',
+                            marginBottom: 'var(--spacing-md)',
+                            background: 'var(--surface)',
+                            borderRadius: 'var(--radius-md)'
+                        }
+                    }
+
+                    > <div style= {
+                            {
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'start'
+                        }
+                    }
+
+                    > <div style= {
+                            {
+                            flex: 1
+                        }
+                    }
+
+                    > <h4 style= {
+                            {
+                            margin: 0, marginBottom: 'var(--spacing-xs)'
+                        }
+                    }
+
+                    > {
+                        med.name
+                    }
+
+                        {
+                        med.dosage && `($ {
+                                med.dosage
+                            })`
+                    }
+
+                    </h4> <p style= {
+                            {
+                            margin: 0, color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)'
+                        }
+                    }
+
+                    > {
+                        med.frequency==='custom'
+
+                        ? `Times: $ {
+                            med.times.join(', ')
+                        }
+
+                        ` : med.frequency.replace('-', ' ')
+                    }
+
+                    </p> {
+                        med.notes && (<p style= {
+                                    {
+                                    margin: 'var(--spacing-xs) 0 0 0', fontSize: 'var(--font-size-sm)'
+                                }
+                            }
+
+                            > {
+                                med.notes
+                            }
+
+                            </p>)
+                    }
+
+                    <p style= {
+                            {
+                            margin: 'var(--spacing-xs) 0 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)'
+                        }
+                    }
+
+                    > {
+                        med.startDate
+                    }
+
+                        {
+                        med.endDate && `- $ {
+                            med.endDate
+                        }
+
+                        `
+                    }
+
+                    </p> </div> <div style= {
+                            {
+                            display: 'flex', gap: 'var(--spacing-xs)'
+                        }
+                    }
+
+                    > <button className="btn-icon"
+
+                    onClick= {
+                        ()=> handleToggleEnabled(med.id)
+                    }
+
+                    title= {
+                        med.enabled ? 'Disable' : 'Enable'
+                    }
+
+                    > {
+                        med.enabled ? '✅' : '⏸️'
+                    }
+
+                    </button> <button className="btn-icon"
+
+                    onClick= {
+                        ()=> handleEdit(med)
+                    }
+
+                    title="Edit"
+                    > ✏️ </button> <button className="btn-icon"
+
+                    onClick= {
+                        ()=> handleDelete(med.id)
+                    }
+
+                    title="Delete"
+                    > 🗑️ </button> </div> </div> </div>))
+        }
+
+        </div>)
+}
+
+</div> </div> </div> </div>);
+}
+
+;
+
+export default MedicationManager;

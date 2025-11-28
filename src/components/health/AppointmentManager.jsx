@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { scheduleReminder, cancelReminder } from '../../services/notificationService';
+import { syncAppointmentReminders } from '../../services/reminderSyncService';
 import './AppointmentManager.css';
 
 const createDefaultForm = () => {
@@ -24,7 +26,11 @@ const AppointmentManager = ({ onClose }) => {
   useEffect(() => {
     const saved = localStorage.getItem('babyAppointments');
     if (saved) {
-      setAppointments(JSON.parse(saved));
+      const loaded = JSON.parse(saved);
+      setAppointments(loaded);
+      scheduleAppointmentReminders(loaded);
+      // Sync to reminders page
+      syncAppointmentReminders(loaded);
       return;
     }
 
@@ -41,11 +47,79 @@ const AppointmentManager = ({ onClose }) => {
     }];
     setAppointments(sample);
     localStorage.setItem('babyAppointments', JSON.stringify(sample));
+    scheduleAppointmentReminders(sample);
+    // Sync to reminders page
+    syncAppointmentReminders(sample);
   }, []);
 
   const saveAppointments = (next) => {
     setAppointments(next);
     localStorage.setItem('babyAppointments', JSON.stringify(next));
+    scheduleAppointmentReminders(next);
+    // Sync to reminders page
+    syncAppointmentReminders(next);
+  };
+
+  const scheduleAppointmentReminders = (appts) => {
+    // Cancel all existing appointment reminders
+    appts.forEach(apt => {
+      cancelReminder(`appt-${apt.id}-24h`);
+      cancelReminder(`appt-${apt.id}-1h`);
+      cancelReminder(`appt-${apt.id}-day`);
+    });
+
+    // Schedule new reminders for appointments with reminder enabled
+    appts.forEach(apt => {
+      if (!apt.reminder) return;
+
+      const appointmentDate = new Date(`${apt.date}T${apt.time}`);
+      const now = new Date();
+
+      // Only schedule for future appointments
+      if (appointmentDate <= now) return;
+
+      const icon = getTypeIcon(apt.type);
+      const title = apt.reason || 'Appointment';
+
+      // 24 hours before
+      const reminder24h = new Date(appointmentDate.getTime() - 24 * 60 * 60 * 1000);
+      if (reminder24h > now) {
+        scheduleReminder({
+          id: `appt-${apt.id}-24h`,
+          title: `📅 ${title} - Tomorrow`,
+          dueAt: reminder24h.toISOString(),
+          body: `Appointment with ${apt.doctor} at ${apt.location} is tomorrow at ${apt.time}`,
+          icon: icon,
+          category: 'appointment'
+        });
+      }
+
+      // 1 hour before
+      const reminder1h = new Date(appointmentDate.getTime() - 60 * 60 * 1000);
+      if (reminder1h > now) {
+        scheduleReminder({
+          id: `appt-${apt.id}-1h`,
+          title: `📅 ${title} - In 1 Hour`,
+          dueAt: reminder1h.toISOString(),
+          body: `Appointment with ${apt.doctor} at ${apt.location} is in 1 hour`,
+          icon: icon,
+          category: 'appointment'
+        });
+      }
+
+      // Day of (30 minutes before)
+      const reminderDay = new Date(appointmentDate.getTime() - 30 * 60 * 1000);
+      if (reminderDay > now) {
+        scheduleReminder({
+          id: `appt-${apt.id}-day`,
+          title: `📅 ${title} - Starting Soon`,
+          dueAt: reminderDay.toISOString(),
+          body: `Appointment with ${apt.doctor} at ${apt.location} starts in 30 minutes`,
+          icon: icon,
+          category: 'appointment'
+        });
+      }
+    });
   };
 
   const handleSubmit = (event) => {
@@ -66,6 +140,13 @@ const AppointmentManager = ({ onClose }) => {
 
   const handleDelete = (id) => {
     if (window.confirm('Delete this appointment?')) {
+      const apt = appointments.find(a => a.id === id);
+      if (apt) {
+        // Cancel reminders
+        cancelReminder(`appt-${id}-24h`);
+        cancelReminder(`appt-${id}-1h`);
+        cancelReminder(`appt-${id}-day`);
+      }
       saveAppointments(appointments.filter((apt) => apt.id !== id));
     }
   };

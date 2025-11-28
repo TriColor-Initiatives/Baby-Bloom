@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import CustomSelect from '../components/onboarding/CustomSelect';
+import DiaperReminder from '../components/DiaperReminder';
 import '../styles/pages.css';
 
 const Diaper = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [diapers, setDiapers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [formData, setFormData] = useState({
     type: 'wet',
     timestamp: new Date().toISOString().slice(0, 16),
@@ -94,6 +96,10 @@ const Diaper = () => {
         <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
           <span>➕</span>
           <span>Log Change</span>
+        </button>
+        <button className="btn btn-secondary" onClick={() => setIsReminderOpen(true)}>
+          <span>⏰</span>
+          <span>Diaper Reminders</span>
         </button>
         <button className="btn btn-secondary">
           <span>📊</span>
@@ -244,6 +250,11 @@ const Diaper = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Diaper Reminder Modal */}
+      {isReminderOpen && (
+        <DiaperReminder diapers={diapers} onClose={() => setIsReminderOpen(false)} />
       )}
     </div>
   );

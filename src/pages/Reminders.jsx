@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import CustomSelect from '../components/onboarding/CustomSelect';
+import { scheduleReminder, cancelReminder, getNotificationPermission, requestNotificationPermission } from '../services/notificationService';
+import { getAllReminders } from '../services/reminderSyncService';
 import '../styles/pages.css';
 
 const STORAGE_KEY = 'baby-bloom-reminders';
@@ -23,17 +25,17 @@ export default function Reminders() {
     // Track if initial load is complete to prevent overwriting on mount
     const [isLoaded, setIsLoaded] = useState(false);
 
-    // Load existing reminders
+    // Load existing reminders (manual + synced from all features)
     useEffect(() => {
         try {
-            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            const loadedReminders = Array.isArray(saved) ? saved : [];
+            // Get all reminders from all sources
+            const allReminders = getAllReminders();
             // Ensure all reminders have a completed property
-            const normalizedReminders = loadedReminders.map(r => ({
+            const normalizedReminders = allReminders.map(r => ({
                 ...r,
                 completed: r.completed === true ? true : false
             }));
-            console.log('Loaded reminders from localStorage:', normalizedReminders);
+            console.log('Loaded all reminders (manual + synced):', normalizedReminders);
             setReminders(normalizedReminders);
             setIsLoaded(true);
         } catch (error) {
@@ -43,16 +45,52 @@ export default function Reminders() {
         }
     }, []);
 
+    // Listen for reminder sync updates from other features
+    useEffect(() => {
+        const handleSync = () => {
+            try {
+                const allReminders = getAllReminders();
+                setReminders(allReminders.map(r => ({
+                    ...r,
+                    completed: r.completed === true ? true : false
+                })));
+            } catch (error) {
+                console.error('Error syncing reminders:', error);
+            }
+        };
+
+        window.addEventListener('reminders-synced', handleSync);
+        return () => window.removeEventListener('reminders-synced', handleSync);
+    }, []);
+
     // Save changes (only after initial load is complete)
+    // Only save manual reminders, not synced ones
     useEffect(() => {
         if (!isLoaded) return; // Don't save until initial load is done
-        
-        if (reminders.length > 0) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(reminders));
+
+        // Separate manual reminders from synced ones
+        const manualReminders = reminders.filter(r => !r.isSynced);
+
+        if (manualReminders.length > 0) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(manualReminders));
         } else {
             localStorage.removeItem(STORAGE_KEY);
         }
-        
+
+        // Schedule notifications for all non-completed reminders (both manual and synced)
+        reminders.forEach(reminder => {
+            if (!reminder.completed && new Date(reminder.dueAt) > new Date()) {
+                scheduleReminder({
+                    id: reminder.id,
+                    title: reminder.title,
+                    dueAt: reminder.dueAt,
+                    body: reminder.notes || reminder.title,
+                    icon: reminder.icon,
+                    category: reminder.category
+                });
+            }
+        });
+
         // Dispatch custom event to notify Dashboard and other components
         console.log('Reminders: Dispatching reminders-updated event');
         window.dispatchEvent(new CustomEvent('reminders-updated'));
@@ -100,7 +138,7 @@ export default function Reminders() {
     const handleSubmit = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        
+
         if (!form.title.trim()) {
             alert('Please enter a reminder title');
             return;
@@ -108,7 +146,7 @@ export default function Reminders() {
 
         const isEditing = editingId !== null;
         const existingReminder = isEditing ? reminders.find(r => r.id === editingId) : null;
-        
+
         const payload = {
             id: isEditing ? editingId : Date.now(),
             title: form.title.trim(),
@@ -122,13 +160,30 @@ export default function Reminders() {
 
         console.log('Adding reminder:', payload);
 
+        // Cancel old reminder if editing
+        if (isEditing && existingReminder) {
+            cancelReminder(payload.id);
+        }
+
+        // Schedule notification if not completed
+        if (!payload.completed && new Date(payload.dueAt) > new Date()) {
+            scheduleReminder({
+                id: payload.id,
+                title: payload.title,
+                dueAt: payload.dueAt,
+                body: payload.notes || payload.title,
+                icon: payload.icon,
+                category: payload.category
+            });
+        }
+
         setReminders((prev) => {
             const others = prev.filter((r) => r.id !== payload.id);
             const updated = [...others, payload];
             console.log('Updated reminders:', updated);
             return updated.sort((a, b) => new Date(a.dueAt) - new Date(b.dueAt));
         });
-        
+
         // Reset form with fresh defaults
         setForm({
             title: '',
@@ -145,13 +200,30 @@ export default function Reminders() {
         setReminders((prev) => prev.map((r) => {
             if (r.id === id) {
                 const currentCompleted = r.completed === true;
-                return { ...r, completed: !currentCompleted };
+                const newCompleted = !currentCompleted;
+
+                // Cancel or schedule notification based on completion status
+                if (newCompleted) {
+                    cancelReminder(id);
+                } else if (new Date(r.dueAt) > new Date()) {
+                    scheduleReminder({
+                        id: r.id,
+                        title: r.title,
+                        dueAt: r.dueAt,
+                        body: r.notes || r.title,
+                        icon: r.icon,
+                        category: r.category
+                    });
+                }
+
+                return { ...r, completed: newCompleted };
             }
             return r;
         }));
     };
 
     const removeReminder = (id) => {
+        cancelReminder(id);
         setReminders((prev) => prev.filter((r) => r.id !== id));
     };
 
@@ -182,10 +254,24 @@ export default function Reminders() {
                     <span className="page-title-icon">⏰</span>
                     <h2 style={{ margin: 0 }}>Reminders</h2>
                 </div>
-                <button className="btn btn-primary" onClick={() => openModal()}>
-                    <span>➕</span>
-                    <span>Add Reminder</span>
-                </button>
+                <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+                    {getNotificationPermission() !== 'granted' && (
+                        <button
+                            className="btn btn-secondary"
+                            onClick={async () => {
+                                await requestNotificationPermission();
+                                window.location.reload();
+                            }}
+                        >
+                            <span>🔔</span>
+                            <span>Enable Notifications</span>
+                        </button>
+                    )}
+                    <button className="btn btn-primary" onClick={() => openModal()}>
+                        <span>➕</span>
+                        <span>Add Reminder</span>
+                    </button>
+                </div>
             </div>
 
             <div className="content-grid">
@@ -211,13 +297,35 @@ export default function Reminders() {
                             <div key={r.id} className="reminder-item" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
                                 <span className="reminder-icon">{r.icon || '⏰'}</span>
                                 <div className="reminder-content" style={{ flex: 1 }}>
-                                    <div className="reminder-title">{r.title}</div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+                                        <div className="reminder-title">{r.title}</div>
+                                        {r.isSynced && (
+                                            <span style={{
+                                                fontSize: '0.75rem',
+                                                color: 'var(--text-secondary)',
+                                                background: 'var(--surface-variant)',
+                                                padding: '2px 6px',
+                                                borderRadius: '4px'
+                                            }}>
+                                                Auto
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className="reminder-time">{new Date(r.dueAt).toLocaleString()} • {timeUntil(r.dueAt)}</div>
+                                    {r.notes && (
+                                        <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                                            {r.notes}
+                                        </div>
+                                    )}
                                 </div>
                                 <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
                                     <button className="btn btn-secondary" onClick={() => toggleComplete(r.id)}>{r.completed ? 'Undo' : 'Done'}</button>
-                                    <button className="btn btn-secondary" onClick={() => openModal(r)}>Edit</button>
-                                    <button className="btn btn-secondary" onClick={() => removeReminder(r.id)}>Delete</button>
+                                    {!r.isSynced && (
+                                        <>
+                                            <button className="btn btn-secondary" onClick={() => openModal(r)}>Edit</button>
+                                            <button className="btn btn-secondary" onClick={() => removeReminder(r.id)}>Delete</button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         ))
@@ -258,30 +366,30 @@ export default function Reminders() {
                             <div>
                                 <label className="form-label">Due</label>
                                 <input
-                                  className="form-input"
-                                  style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}
-                                  type="datetime-local"
-                                  name="dueAt"
-                                  value={form.dueAt}
-                                  onChange={handleChange}
-                                  required
+                                    className="form-input"
+                                    style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}
+                                    type="datetime-local"
+                                    name="dueAt"
+                                    value={form.dueAt}
+                                    onChange={handleChange}
+                                    required
                                 />
                             </div>
                             <div>
                                 <label className="form-label">Category</label>
                                 <CustomSelect
-                                  className="small"
-                                  value={form.category}
-                                  onChange={(val) => setForm((f) => ({ ...f, category: val }))}
-                                  options={[
-                                    { value: 'general', label: 'General' },
-                                    { value: 'feeding', label: 'Feeding' },
-                                    { value: 'sleep', label: 'Sleep' },
-                                    { value: 'diaper', label: 'Diaper' },
-                                    { value: 'health', label: 'Health' },
-                                    { value: 'photos', label: 'Photos' },
-                                  ]}
-                                  placeholder="Select category"
+                                    className="small"
+                                    value={form.category}
+                                    onChange={(val) => setForm((f) => ({ ...f, category: val }))}
+                                    options={[
+                                        { value: 'general', label: 'General' },
+                                        { value: 'feeding', label: 'Feeding' },
+                                        { value: 'sleep', label: 'Sleep' },
+                                        { value: 'diaper', label: 'Diaper' },
+                                        { value: 'health', label: 'Health' },
+                                        { value: 'photos', label: 'Photos' },
+                                    ]}
+                                    placeholder="Select category"
                                 />
                             </div>
                             <div>

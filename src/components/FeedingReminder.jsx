@@ -1,6 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import '../pages/Feeding.css';
 import './FeedingReminder.css';
+import { 
+  requestNotificationPermission, 
+  getNotificationPermission,
+  scheduleReminder,
+  cancelReminder,
+  showNotification
+} from '../services/notificationService';
+import { syncFeedingReminders } from '../services/reminderSyncService';
 
 const FeedingReminder = ({ feedings, onClose }) => {
   const [reminderSettings, setReminderSettings] = useState(() => {
@@ -15,11 +23,54 @@ const FeedingReminder = ({ feedings, onClose }) => {
 
   const [nextReminder, setNextReminder] = useState(null);
   const [upcomingReminders, setUpcomingReminders] = useState([]);
+  const scheduledReminderIdRef = useRef(null);
 
   useEffect(() => {
     localStorage.setItem('baby-bloom-feeding-reminders', JSON.stringify(reminderSettings));
     calculateNextReminder();
+    
+    // Sync to reminders page
+    syncFeedingReminders(feedings, reminderSettings);
   }, [reminderSettings, feedings]);
+
+  // Schedule notification when next reminder is calculated
+  useEffect(() => {
+    if (nextReminder && reminderSettings.enabled && reminderSettings.notifications) {
+      // Cancel previous reminder if exists
+      if (scheduledReminderIdRef.current) {
+        cancelReminder(`feeding-${scheduledReminderIdRef.current}`);
+      }
+
+      // Schedule new reminder
+      const reminderId = `feeding-${Date.now()}`;
+      scheduledReminderIdRef.current = reminderId;
+      
+      scheduleReminder({
+        id: reminderId,
+        title: '🍼 Time for Feeding!',
+        dueAt: nextReminder.time.toISOString(),
+        body: `It's been ${nextReminder.interval.toFixed(1)} hours since last feeding. Time to feed your baby!`,
+        icon: '🍼',
+        category: 'feeding',
+        onTrigger: () => {
+          // Show notification when triggered
+          if (getNotificationPermission() === 'granted') {
+            showNotification('🍼 Time for Feeding!', {
+              body: `It's been ${nextReminder.interval.toFixed(1)} hours since last feeding.`,
+              icon: '🍼',
+              requireInteraction: true
+            });
+          }
+        }
+      });
+    } else if (!reminderSettings.enabled || !reminderSettings.notifications) {
+      // Cancel reminder if disabled
+      if (scheduledReminderIdRef.current) {
+        cancelReminder(scheduledReminderIdRef.current);
+        scheduledReminderIdRef.current = null;
+      }
+    }
+  }, [nextReminder, reminderSettings.enabled, reminderSettings.notifications]);
 
   const calculateNextReminder = () => {
     if (!reminderSettings.enabled || feedings.length === 0) {
@@ -104,15 +155,15 @@ const FeedingReminder = ({ feedings, onClose }) => {
     }));
   };
 
-  const requestNotificationPermission = async () => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        new Notification('Baby Bloom', {
-          body: 'Feeding reminders enabled!',
-          icon: '🍼'
-        });
-      }
+  const handleRequestNotificationPermission = async () => {
+    const permission = await requestNotificationPermission();
+    if (permission === 'granted') {
+      showNotification('Baby Bloom', {
+        body: 'Feeding reminders enabled!',
+        icon: '🍼'
+      });
+      // Recalculate to schedule notification
+      calculateNextReminder();
     }
   };
 
@@ -188,11 +239,11 @@ const FeedingReminder = ({ feedings, onClose }) => {
                     </div>
                     <button 
                       className="btn btn-secondary-outline"
-                      onClick={requestNotificationPermission}
+                      onClick={handleRequestNotificationPermission}
                       style={{ padding: 'var(--spacing-sm) var(--spacing-md)', fontSize: 'var(--font-size-sm)' }}
                     >
-                      {Notification.permission === 'granted' ? '✅ Enabled' : 
-                       Notification.permission === 'denied' ? '🚫 Blocked' : '🔔 Enable'}
+                      {getNotificationPermission() === 'granted' ? '✅ Enabled' : 
+                       getNotificationPermission() === 'denied' ? '🚫 Blocked' : '🔔 Enable'}
                     </button>
                   </div>
                 </>

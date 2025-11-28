@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import CustomSelect from '../components/onboarding/CustomSelect';
+import SleepReminder from '../components/SleepReminder';
 import '../styles/pages.css';
 import './sleep.css';
 
@@ -8,6 +9,7 @@ const Sleep = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [sleeps, setSleeps] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [editingSleep, setEditingSleep] = useState(null);
   const [formData, setFormData] = useState({
     type: 'nap',
@@ -145,6 +147,10 @@ const Sleep = () => {
         <button className="btn btn-primary" onClick={() => openModal()}>
           <span>➕</span>
           <span>Log Sleep</span>
+        </button>
+        <button className="btn btn-secondary" onClick={() => setIsReminderOpen(true)}>
+          <span>⏰</span>
+          <span>Sleep Reminders</span>
         </button>
         <button className="btn btn-secondary">
           <span>📊</span>
@@ -294,20 +300,20 @@ const Sleep = () => {
                 />
               </div>
 
-            <div className="form-group">
-              <label>Sleep Quality</label>
-              <CustomSelect
-                value={formData.quality}
-                onChange={(val) => setFormData({ ...formData, quality: val })}
-                options={[
-                  { value: 'excellent', label: '?????? Excellent' },
-                  { value: 'good', label: '???? Good' },
-                  { value: 'fair', label: '?? Fair' },
-                  { value: 'poor', label: 'Poor' },
-                ]}
-                placeholder="Select quality"
-              />
-            </div>
+              <div className="form-group">
+                <label>Sleep Quality</label>
+                <CustomSelect
+                  value={formData.quality}
+                  onChange={(val) => setFormData({ ...formData, quality: val })}
+                  options={[
+                    { value: 'excellent', label: '?????? Excellent' },
+                    { value: 'good', label: '???? Good' },
+                    { value: 'fair', label: '?? Fair' },
+                    { value: 'poor', label: 'Poor' },
+                  ]}
+                  placeholder="Select quality"
+                />
+              </div>
 
               <div className="form-group">
                 <label>Notes</label>
@@ -330,6 +336,11 @@ const Sleep = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Sleep Reminder Modal */}
+      {isReminderOpen && (
+        <SleepReminder sleeps={sleeps} onClose={() => setIsReminderOpen(false)} />
       )}
     </div>
   );
