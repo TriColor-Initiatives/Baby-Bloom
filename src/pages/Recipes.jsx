@@ -1,10 +1,9 @@
 import '../styles/pages.css';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { recipeLibrary } from '../data/recipes';
-import CustomSelect from '../components/onboarding/CustomSelect';
+import BabyMealChat from '../components/BabyMealChat';
 
 const FAVORITES_KEY = 'baby-bloom-recipe-favorites';
-const PLAN_KEY = 'baby-bloom-ai-plan';
 const PROFILE_AGE_KEY = 'babyAgeMonths';
 
 const getProfileAge = () => {
@@ -25,61 +24,21 @@ const loadFavorites = () => {
   }
 };
 
-const loadAiPlan = () => null;
-
 const Recipes = () => {
   const [viewMode, setViewMode] = useState('library');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [favorites, setFavorites] = useState(() => new Set(loadFavorites()));
-  const [aiPlan, setAiPlan] = useState(loadAiPlan);
   const [aiStatus, setAiStatus] = useState('idle');
   const [aiError, setAiError] = useState('');
   const [dietFilter, setDietFilter] = useState('all');
-  const [aiForm, setAiForm] = useState(() => ({
-    ageMonths: getProfileAge(),
-    allergens: 'dairy, eggs',
-    dislikes: '',
-    texture: ['purees/mashed'],
-    mealsPerDay: 3,
-    specialRequest: 'Keep prep under 20 minutes and use pantry basics.',
-    planDays: 7
-  }));
-
-  const textureOptions = [
-    { value: 'purees/mashed', label: 'Purees / mashed' },
-    { value: 'mashed/soft-finger', label: 'Mashed / soft finger foods' },
-    { value: 'mixed textures', label: 'Mixed textures' }
-  ];
-  const mealsOptions = [
-    { value: '3', label: '3 meals' },
-    { value: '4', label: '4 small meals' }
-  ];
+  const suggestionClickRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favorites]));
   }, [favorites]);
 
-  useEffect(() => {
-    // Ensure no cached plan (e.g., old sample) persists between sessions
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(PLAN_KEY);
-      if (aiPlan !== null) {
-        setAiPlan(null);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (aiPlan) {
-      localStorage.setItem(PLAN_KEY, JSON.stringify(aiPlan));
-    } else {
-      localStorage.removeItem(PLAN_KEY);
-    }
-  }, [aiPlan]);
 
   const filteredRecipes = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -109,71 +68,6 @@ const Recipes = () => {
       }
       return next;
     });
-  };
-
-  const tryParseJson = (value) => {
-    if (!value) return null;
-    const attempts = [
-      value,
-      value
-        .replace(/[“”]/g, '"')
-        .replace(/[‘’]/g, "'")
-        .replace(/,\s*([}\]])/g, '$1')
-        .trim()
-    ];
-
-    for (const attempt of attempts) {
-      try {
-        return JSON.parse(attempt);
-      } catch {
-        continue;
-      }
-    }
-    return null;
-  };
-
-  const parsePlanContent = (text) => {
-    if (!text) return null;
-
-    // 1) direct parse
-    const direct = tryParseJson(text.trim());
-    if (direct) return direct;
-
-    // 2) extract code block
-    const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-    if (codeBlock?.[1]) {
-      const p = tryParseJson(codeBlock[1].trim());
-      if (p) return p;
-    }
-
-    // 3) remove <think> blocks and try
-    const withoutThoughts = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-    if (withoutThoughts && withoutThoughts !== text) {
-      const p = tryParseJson(withoutThoughts);
-      if (p) return p;
-    }
-
-    // 4) Balanced-brace extraction (try larger slices first)
-    const extracts = [];
-    for (let i = 0; i < text.length; i++) {
-      if (text[i] !== '{') continue;
-      let depth = 0;
-      for (let j = i; j < text.length; j++) {
-        if (text[j] === '{') depth += 1;
-        else if (text[j] === '}') depth -= 1;
-        if (depth === 0) {
-          extracts.push(text.slice(i, j + 1));
-          break;
-        }
-      }
-    }
-    extracts.sort((a, b) => b.length - a.length);
-    for (const ex of extracts) {
-      const p = tryParseJson(ex);
-      if (p) return p;
-    }
-
-    return null;
   };
 
   const extractResponseText = (data) => {
@@ -206,60 +100,166 @@ const Recipes = () => {
     }
   };
 
-  const generateAiPlan = async (event) => {
-    event.preventDefault();
+  // Handle chat messages
+  const handleChatMessage = async (userMessage) => {
     setAiStatus('loading');
     setAiError('');
 
     const openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
-    if (!openAiKey) {
-      // Demo fallback
-      setAiPlan({
-        days: [
-          {
-            day: 'Day 1',
-            meals: [
-              {
-                name: 'Avocado & Banana Puree',
-                timeOfDay: 'Breakfast',
-                ingredients: ['avocado', 'banana'],
-                prep: 'Mash and thin with breastmilk or formula',
-                portionGrams: 120,
-                notes: 'Rich in healthy fats',
-                allergens: []
-              }
-            ]
-          }
-        ],
-        summary: { calciumMg: 100, ironMg: 2.5, proteinG: 12, fiberG: 8, reminders: ['Avoid honey', 'Check texture for choking hazards'] }
-      });
-      setAiStatus('ready');
-      setAiError('Using demo plan - set VITE_OPENAI_API_KEY to generate live plans.');
-      return;
-    }
+    const babyAge = getProfileAge();
 
+    // System message to keep AI focused on baby meal planning
     const systemMessage = {
       role: 'system',
-      content: `You are a pediatric nutritionist. RESPOND WITH ONLY A SINGLE VALID JSON OBJECT AND NOTHING ELSE. Do not include markdown, code fences, prose, analysis, <think> tags, citations, URLs, or any surrounding text. The response MUST begin with "{" and end with "}" and be directly parseable by JavaScript JSON.parse. If you cannot produce valid JSON, reply with the exact string: ERROR_NON_JSON.
+      content: `You are the Baby Meal Assistant. Follow these formatting and behavior rules strictly:
 
-JSON shape (must match): {"days":[{"day":"Day 1","meals":[{"name":"...","timeOfDay":"...","ingredients":["..."],"prep":"...","portionGrams":0,"notes":"...","allergens":["..."]}]}],"summary":{"calciumMg":0,"ironMg":0,"proteinG":0,"fiberG":0,"reminders":["..."]}}.
+1. STYLE & TONE:
+- Warm, gentle, positive, and encouraging
+- Baby-friendly energy without being childish
+- Keep sentences clear and simple
+- Use soft emojis like 🍼🥣👶🍐 only where they enhance clarity
+- Never overwhelm with long paragraphs
 
-Keep prep under 20 minutes; avoid honey and choking hazards.`
+2. FORMATTING RULES (NO hash headings allowed):
+- All responses must use bold titles, bullets, numbers, and clean spacing
+- Use this structure:
+
+Main Title (bold)
+A short friendly intro line.
+
+Meal Title (bold, optional emoji)
+Texture: smooth / mashed / finger food
+Age: recommended age in months
+
+Ingredients:
+• ingredient
+• ingredient
+• ingredient
+
+How to make:
+
+Step
+
+Step
+
+Step
+
+Notes:
+• safety tips
+• allergen info
+• simple swaps
+
+Finish with a gentle closing question or offer to help.
+
+3. RESPONSE LAYOUT EXAMPLE (copy this format):
+
+Day 1 – Breakfast: Apple Oatmeal 🥣
+Texture: Smooth puree
+Age: 7–8 months
+
+Ingredients:
+• 1/4 cup oats
+• 1/2 apple, peeled
+• Water or breast milk
+
+How to make:
+
+Cook oats until very soft.
+
+Add diced apple and simmer until tender.
+
+Blend or mash to your baby's preferred texture.
+
+Notes:
+• Add more milk if you need a thinner puree.
+• Introduce new fruits slowly to check for reactions.
+
+Let me know if you'd like a dairy-free or faster version! 💛
+
+4. BEHAVIORAL CONSTRAINTS:
+- Only discuss baby meals, purees, recipes, ingredients, textures, allergens, substitutions, and meal plans
+- Do not give medical instructions
+- If a medical question appears, gently redirect to a pediatrician
+- Keep all answers concise but helpful
+- Avoid over-formatting — keep responses clean and consistent
+
+5. CHAT-FRIENDLY RULES:
+- No long blocks of text
+- Break sections with spacing
+- Use bullets and numbers for readability
+- Ensure every message is visually scannable in a chat bubble
+- Keep tone supportive, not robotic
+
+6. MEMORY OF CONTEXT:
+- Remember the baby's age if mentioned earlier (current baby is ${babyAge} months old)
+- Adjust textures according to age
+- Consider allergens or diet preferences previously stated
+
+Remember: Use **bold** for titles, not # headings. Keep responses warm, formatted, and focused on baby meal planning.`
     };
 
-    const userMessage = {
+    const userMsg = {
       role: 'user',
-      content: `Baby age: ${aiForm.ageMonths} months
-Plan length: ${aiForm.planDays} day(s)
-Avoid: ${aiForm.allergens || 'none'}
-Texture: ${Array.isArray(aiForm.texture) ? aiForm.texture.join(', ') : aiForm.texture}
-Meals per day: ${aiForm.mealsPerDay} + 1 snack if appropriate
-Dislikes/notes: ${aiForm.dislikes || 'none'}
-Special request: ${aiForm.specialRequest || 'none'}
-Output valid JSON only, no prose, markdown, or <think> content.`
+      content: userMessage
     };
 
     const sendRequest = async (messages, signal) => {
+      if (!openAiKey) {
+        // Demo fallback response
+        return {
+          choices: [{
+            message: {
+              content: `**Quick Meal Ideas for Your ${babyAge}-Month-Old** 🍼
+
+Here are some simple suggestions to get you started:
+
+**Avocado & Banana Puree** 🥑
+Texture: Smooth puree
+Age: 6+ months
+
+Ingredients:
+• 1/2 ripe avocado
+• 1/2 banana
+• Breast milk or formula (as needed)
+
+How to make:
+
+Mash avocado and banana together until smooth.
+
+Add a little breast milk or formula if you need a thinner texture.
+
+Serve fresh.
+
+Notes:
+• Avocado is rich in healthy fats for brain development.
+• Introduce one new food at a time to check for reactions.
+
+**Sweet Potato Mash** 🍠
+Texture: Smooth puree
+Age: 6+ months
+
+Ingredients:
+• 1 small sweet potato
+• Water or breast milk
+
+How to make:
+
+Steam or bake sweet potato until very soft.
+
+Peel and mash until smooth.
+
+Add liquid if needed for desired texture.
+
+Notes:
+• Great source of beta-carotene.
+• Can be stored in the fridge for up to 3 days.
+
+To get personalized AI responses with more recipes and meal plans, set up your VITE_OPENAI_API_KEY. 💛`
+            }
+          }]
+        };
+      }
+
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -269,11 +269,12 @@ Output valid JSON only, no prose, markdown, or <think> content.`
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages,
-          temperature: 0,
-          max_tokens: 2000
+          temperature: 0.7,
+          max_tokens: 500
         }),
         signal
       });
+
       if (!res.ok) {
         const errText = await res.text();
         console.error('OpenAI response body:', errText);
@@ -285,62 +286,29 @@ Output valid JSON only, no prose, markdown, or <think> content.`
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
-      const first = await sendRequest([systemMessage, userMessage], controller.signal);
-      console.debug('OpenAI first response:', first);
-      const firstText = extractResponseText(first);
-      let parsed = parsePlanContent(firstText);
-
-      // If parse failed, attempt one follow-up asking for strict JSON-only output
-      if (!parsed) {
-        console.warn('Initial parse failed, attempting follow-up. Raw firstText:', firstText);
-
-        if (typeof firstText === 'string' && firstText.trim().startsWith('ERROR_NON_JSON')) {
-          setAiError('OpenAI indicated it could not produce JSON (ERROR_NON_JSON).');
-          setAiStatus('error');
-          setAiPlan(null);
-          return;
-        }
-
-        const followUpUser = {
-          role: 'user',
-          content: 'Previous response included analysis or metadata. NOW OUTPUT ONLY THE JSON OBJECT that matches the required shape and nothing else. If you cannot, reply with ERROR_NON_JSON. Output must begin with { and end with }.'
-        };
-
-        const second = await sendRequest([systemMessage, { role: 'assistant', content: firstText }, followUpUser], controller.signal);
-        console.debug('OpenAI second response:', second);
-        const secondText = extractResponseText(second);
-        parsed = parsePlanContent(secondText);
-
-        if (!parsed) {
-          console.error('Follow-up parse failure. secondText:', secondText, 'first:', first);
-          setAiError('OpenAI returned unexpected output - not valid JSON after retry.');
-          setAiPlan(null);
-          setAiStatus('error');
-          return;
-        }
-      }
-
-      setAiPlan(parsed);
-      setAiStatus('ready');
+      const response = await sendRequest([systemMessage, userMsg], controller.signal);
+      const responseText = extractResponseText(response);
+      setAiStatus('idle');
       setAiError('');
+      return responseText || "I'm here to help with baby meal planning! Ask me about recipes, purees, or meal ideas.";
     } catch (err) {
-      console.error('AI planner error', err);
+      console.error('AI chat error', err);
+      setAiStatus('idle');
+
       if (err.name === 'AbortError') {
-        setAiError('AI request timed out. Please try again.');
+        setAiError('Request timed out. Please try again.');
+        throw new Error('Request timed out. Please try again.');
       } else if (err.status === 429) {
-        setAiError('OpenAI rate limit or quota reached. Try again in a bit or update your API key/billing.');
-        // Optional soft fallback: keep any existing plan so the UI isn’t empty
-        if (!aiPlan) {
-          setAiPlan(null);
-        }
+        setAiError('Rate limit reached. Please try again in a moment.');
+        throw new Error('Rate limit reached. Please try again in a moment.');
       } else {
-        setAiError(`AI meal plan failed: ${err.message || String(err)}`);
+        const errorMsg = `AI request failed: ${err.message || String(err)}`;
+        setAiError(errorMsg);
+        throw new Error(errorMsg);
       }
-      setAiPlan(null);
-      setAiStatus('error');
     } finally {
       clearTimeout(timeoutId);
     }
@@ -358,23 +326,23 @@ Output valid JSON only, no prose, markdown, or <think> content.`
         <p className="page-subtitle">Wholesome meals with quick prep, plus an AI-powered weekly plan.</p>
       </div>
 
-      <div className="page-actions">
+      <div className={`page-actions ${viewMode === 'planner' ? 'planner-mode' : ''}`}>
         <button
-          className={`btn btn-secondary ${viewMode === 'library' ? 'active' : ''}`}
+          className={`nav-tab ${viewMode === 'library' ? 'active' : ''}`}
           onClick={() => setViewMode('library')}
         >
           <span aria-hidden="true">🔎</span>
           <span>Recipe Library</span>
         </button>
         <button
-          className={`btn btn-secondary ${viewMode === 'favorites' ? 'active' : ''}`}
+          className={`nav-tab ${viewMode === 'favorites' ? 'active' : ''}`}
           onClick={() => setViewMode('favorites')}
         >
           <span aria-hidden="true">⭐</span>
           <span>Favorites</span>
         </button>
         <button
-          className={`btn btn-secondary ${viewMode === 'planner' ? 'active' : ''}`}
+          className={`nav-tab ${viewMode === 'planner' ? 'active' : ''}`}
           onClick={() => setViewMode('planner')}
         >
           <span aria-hidden="true">🧠</span>
@@ -469,175 +437,55 @@ Output valid JSON only, no prose, markdown, or <think> content.`
       )}
 
       {viewMode === 'planner' && (
-        <div className="section-card recipe-planner-card">
-          <form className="ai-form" onSubmit={generateAiPlan}>
-            <div className="form-row">
-              <div className="form-field">
-                <label className="form-label">Texture preference</label>
-                <CustomSelect
-                  multiple
-                  value={aiForm.texture}
-                  onChange={(val) => setAiForm({ ...aiForm, texture: Array.isArray(val) ? val : [val].filter(Boolean) })}
-                  options={textureOptions}
-                  placeholder="Select texture"
-                  className="small"
-                  required
-                />
-              </div>
-              <div className="form-field">
-                <label className="form-label">Plan length (days)</label>
-                <input
-                  className="form-input"
-                  type="number"
-                  min="1"
-                  max="30"
-                  value={aiForm.planDays}
-                  onChange={(e) => setAiForm({ ...aiForm, planDays: Math.max(1, Math.min(30, Number(e.target.value) || 1)) })}
-                  placeholder="e.g., 1 for a single day, 7 for a week"
-                />
-              </div>
-              <div className="form-field">
-                <label className="form-label">Meals per day</label>
-                <CustomSelect
-                  value={String(aiForm.mealsPerDay)}
-                  onChange={(val) => setAiForm({ ...aiForm, mealsPerDay: Number(val) })}
-                  options={mealsOptions}
-                  placeholder="Select meals"
-                  className="small"
-                  required
-                />
-              </div>
+        <div className="ai-planner-container">
+          {/* Quick Suggestions */}
+          <div className="quick-suggestions">
+            <div className="suggestion-chip" onClick={() => {
+              if (suggestionClickRef.current) {
+                suggestionClickRef.current('Quick puree ideas for my baby');
+              }
+            }}>
+              <span>🍎</span>
+              <span>Quick Puree Ideas</span>
             </div>
-
-            <div className="ai-age-note"></div>
-
-            <div className="form-row">
-              <div className="form-field">
-                <label className="form-label">Allergens to avoid</label>
-                <input
-                  className="form-input"
-                  placeholder="e.g., dairy, eggs"
-                  value={aiForm.allergens}
-                  onChange={(e) => setAiForm({ ...aiForm, allergens: e.target.value })}
-                />
-              </div>
-              <div className="form-field">
-                <label className="form-label">Dislikes or ingredients to skip</label>
-                <input
-                  className="form-input"
-                  placeholder="e.g., spinach, citrus"
-                  value={aiForm.dislikes}
-                  onChange={(e) => setAiForm({ ...aiForm, dislikes: e.target.value })}
-                />
-              </div>
+            <div className="suggestion-chip" onClick={() => {
+              if (suggestionClickRef.current) {
+                suggestionClickRef.current('Create a 7-day meal plan');
+              }
+            }}>
+              <span>📅</span>
+              <span>7-Day Meal Plan</span>
             </div>
-
-            <div className="form-field">
-              <label className="form-label">Special request (optional)</label>
-              <textarea
-                className="form-input"
-                rows="2"
-                placeholder="Add timing, budget, or cultural preferences"
-                value={aiForm.specialRequest}
-                onChange={(e) => setAiForm({ ...aiForm, specialRequest: e.target.value })}
-              />
+            <div className="suggestion-chip" onClick={() => {
+              if (suggestionClickRef.current) {
+                suggestionClickRef.current('Allergen-free recipe suggestions');
+              }
+            }}>
+              <span>🌾</span>
+              <span>Allergen-Free</span>
             </div>
-
-            <div className="ai-actions">
-              <button className="btn btn-primary btn-large" type="submit" disabled={aiStatus === 'loading'}>
-                <span aria-hidden="true">{aiStatus === 'loading' ? '⏳' : '✨'}</span>
-                <span>{aiStatus === 'loading' ? 'Generating...' : 'Generate with AI'}</span>
-              </button>
+            <div className="suggestion-chip" onClick={() => {
+              if (suggestionClickRef.current) {
+                suggestionClickRef.current('Quick prep meals under 15 minutes');
+              }
+            }}>
+              <span>⏱️</span>
+              <span>Quick Prep</span>
             </div>
-            {aiError && <div className="alert alert-warning">{aiError}</div>}
-          </form>
+          </div>
 
-          {!aiPlan && (
-            <div className="empty-state" style={{ padding: 'var(--spacing-xl)' }}>
-              <div className="empty-icon" aria-hidden="true">*</div>
-              <h3>No plan yet</h3>
-              <p>Enter your preferences above and click Generate with AI to see a tailored plan.</p>
-            </div>
-          )}
-
-          {aiPlan && (
-            <div className="ai-plan-grid">
-              {aiPlan.days?.map((day) => (
-                <div key={day.day} className="card ai-day">
-                  <div className="ai-day-header">
-                    <span className="ai-day-label">{day.day}</span>
-                    <span className="ai-day-tip">Daily safety: keep pieces soft, no honey or whole nuts.</span>
-                  </div>
-                  <div className="ai-meals">
-                    {day.meals.map((meal, idx) => (
-                      <div key={`${meal.name}-${idx}`} className="ai-meal">
-                        <div className="ai-meal-title">
-                          <span className="ai-meal-time">{meal.timeOfDay}</span>
-                          <span>{meal.name}</span>
-                        </div>
-                        <div className="ai-meal-row"><strong>Portion:</strong> {meal.portionGrams} g</div>
-                        <div className="ai-meal-row"><strong>Ingredients:</strong> {meal.ingredients.join(', ')}</div>
-                        <div className="ai-meal-row"><strong>Prep:</strong> {meal.prep}</div>
-                        <div className="ai-meal-row"><strong>Note:</strong> {meal.notes}</div>
-                        <div className="ai-meal-row"><strong>Allergens:</strong> {meal.allergens.length ? meal.allergens.join(', ') : 'None noted'}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {aiPlan?.summary && (
-            <div className="card ai-summary">
-              <h4>Weekly Summary</h4>
-              <div className="ai-summary-grid">
-                <div className="ai-pill">Calcium: {aiPlan.summary.calciumMg}</div>
-                <div className="ai-pill">Iron: {aiPlan.summary.ironMg}</div>
-                <div className="ai-pill">Protein: {aiPlan.summary.proteinG}</div>
-                <div className="ai-pill">Fiber: {aiPlan.summary.fiberG}</div>
-              </div>
-              {aiPlan.summary.reminders && (
-                <ul className="ai-reminders">
-                  {aiPlan.summary.reminders.map((item, idx) => (
-                    <li key={idx}>{item}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
+          {/* Chat Container */}
+          <div className="ai-chat-wrapper">
+            <BabyMealChat
+              onSendMessage={handleChatMessage}
+              isLoading={aiStatus === 'loading'}
+              error={aiError}
+              onSuggestionClick={suggestionClickRef}
+            />
+          </div>
         </div>
       )}
 
-      <div className="section-card" style={{ marginTop: 'var(--spacing-xl)' }}>
-        <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Feeding Guidelines</h3>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: 'var(--spacing-md)'
-          }}
-        >
-          <div className="info-item">
-            <h4 style={{ marginBottom: 'var(--spacing-sm)' }}>6-8 Months</h4>
-            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', margin: 0 }}>
-              Start with single-ingredient purees. Introduce iron-rich foods like meat and fortified cereals.
-            </p>
-          </div>
-          <div className="info-item">
-            <h4 style={{ marginBottom: 'var(--spacing-sm)' }}>8-10 Months</h4>
-            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', margin: 0 }}>
-              Introduce mashed and chopped foods. Baby can start self-feeding with soft finger foods.
-            </p>
-          </div>
-          <div className="info-item">
-            <h4 style={{ marginBottom: 'var(--spacing-sm)' }}>10-12 Months</h4>
-            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', margin: 0 }}>
-              Most table foods are OK. Continue breast milk or formula. Avoid honey, choking hazards.
-            </p>
-          </div>
-        </div>
-      </div>
 
       {selectedRecipe && (
         <div className="modal-overlay" onClick={() => setSelectedRecipe(null)}>

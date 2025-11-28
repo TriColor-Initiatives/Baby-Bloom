@@ -1049,6 +1049,145 @@ button.btn,
   color: var(--text-secondary);
 }
 
+/* AI Planner Page Enhancements */
+.recipes-page .page-actions.planner-mode {
+  margin-bottom: var(--spacing-lg);
+}
+
+.recipes-page .nav-tab {
+  padding: 10px 20px;
+  border-radius: 24px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.recipes-page .nav-tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.recipes-page .nav-tab span {
+  position: relative;
+  z-index: 1;
+}
+
+.recipes-page .nav-tab:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(85, 104, 201, 0.15);
+}
+
+.recipes-page .nav-tab.active {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(85, 104, 201, 0.25);
+}
+
+.recipes-page .nav-tab.active::before {
+  opacity: 1;
+}
+
+.recipes-page .nav-tab.active span {
+  color: white;
+}
+
+.ai-planner-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quick-suggestions {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  padding: var(--spacing-md);
+  background: var(--surface-variant);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+
+.suggestion-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.suggestion-chip:hover {
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+  color: white;
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(85, 104, 201, 0.2);
+}
+
+.suggestion-chip span:first-child {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.ai-chat-wrapper {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .recipes-page .ai-reminders {
   margin: 0;
   padding-left: 18px;
@@ -1056,6 +1195,40 @@ button.btn,
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+/* Responsive Design for AI Planner */
+@media (max-width: 768px) {
+  .recipes-page .nav-tab {
+    padding: 8px 16px;
+    font-size: var(--font-size-xs);
+  }
+
+  .recipes-page .nav-tab span:last-child {
+    display: none;
+  }
+
+  .quick-suggestions {
+    padding: var(--spacing-sm);
+    gap: var(--spacing-xs);
+  }
+
+  .suggestion-chip {
+    padding: 6px 12px;
+    font-size: var(--font-size-xs);
+  }
+
+  .suggestion-chip span:last-child {
+    display: none;
+  }
+
+  .chat-status {
+    padding: 3px 8px;
+  }
+
+  .status-text {
+    display: none;
+  }
 }
 
 .recipes-page .alert {
