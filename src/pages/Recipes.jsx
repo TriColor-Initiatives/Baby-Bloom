@@ -32,6 +32,7 @@ const Recipes = () => {
   const [aiStatus, setAiStatus] = useState('idle');
   const [aiError, setAiError] = useState('');
   const [dietFilter, setDietFilter] = useState('all');
+  const [conversationHistory, setConversationHistory] = useState([]);
   const suggestionClickRef = useRef(null);
 
   useEffect(() => {
@@ -107,6 +108,15 @@ const Recipes = () => {
 
     const openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
     const babyAge = getProfileAge();
+
+    // Determine token limit based on request type
+    const isLongRequest =
+      userMessage.toLowerCase().includes('7 days') ||
+      userMessage.toLowerCase().includes('week') ||
+      userMessage.toLowerCase().includes('meal plan') ||
+      userMessage.toLowerCase().includes('weekly');
+
+    const maxTokens = isLongRequest ? 3000 : 1500;
 
     // System message to keep AI focused on baby meal planning
     const systemMessage = {
@@ -189,6 +199,8 @@ Let me know if you'd like a dairy-free or faster version! 💛
 - Use bullets and numbers for readability
 - Ensure every message is visually scannable in a chat bubble
 - Keep tone supportive, not robotic
+- When creating tables, use actual line breaks (press Enter) between items in cells, NOT <br> tags
+- For multi-line content in table cells, use natural line breaks, not HTML tags
 
 6. MEMORY OF CONTEXT:
 - Remember the baby's age if mentioned earlier (current baby is ${babyAge} months old)
@@ -202,6 +214,13 @@ Remember: Use **bold** for titles, not # headings. Keep responses warm, formatte
       role: 'user',
       content: userMessage
     };
+
+    // Build messages array with conversation history (last 10 messages for context)
+    const messagesForApi = [
+      systemMessage,
+      ...conversationHistory.slice(-10), // Last 10 messages for context
+      userMsg
+    ];
 
     const sendRequest = async (messages, signal) => {
       if (!openAiKey) {
@@ -270,7 +289,7 @@ To get personalized AI responses with more recipes and meal plans, set up your V
           model: 'gpt-4o-mini',
           messages,
           temperature: 0.7,
-          max_tokens: 500
+          max_tokens: maxTokens
         }),
         signal
       });
@@ -286,26 +305,75 @@ To get personalized AI responses with more recipes and meal plans, set up your V
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    // Increase timeout for longer requests (7-day meal plans need more time)
+    const timeoutDuration = isLongRequest ? 60000 : 30000; // 60s for long requests, 30s for regular
+    const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
 
     try {
-      const response = await sendRequest([systemMessage, userMsg], controller.signal);
+      const response = await sendRequest(messagesForApi, controller.signal);
       const responseText = extractResponseText(response);
+
+      // Check if response was truncated (OpenAI sometimes truncates even with max_tokens)
+      const wasTruncated = responseText.length > 0 &&
+        (responseText.endsWith('...') ||
+          responseText.includes('[truncated]') ||
+          (maxTokens >= 2000 && responseText.length < 100)); // Suspiciously short for long requests
+
+      // Update conversation history
+      setConversationHistory(prev => {
+        const updated = [...prev, userMsg, {
+          role: 'assistant',
+          content: responseText
+        }];
+        // Keep only last 20 messages to avoid token bloat
+        return updated.slice(-20);
+      });
+
       setAiStatus('idle');
       setAiError('');
+
+      // Add note if truncated
+      if (wasTruncated) {
+        return responseText + '\n\n*Note: Response may have been truncated. Please ask for specific days if you need more details.*';
+      }
+
       return responseText || "I'm here to help with baby meal planning! Ask me about recipes, purees, or meal ideas.";
     } catch (err) {
       console.error('AI chat error', err);
       setAiStatus('idle');
 
+      // Don't add failed user message to history
       if (err.name === 'AbortError') {
-        setAiError('Request timed out. Please try again.');
-        throw new Error('Request timed out. Please try again.');
+        // Check if it was a long request based on the user message
+        const wasLongRequest =
+          userMessage.toLowerCase().includes('7 days') ||
+          userMessage.toLowerCase().includes('week') ||
+          userMessage.toLowerCase().includes('meal plan') ||
+          userMessage.toLowerCase().includes('weekly');
+
+        const errorMsg = wasLongRequest
+          ? 'Request timed out. Generating a 7-day meal plan takes longer. Please wait a moment and try again, or ask for fewer days.'
+          : 'Request timed out. The AI may be taking longer than expected. Please try again.';
+        setAiError(errorMsg);
+        throw new Error(errorMsg);
       } else if (err.status === 429) {
-        setAiError('Rate limit reached. Please try again in a moment.');
-        throw new Error('Rate limit reached. Please try again in a moment.');
+        const errorMsg = 'Rate limit reached. Please wait a moment before trying again.';
+        setAiError(errorMsg);
+        throw new Error(errorMsg);
+      } else if (err.status === 400) {
+        const errorMsg = 'Invalid request. Please check your message and try again.';
+        setAiError(errorMsg);
+        throw new Error(errorMsg);
+      } else if (err.status === 401) {
+        const errorMsg = 'API key is invalid or missing. Please check your configuration.';
+        setAiError(errorMsg);
+        throw new Error(errorMsg);
+      } else if (err.status === 500 || err.status >= 502) {
+        const errorMsg = 'AI service is temporarily unavailable. Please try again in a moment.';
+        setAiError(errorMsg);
+        throw new Error(errorMsg);
       } else {
-        const errorMsg = `AI request failed: ${err.message || String(err)}`;
+        const errorMsg = `AI request failed: ${err.message || String(err)}. Please try again.`;
         setAiError(errorMsg);
         throw new Error(errorMsg);
       }
@@ -317,7 +385,7 @@ To get personalized AI responses with more recipes and meal plans, set up your V
 
 
   return (
-    <div className="page-container recipes-page">
+    <div className="page-container recipes-page" style={{ background: '#FAFAFA', minHeight: '100vh' }}>
       <div className="page-header">
         <div className="page-header-top">
           <h1 className="page-title">
@@ -353,41 +421,47 @@ To get personalized AI responses with more recipes and meal plans, set up your V
       <div className="page-meta"></div>
 
       {viewMode !== 'planner' && (
-        <div className="section-card">
-          <div className="recipes-toolbar">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Diet filter:</span>
-              <button
-                className={`btn btn-secondary ${dietFilter === 'all' ? 'active' : ''}`}
-                type="button"
-                onClick={() => setDietFilter('all')}
-              >
-                All
-              </button>
-              <button
-                className={`btn btn-secondary ${dietFilter === 'vegetarian' ? 'active' : ''}`}
-                type="button"
-                onClick={() => setDietFilter('vegetarian')}
-              >
-                Vegetarian
-              </button>
-              <button
-                className={`btn btn-secondary ${dietFilter === 'non-veg' ? 'active' : ''}`}
-                type="button"
-                onClick={() => setDietFilter('non-veg')}
-              >
-                Non-veg (eggs/meat)
-              </button>
+        <>
+          <div className="recipes-toolbar-sticky">
+            <div className="recipes-toolbar">
+              <div className="toolbar-filters">
+                <span className="filter-label">Diet:</span>
+                <div className="filter-buttons">
+                  <button
+                    className={`filter-btn ${dietFilter === 'all' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setDietFilter('all')}
+                  >
+                    All
+                  </button>
+                  <button
+                    className={`filter-btn ${dietFilter === 'vegetarian' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setDietFilter('vegetarian')}
+                  >
+                    Vegetarian
+                  </button>
+                  <button
+                    className={`filter-btn ${dietFilter === 'non-veg' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setDietFilter('non-veg')}
+                  >
+                    Non-veg
+                  </button>
+                </div>
+              </div>
+              <div className="toolbar-search">
+                <input
+                  className="recipe-search-input"
+                  placeholder="Search recipes, ingredients, tags..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <span className="toolbar-meta">
+                  {displayedRecipes.length} {displayedRecipes.length === 1 ? 'recipe' : 'recipes'}
+                </span>
+              </div>
             </div>
-            <input
-              className="form-input"
-              placeholder="Search by name, ingredient, or tag (e.g., puree, iron, finger food)"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <span className="toolbar-meta">
-              {displayedRecipes.length} recipe{displayedRecipes.length === 1 ? '' : 's'}
-            </span>
           </div>
 
           <div className="recipes-grid">
@@ -401,39 +475,33 @@ To get personalized AI responses with more recipes and meal plans, set up your V
               displayedRecipes.map((recipe) => (
                 <div
                   key={recipe.id}
-                  className={`card recipe-card ${recipe.diet === 'vegetarian' ? 'veg' : 'non-veg'}`}
+                  className={`recipe-card-vertical ${recipe.diet === 'vegetarian' ? 'veg' : 'non-veg'}`}
                 >
-                  <div className="recipe-icon" aria-hidden="true">{recipe.icon}</div>
-                  <div className="recipe-meta">
-                    <h4 className="recipe-title">{recipe.name}</h4>
-                    <div className="recipe-tags">
-                      <span className="recipe-tag">👶 {recipe.ageRange}</span>
-                      <span className="recipe-tag">⏱️ {recipe.time}</span>
-                      <span className="recipe-tag">⭐ {recipe.difficulty}</span>
-                    </div>
-                    <div className="recipe-nutrition">{recipe.nutrition}</div>
-                  </div>
-                  <div className="recipe-actions">
-                    <button className="btn btn-secondary" onClick={() => setSelectedRecipe(recipe)}>
-                      <span aria-hidden="true">📖</span>
-                      <span>View steps</span>
-                    </button>
+                  <div className="recipe-card-icon-wrapper">
+                    <div className="recipe-icon-vertical" aria-hidden="true">{recipe.icon}</div>
                     <button
-                      className={`btn btn-secondary ${favorites.has(recipe.id) ? 'is-active' : ''}`}
-                      onClick={() => toggleFavorite(recipe.id)}
+                      className={`recipe-favorite-btn-vertical ${favorites.has(recipe.id) ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(recipe.id);
+                      }}
+                      aria-label={favorites.has(recipe.id) ? 'Remove from favorites' : 'Add to favorites'}
                     >
-                      <span aria-hidden="true">{favorites.has(recipe.id) ? '💜' : '🤍'}</span>
-                      <span>{favorites.has(recipe.id) ? 'Saved' : 'Save'}</span>
+                      {favorites.has(recipe.id) ? '⭐' : '☆'}
                     </button>
                   </div>
-                  <div className="recipe-footnote">
-                    <strong>Allergens:</strong> {recipe.allergens.length ? recipe.allergens.join(', ') : 'None noted'}
-                  </div>
+                  <h3 className="recipe-name-vertical">{recipe.name}</h3>
+                  <button
+                    className="recipe-view-btn-vertical"
+                    onClick={() => setSelectedRecipe(recipe)}
+                  >
+                    View Recipe
+                  </button>
                 </div>
               ))
             )}
           </div>
-        </div>
+        </>
       )}
 
       {viewMode === 'planner' && (

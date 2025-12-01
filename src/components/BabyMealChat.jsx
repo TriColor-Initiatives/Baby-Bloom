@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './BabyMealChat.css';
 
 const BabyMealChat = ({ onSendMessage, isLoading, error, onSuggestionClick }) => {
@@ -191,12 +193,65 @@ const BabyMealChat = ({ onSendMessage, isLoading, error, onSuggestionClick }) =>
                             ) : (
                                 <>
                                     <div className="message-content">
-                                        {message.content.split('\n').map((line, idx) => (
-                                            <React.Fragment key={idx}>
-                                                {line}
-                                                {idx < message.content.split('\n').length - 1 && <br />}
-                                            </React.Fragment>
-                                        ))}
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkGfm]}
+                                            components={{
+                                                // Custom styling for markdown elements
+                                                p: ({ node, children, ...props }) => {
+                                                    // Skip rendering empty paragraphs
+                                                    if (!children || (Array.isArray(children) && children.every(c => !c || c === '\n' || (typeof c === 'string' && c.trim() === '')))) {
+                                                        return null;
+                                                    }
+                                                    return <p className="markdown-paragraph" {...props}>{children}</p>;
+                                                },
+                                                strong: ({ node, ...props }) => <strong className="markdown-strong" {...props} />,
+                                                em: ({ node, ...props }) => <em className="markdown-em" {...props} />,
+                                                ul: ({ node, ...props }) => <ul className="markdown-list markdown-ul" {...props} />,
+                                                ol: ({ node, ...props }) => <ol className="markdown-list markdown-ol" {...props} />,
+                                                li: ({ node, ...props }) => <li className="markdown-list-item" {...props} />,
+                                                h1: ({ node, ...props }) => <h1 className="markdown-h1" {...props} />,
+                                                h2: ({ node, ...props }) => <h2 className="markdown-h2" {...props} />,
+                                                h3: ({ node, ...props }) => <h3 className="markdown-h3" {...props} />,
+                                                code: ({ node, inline, ...props }) => 
+                                                    inline ? (
+                                                        <code className="markdown-code-inline" {...props} />
+                                                    ) : (
+                                                        <code className="markdown-code-block" {...props} />
+                                                    ),
+                                                blockquote: ({ node, ...props }) => <blockquote className="markdown-blockquote" {...props} />,
+                                                hr: ({ node, ...props }) => <hr className="markdown-hr" {...props} />,
+                                                br: () => <br style={{ lineHeight: '1.4' }} />,
+                                                table: ({ node, ...props }) => <div className="markdown-table-wrapper"><table className="markdown-table" {...props} /></div>,
+                                                thead: ({ node, ...props }) => <thead className="markdown-thead" {...props} />,
+                                                tbody: ({ node, ...props }) => <tbody className="markdown-tbody" {...props} />,
+                                                tr: ({ node, ...props }) => <tr className="markdown-tr" {...props} />,
+                                                th: ({ node, ...props }) => <th className="markdown-th" {...props} />,
+                                                td: ({ node, children, ...props }) => {
+                                                    // Process children to convert <br> tags to actual line breaks
+                                                    const processChildren = (children) => {
+                                                        if (typeof children === 'string') {
+                                                            return children.split('<br>').map((part, i, arr) => 
+                                                                i < arr.length - 1 ? [part, <br key={i} />] : part
+                                                            );
+                                                        }
+                                                        if (Array.isArray(children)) {
+                                                            return children.flatMap((child, i) => {
+                                                                if (typeof child === 'string' && child.includes('<br>')) {
+                                                                    return child.split('<br>').flatMap((part, j, arr) => 
+                                                                        j < arr.length - 1 ? [part, <br key={`${i}-${j}`} />] : part
+                                                                    );
+                                                                }
+                                                                return child;
+                                                            });
+                                                        }
+                                                        return children;
+                                                    };
+                                                    return <td className="markdown-td" {...props}>{processChildren(children)}</td>;
+                                                },
+                                            }}
+                                        >
+                                            {message.content.replace(/\n{3,}/g, '\n\n')}
+                                        </ReactMarkdown>
                                     </div>
                                 </>
                             )}
