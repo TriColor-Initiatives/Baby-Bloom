@@ -1,14 +1,15 @@
 .baby-meal-chat {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 200px);
+    height: calc(100vh - 240px);
     min-height: 600px;
-    max-height: calc(100vh - 120px);
+    max-height: calc(100vh - 160px);
     background: linear-gradient(135deg, #f2f5ff 0%, #eef2ff 100%);
     border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     border: 1px solid var(--border);
+    margin-bottom: 0;
 }
 
 /* Chat Header */
@@ -248,12 +249,12 @@
     line-height: 1.4;
 }
 
-.message-content > * {
+.message-content>* {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
 }
 
-.message-content > * + * {
+.message-content>*+* {
     margin-top: 2px !important;
 }
 
@@ -264,7 +265,7 @@
     padding: 0;
 }
 
-.message-content .markdown-paragraph + .markdown-paragraph {
+.message-content .markdown-paragraph+.markdown-paragraph {
     margin-top: 2px !important;
 }
 
@@ -276,12 +277,12 @@
 }
 
 /* Collapse multiple consecutive empty paragraphs */
-.message-content .markdown-paragraph:empty + .markdown-paragraph:empty {
+.message-content .markdown-paragraph:empty+.markdown-paragraph:empty {
     display: none !important;
 }
 
 /* Remove spacing after empty paragraphs */
-.message-content .markdown-paragraph:empty + * {
+.message-content .markdown-paragraph:empty+* {
     margin-top: 0 !important;
 }
 
@@ -315,7 +316,7 @@
     line-height: 1.4;
 }
 
-.message-content .markdown-list-item + .markdown-list-item {
+.message-content .markdown-list-item+.markdown-list-item {
     margin-top: 1px !important;
 }
 
@@ -469,7 +470,7 @@
     .markdown-table-wrapper {
         margin: 6px 0;
     }
-    
+
     .markdown-th,
     .markdown-td {
         padding: 8px 10px;

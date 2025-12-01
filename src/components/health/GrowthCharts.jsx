@@ -244,6 +244,17 @@ const GrowthCharts = ({ referenceCurve = [], chartPoints = [], onClose, embed = 
 
       {/* Chart */}
       <div className="chart-container">
+        {/* Legend - positioned at top right */}
+        <div className="chart-legend">
+          <div className="legend-item">
+            <span className="legend-color" style={{ background: '#c7d3ff', border: '1px dashed #c7d3ff' }}></span>
+            <span>Reference</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{ background: 'var(--accent)' }}></span>
+            <span>Your baby</span>
+          </div>
+        </div>
         <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Baby ${activeTab} growth chart`}>
           {/* Background grid */}
           <defs>
@@ -466,18 +477,6 @@ const GrowthCharts = ({ referenceCurve = [], chartPoints = [], onClose, embed = 
             </text>
           )}
         </svg>
-      </div>
-
-      {/* Legend */}
-      <div className="chart-legend">
-        <div className="legend-item">
-          <span className="legend-color" style={{ background: '#c7d3ff', border: '1px dashed #c7d3ff' }}></span>
-          <span>Reference (50th percentile)</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ background: 'var(--accent)' }}></span>
-          <span>Your baby</span>
-        </div>
       </div>
     </div>
   );

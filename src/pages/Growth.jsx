@@ -493,187 +493,257 @@ const Growth = () => {
         </button>
       </div>
 
-      <div className="section-card" style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Latest Measurements</h3>
-        {latestRecord ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--spacing-lg)' }}>
-            {latestRecord.weight && (() => {
-              const trend = getTrend('weight', latestRecord.weight);
-              const percentile = getPercentile('weight', latestRecord.weight, getAgeInMonths(latestRecord.date, 0));
-              return (
-                <div style={{
-                  background: 'linear-gradient(135deg, #eef2ff, #dfe7ff)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: 'var(--spacing-lg)',
-                  border: '1px solid rgba(255,255,255,0.5)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 'var(--spacing-sm)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-                    <span style={{ fontSize: '1.5rem' }}>⚖️</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 500 }}>Weight</div>
-                      <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--text-primary)' }}>
-                        {latestRecord.weight} <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500 }}>kg</span>
-                      </div>
-                    </div>
-                  </div>
-                  {trend && (
+      {/* Two Column Layout: Latest Measurements (Left) and Growth Charts (Right) */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 'var(--spacing-xl)',
+        marginBottom: 'var(--spacing-xl)',
+        alignItems: 'stretch'
+      }} className="growth-two-column-layout">
+        {/* Left Column: Latest Measurements */}
+        <div className="section-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Latest Measurements</h3>
+          {latestRecord ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)', flex: 1, minHeight: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)', flex: 1, overflow: 'auto' }}>
+                {latestRecord.weight && (() => {
+                  const trend = getTrend('weight', latestRecord.weight);
+                  const percentile = getPercentile('weight', latestRecord.weight, getAgeInMonths(latestRecord.date, 0));
+                  return (
                     <div style={{
+                      background: 'linear-gradient(135deg, #eef2ff, #dfe7ff)',
+                      borderRadius: 'var(--radius-lg)',
+                      padding: 'var(--spacing-lg)',
+                      border: '1px solid rgba(255,255,255,0.5)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 'var(--spacing-xs)',
-                      fontSize: 'var(--font-size-sm)',
-                      color: trend.direction === 'up' ? 'var(--success)' : trend.direction === 'down' ? 'var(--error)' : 'var(--text-secondary)'
+                      gap: 'var(--spacing-md)'
                     }}>
-                      <span>{trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'}</span>
-                      <span>{trend.value.toFixed(1)} kg ({trend.percentage}%)</span>
-                    </div>
-                  )}
-                  {percentile && (
-                    <div style={{
-                      background: 'rgba(255,255,255,0.7)',
-                      padding: '4px 10px',
-                      borderRadius: '999px',
-                      fontSize: 'var(--font-size-xs)',
-                      fontWeight: 600,
-                      color: 'var(--primary)',
-                      display: 'inline-block',
-                      width: 'fit-content'
-                    }}>
-                      {percentile}th percentile
-                    </div>
-                  )}
-                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginTop: 'var(--spacing-xs)' }}>
-                    {getTimeAgo(latestRecord.date)} • {new Date(latestRecord.date).toLocaleDateString()}
-                  </div>
-                </div>
-              );
-            })()}
-            {latestRecord.height && (() => {
-              const trend = getTrend('height', latestRecord.height);
-              const percentile = getPercentile('height', latestRecord.height, getAgeInMonths(latestRecord.date, 0));
-              return (
-                <div style={{
-                  background: 'linear-gradient(135deg, #eef2ff, #dfe7ff)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: 'var(--spacing-lg)',
-                  border: '1px solid rgba(255,255,255,0.5)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 'var(--spacing-sm)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-                    <span style={{ fontSize: '1.5rem' }}>📏</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 500 }}>Height</div>
-                      <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--text-primary)' }}>
-                        {latestRecord.height} <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500 }}>cm</span>
+                      <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>⚖️</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 500 }}>Weight</div>
+                        <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {latestRecord.weight} <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500 }}>kg</span>
+                        </div>
+                        {percentile && (
+                          <div style={{
+                            background: 'rgba(255,255,255,0.7)',
+                            padding: '4px 10px',
+                            borderRadius: '999px',
+                            fontSize: 'var(--font-size-xs)',
+                            fontWeight: 600,
+                            color: 'var(--primary)',
+                            display: 'inline-block',
+                            width: 'fit-content',
+                            marginTop: 'var(--spacing-xs)'
+                          }}>
+                            {percentile}th percentile
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 'var(--spacing-xs)', flexShrink: 0 }}>
+                        {trend && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'var(--spacing-xs)',
+                            fontSize: 'var(--font-size-sm)',
+                            color: trend.direction === 'up' ? 'var(--success)' : trend.direction === 'down' ? 'var(--error)' : 'var(--text-secondary)',
+                            fontWeight: 600
+                          }}>
+                            <span>{trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'}</span>
+                            <span>{trend.value.toFixed(1)} kg ({trend.percentage}%)</span>
+                          </div>
+                        )}
+                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', textAlign: 'right' }}>
+                          {getTimeAgo(latestRecord.date)} • {new Date(latestRecord.date).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  {trend && (
+                  );
+                })()}
+                {latestRecord.height && (() => {
+                  const trend = getTrend('height', latestRecord.height);
+                  const percentile = getPercentile('height', latestRecord.height, getAgeInMonths(latestRecord.date, 0));
+                  return (
                     <div style={{
+                      background: 'linear-gradient(135deg, #eef2ff, #dfe7ff)',
+                      borderRadius: 'var(--radius-lg)',
+                      padding: 'var(--spacing-lg)',
+                      border: '1px solid rgba(255,255,255,0.5)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 'var(--spacing-xs)',
-                      fontSize: 'var(--font-size-sm)',
-                      color: trend.direction === 'up' ? 'var(--success)' : trend.direction === 'down' ? 'var(--error)' : 'var(--text-secondary)'
+                      gap: 'var(--spacing-md)'
                     }}>
-                      <span>{trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'}</span>
-                      <span>{trend.value.toFixed(1)} cm ({trend.percentage}%)</span>
-                    </div>
-                  )}
-                  {percentile && (
-                    <div style={{
-                      background: 'rgba(255,255,255,0.7)',
-                      padding: '4px 10px',
-                      borderRadius: '999px',
-                      fontSize: 'var(--font-size-xs)',
-                      fontWeight: 600,
-                      color: 'var(--primary)',
-                      display: 'inline-block',
-                      width: 'fit-content'
-                    }}>
-                      {percentile}th percentile
-                    </div>
-                  )}
-                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginTop: 'var(--spacing-xs)' }}>
-                    {getTimeAgo(latestRecord.date)} • {new Date(latestRecord.date).toLocaleDateString()}
-                  </div>
-                </div>
-              );
-            })()}
-            {latestRecord.headCircumference && (() => {
-              const trend = getTrend('head', latestRecord.headCircumference);
-              const percentile = getPercentile('head', latestRecord.headCircumference, getAgeInMonths(latestRecord.date, 0));
-              return (
-                <div style={{
-                  background: 'linear-gradient(135deg, #eef2ff, #dfe7ff)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: 'var(--spacing-lg)',
-                  border: '1px solid rgba(255,255,255,0.5)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 'var(--spacing-sm)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-                    <span style={{ fontSize: '1.5rem' }}>⭕</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 500 }}>Head Circumference</div>
-                      <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--text-primary)' }}>
-                        {latestRecord.headCircumference} <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500 }}>cm</span>
+                      <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>📏</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 500 }}>Height</div>
+                        <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {latestRecord.height} <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500 }}>cm</span>
+                        </div>
+                        {percentile && (
+                          <div style={{
+                            background: 'rgba(255,255,255,0.7)',
+                            padding: '4px 10px',
+                            borderRadius: '999px',
+                            fontSize: 'var(--font-size-xs)',
+                            fontWeight: 600,
+                            color: 'var(--primary)',
+                            display: 'inline-block',
+                            width: 'fit-content',
+                            marginTop: 'var(--spacing-xs)'
+                          }}>
+                            {percentile}th percentile
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 'var(--spacing-xs)', flexShrink: 0 }}>
+                        {trend && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'var(--spacing-xs)',
+                            fontSize: 'var(--font-size-sm)',
+                            color: trend.direction === 'up' ? 'var(--success)' : trend.direction === 'down' ? 'var(--error)' : 'var(--text-secondary)',
+                            fontWeight: 600
+                          }}>
+                            <span>{trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'}</span>
+                            <span>{trend.value.toFixed(1)} cm ({trend.percentage}%)</span>
+                          </div>
+                        )}
+                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', textAlign: 'right' }}>
+                          {getTimeAgo(latestRecord.date)} • {new Date(latestRecord.date).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  {trend && (
+                  );
+                })()}
+                {latestRecord.headCircumference && (() => {
+                  const trend = getTrend('head', latestRecord.headCircumference);
+                  const percentile = getPercentile('head', latestRecord.headCircumference, getAgeInMonths(latestRecord.date, 0));
+                  return (
                     <div style={{
+                      background: 'linear-gradient(135deg, #eef2ff, #dfe7ff)',
+                      borderRadius: 'var(--radius-lg)',
+                      padding: 'var(--spacing-lg)',
+                      border: '1px solid rgba(255,255,255,0.5)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 'var(--spacing-xs)',
-                      fontSize: 'var(--font-size-sm)',
-                      color: trend.direction === 'up' ? 'var(--success)' : trend.direction === 'down' ? 'var(--error)' : 'var(--text-secondary)'
+                      gap: 'var(--spacing-md)'
                     }}>
-                      <span>{trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'}</span>
-                      <span>{trend.value.toFixed(1)} cm ({trend.percentage}%)</span>
+                      <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>⭕</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', fontWeight: 500 }}>Head Circumference</div>
+                        <div style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {latestRecord.headCircumference} <span style={{ fontSize: 'var(--font-size-lg)', fontWeight: 500 }}>cm</span>
+                        </div>
+                        {percentile && (
+                          <div style={{
+                            background: 'rgba(255,255,255,0.7)',
+                            padding: '4px 10px',
+                            borderRadius: '999px',
+                            fontSize: 'var(--font-size-xs)',
+                            fontWeight: 600,
+                            color: 'var(--primary)',
+                            display: 'inline-block',
+                            width: 'fit-content',
+                            marginTop: 'var(--spacing-xs)'
+                          }}>
+                            {percentile}th percentile
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 'var(--spacing-xs)', flexShrink: 0 }}>
+                        {trend && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'var(--spacing-xs)',
+                            fontSize: 'var(--font-size-sm)',
+                            color: trend.direction === 'up' ? 'var(--success)' : trend.direction === 'down' ? 'var(--error)' : 'var(--text-secondary)',
+                            fontWeight: 600
+                          }}>
+                            <span>{trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'}</span>
+                            <span>{trend.value.toFixed(1)} cm ({trend.percentage}%)</span>
+                          </div>
+                        )}
+                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', textAlign: 'right' }}>
+                          {getTimeAgo(latestRecord.date)} • {new Date(latestRecord.date).toLocaleDateString()}
+                        </div>
+                      </div>
                     </div>
-                  )}
-                  {percentile && (
-                    <div style={{
-                      background: 'rgba(255,255,255,0.7)',
-                      padding: '4px 10px',
-                      borderRadius: '999px',
-                      fontSize: 'var(--font-size-xs)',
-                      fontWeight: 600,
-                      color: 'var(--primary)',
-                      display: 'inline-block',
-                      width: 'fit-content'
-                    }}>
-                      {percentile}th percentile
-                    </div>
-                  )}
-                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginTop: 'var(--spacing-xs)' }}>
-                    {getTimeAgo(latestRecord.date)} • {new Date(latestRecord.date).toLocaleDateString()}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-icon">📏</div>
-            <h3>No measurements yet</h3>
-            <p>Add your first growth measurement to start tracking</p>
-            <button className="btn btn-primary btn-large" onClick={openMeasurementModal}>
-              <span>➕</span>
-              <span>Add Measurement</span>
+                  );
+                })()}
+              </div>
+              {latestRecord && (
+                <button className="btn btn-primary" onClick={openMeasurementModal} style={{ marginTop: 'auto', width: 'auto', alignSelf: 'center', flexShrink: 0 }}>
+                  <span>➕</span>
+                  <span>Add New Measurement</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="empty-state" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div className="empty-icon">📏</div>
+              <h3>No measurements yet</h3>
+              <p>Add your first growth measurement to start tracking</p>
+              <button className="btn btn-primary btn-large" onClick={openMeasurementModal}>
+                <span>➕</span>
+                <span>Add Measurement</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Growth Charts */}
+        <div className="section-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-lg)' }}>
+            <h3 style={{ margin: 0 }}>Growth Charts</h3>
+            <button className="btn btn-secondary" onClick={() => setIsChartsOpen(true)} style={{ padding: '6px 12px', fontSize: 'var(--font-size-xs)' }}>
+              <span>🔍</span>
+              <span>Fullscreen</span>
             </button>
           </div>
-        )}
+          <div style={{
+            padding: 'var(--spacing-lg) var(--spacing-lg) var(--spacing-sm) var(--spacing-lg)',
+            background: 'linear-gradient(135deg, #eef2ff, #dfe7ff)',
+            borderRadius: 'var(--radius-md)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--spacing-sm)',
+            flex: 1,
+            minHeight: 0
+          }}>
+            <GrowthCharts
+              records={records}
+              referenceCurve={referenceCurve}
+              chartPoints={chartPoints}
+              onClose={() => { }}
+              embed
+            />
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginTop: 'auto',
+              paddingTop: 'var(--spacing-sm)',
+              borderTop: '1px solid rgba(255,255,255,0.5)',
+              flexShrink: 0
+            }}>
+              <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-xs)', flex: 1 }}>
+                Track growth over time. Switch tabs to view different metrics.
+              </div>
+              <button className="btn btn-primary" onClick={openMeasurementModal} style={{ padding: '6px 12px', fontSize: 'var(--font-size-xs)', whiteSpace: 'nowrap' }}>
+                <span>➕</span>
+                <span>Add</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="section-card" style={{ marginBottom: 'var(--spacing-xl)' }}>
@@ -748,42 +818,6 @@ const Growth = () => {
         </div>
       </div>
 
-      <div className="section-card" style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Growth Charts</h3>
-        <div style={{
-          padding: 'var(--spacing-xl)',
-          background: 'linear-gradient(135deg, #eef2ff, #dfe7ff)',
-          borderRadius: 'var(--radius-md)',
-          textAlign: 'center',
-          minHeight: '320px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--spacing-md)',
-          maxWidth: '100%',
-          margin: '0 auto'
-        }}>
-          <GrowthCharts
-            records={records}
-            referenceCurve={referenceCurve}
-            chartPoints={chartPoints}
-            onClose={() => { }}
-            embed
-          />
-          <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)', marginTop: 'var(--spacing-sm)' }}>
-            Track your baby's growth over time. Switch between Weight, Height, and Head Circumference using the tabs above.
-          </div>
-          <div style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap', justifyContent: 'center', marginTop: 'var(--spacing-md)' }}>
-            <button className="btn btn-secondary" onClick={() => setIsChartsOpen(true)}>
-              <span>🔍</span>
-              <span>Open in Fullscreen</span>
-            </button>
-            <button className="btn btn-primary" onClick={openMeasurementModal}>
-              <span>➕</span>
-              <span>Add Measurement</span>
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Growth History Timeline */}
       {growthRecords.length > 0 && (
