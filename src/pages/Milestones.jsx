@@ -288,7 +288,7 @@ const getTimeAgo = (date) => {
     
     // Fallback to category icon
     const categoryIcons = {
-      motor: '🏃',
+      motor: '👶',
       language: '💬',
       social: '👥',
       cognitive: '🧠'
@@ -298,7 +298,7 @@ const getTimeAgo = (date) => {
 
   const getCategoryIcon = (category) => {
     const icons = {
-      motor: '🏃',
+      motor: '👶',
       language: '💬',
       social: '👥',
       cognitive: '🧠'
@@ -732,7 +732,7 @@ const getTimeAgo = (date) => {
                   value={formData.category}
                   onChange={(val) => setFormData({ ...formData, category: val })}
                   options={[
-                    { value: 'motor', label: '🏃 Motor' },
+                    { value: 'motor', label: '👶 Motor' },
                     { value: 'language', label: '💬 Language' },
                     { value: 'social', label: '👥 Social' },
                     { value: 'cognitive', label: '🧠 Cognitive' },
