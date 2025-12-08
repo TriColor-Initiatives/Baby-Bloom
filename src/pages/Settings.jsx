@@ -30,6 +30,19 @@ export default function Settings() {
     bloodType: '',
   });
   
+  // Track original profile to detect changes
+  const [originalProfile, setOriginalProfile] = useState({
+    name: '',
+    birthDate: '',
+    gender: 'not-specified',
+    weight: '',
+    height: '',
+    bloodType: '',
+  });
+  
+  // Track if there are unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
   // Other settings
   const [autoTheme, setAutoTheme] = useState(false);
   const [language, setLanguage] = useState('en');
@@ -52,14 +65,17 @@ export default function Settings() {
     
     // Load from activeBaby if available
     if (activeBaby) {
-      setBabyProfile({
+      const profileData = {
         name: activeBaby.name || '',
         birthDate: activeBaby.dateOfBirth || '',
         gender: activeBaby.gender || 'not-specified',
         weight: activeBaby.weight || '',
         height: activeBaby.height || '',
         bloodType: activeBaby.bloodType || '',
-      });
+      };
+      setBabyProfile(profileData);
+      setOriginalProfile(profileData);
+      setHasUnsavedChanges(false);
     }
   }, [activeBaby]);
   
@@ -70,23 +86,55 @@ export default function Settings() {
     localStorage.setItem('baby-bloom-notifications', JSON.stringify(updated));
   };
   
-  // Save baby profile
+  // Handle baby profile changes (only update local state)
   const handleProfileChange = (field, value) => {
     const updated = { ...babyProfile, [field]: value };
     setBabyProfile(updated);
     
-    // Update in BabyContext if activeBaby exists
-    if (activeBabyId && activeBaby) {
-      const updateData = {};
-      if (field === 'birthDate') {
-        updateData.dateOfBirth = value;
-      } else {
-        updateData[field] = value;
-      }
-      updateBaby(activeBabyId, updateData);
-    } else {
+    // Check if there are unsaved changes by comparing with original
+    const updatedCopy = { ...updated };
+    const originalCopy = { ...originalProfile };
+    
+    // Normalize for comparison (both use birthDate in state)
+    const hasChanges = JSON.stringify(updatedCopy) !== JSON.stringify(originalCopy);
+    setHasUnsavedChanges(hasChanges);
+  };
+  
+  // Save baby profile
+  const handleSaveProfile = () => {
+    if (!activeBabyId || !activeBaby) {
       // Fallback to localStorage if no active baby
-      localStorage.setItem('baby-bloom-profile', JSON.stringify(updated));
+      localStorage.setItem('baby-bloom-profile', JSON.stringify(babyProfile));
+      setOriginalProfile(babyProfile);
+      setHasUnsavedChanges(false);
+      alert('Profile saved successfully!');
+      return;
+    }
+    
+    // Update in BabyContext
+    const updateData = {
+      name: babyProfile.name,
+      dateOfBirth: babyProfile.birthDate,
+      gender: babyProfile.gender,
+      weight: babyProfile.weight,
+      height: babyProfile.height,
+      bloodType: babyProfile.bloodType,
+    };
+    
+    updateBaby(activeBabyId, updateData);
+    setOriginalProfile(babyProfile);
+    setHasUnsavedChanges(false);
+    
+    // Show success feedback
+    const saveBtn = document.querySelector('.save-profile-btn');
+    if (saveBtn) {
+      const originalText = saveBtn.textContent;
+      saveBtn.textContent = '✓ Saved!';
+      saveBtn.style.background = 'linear-gradient(135deg, #10B981 0%, #059669 100%)';
+      setTimeout(() => {
+        saveBtn.textContent = originalText;
+        saveBtn.style.background = '';
+      }, 2000);
     }
   };
   
@@ -312,6 +360,22 @@ export default function Settings() {
                   🧒 Not Specified
                 </button>
               </div>
+            </div>
+            
+            {/* Save Button */}
+            <div className="setting-item-vertical save-profile-section">
+              <button
+                className="save-profile-btn"
+                onClick={handleSaveProfile}
+                disabled={!hasUnsavedChanges}
+              >
+                {hasUnsavedChanges ? '💾 Save Changes' : '✓ All Changes Saved'}
+              </button>
+              {hasUnsavedChanges && (
+                <p className="unsaved-changes-text">
+                  You have unsaved changes
+                </p>
+              )}
             </div>
           </div>
         </div>
