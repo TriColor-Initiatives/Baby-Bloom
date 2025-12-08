@@ -140,8 +140,8 @@ const Milestones = () => {
         title: milestone.title,
         age: milestone.age,
         category: milestone.category || 'motor',
-        achieved: milestone.achieved || false,
-        date: milestone.date || new Date().toISOString().slice(0, 10),
+        achieved: false,
+        date: new Date().toISOString().slice(0, 10),
         notes: milestone.notes || '',
         photo: milestone.photo || null
       });
@@ -182,8 +182,8 @@ const Milestones = () => {
       title: formData.title.trim(),
       age: formData.age,
       category: formData.category,
-      achieved: formData.achieved,
-      date: formData.achieved ? formData.date : null,
+      achieved: false,
+      date: null,
       notes: formData.notes.trim(),
       photo: formData.photo
     };
@@ -741,28 +741,6 @@ const getTimeAgo = (date) => {
                 />
               </div>
               </div>
-
-              <div className="form-group">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={formData.achieved}
-                    onChange={(e) => setFormData({ ...formData, achieved: e.target.checked })}
-                  />
-                  {' '}Mark as achieved
-                </label>
-              </div>
-
-              {formData.achieved && (
-                <div className="form-group">
-                  <label>Achieved Date</label>
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  />
-                </div>
-              )}
 
               <div className="form-group">
                 <label>Notes</label>
