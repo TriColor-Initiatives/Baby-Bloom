@@ -1,7 +1,9 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import '../styles/pages.css';
 import { useBaby } from '../contexts/BabyContext';
+import ActivitiesChat from '../components/ActivitiesChat';
+import { useAIChat } from '../hooks/useAIChat';
 
 const STORAGE_KEY = 'baby-bloom-activities';
 
@@ -19,6 +21,7 @@ const activityIdeas = [
 const Activities = () => {
   const { activeBaby } = useBaby();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [viewMode, setViewMode] = useState('overview');
   const [activities, setActivities] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isIdeasOpen, setIsIdeasOpen] = useState(false);
@@ -85,7 +88,7 @@ const Activities = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) {
       alert('Please enter an activity title');
       return;
@@ -167,91 +170,238 @@ const Activities = () => {
     });
   }, [babyAgeInMonths]);
 
+  // AI Chat hook
+  const getSystemPrompt = (babyAge) => `You are an Activity Assistant. Provide SHORT, PINPOINTED, practical answers about baby activities and play. Follow these rules:
+
+1. RESPONSE STYLE:
+- Maximum 3-4 sentences per answer
+- Get straight to the point
+- Natural, conversational tone
+- Use emojis sparingly (🎨 only when appropriate)
+- No fluff or filler words
+- Focus on what parents can do
+
+2. FORMATTING:
+- Use **bold** for the main answer title (optional, only if it helps clarity)
+- Answer directly in 1-3 sentences
+- Use bullet points ONLY when providing multiple actionable tips or steps
+- Include "Key Tips:" section ONLY when the answer benefits from additional actionable advice (not for simple suggestions or straightforward answers)
+
+3. WHEN TO USE KEY TIPS:
+- Use Key Tips for troubleshooting questions, multi-step processes, or when providing multiple actionable suggestions
+- DON'T use Key Tips for simple activity suggestions, yes/no questions, or when the answer is already complete in 1-2 sentences
+- Examples that NEED Key Tips: troubleshooting, "how to" questions, complex topics
+- Examples that DON'T need Key Tips: "what activities", simple suggestions, straightforward questions
+
+4. ACTIVITY TOPICS:
+
+A. AGE-APPROPRIATE ACTIVITY SUGGESTIONS:
+- Provide activities suitable for baby's age: ${babyAge} months
+- General guidelines:
+  * 0-3 months: Tummy time, high-contrast visuals, music, rattles
+  * 3-6 months: Reaching, grasping, mirror play, peek-a-boo
+  * 6-9 months: Sitting play, stacking, cause-and-effect toys
+  * 9-12 months: Crawling games, simple puzzles, ball play
+  * 12-18 months: Walking activities, pretend play, simple sorting
+- Always mention: "Adjust activities based on your baby's development and interests."
+
+B. DEVELOPMENTAL PLAY IDEAS:
+- Motor skills: Activities that develop gross and fine motor skills
+- Cognitive skills: Problem-solving, cause-and-effect, object permanence
+- Language skills: Reading, singing, talking, naming objects
+- Social skills: Interactive play, turn-taking, imitation
+- Always include: "Play is how babies learn. Follow their lead and interests."
+
+C. ACTIVITY TROUBLESHOOTING:
+- Baby not interested: Try different times, shorter duration, or different activities
+- Baby gets frustrated: Simplify the activity, provide more support
+- Safety concerns: Always supervise, use age-appropriate materials
+- Always include: "Every baby is different. Adjust activities to match your baby's temperament and development."
+
+D. SENSORY PLAY IDEAS:
+- Texture exploration: Safe materials (water, sand, rice, fabric)
+- Visual stimulation: High-contrast images, colors, lights
+- Auditory: Music, sounds, instruments
+- Always include: "Ensure all materials are safe and age-appropriate. Supervise closely."
+
+E. MOTOR SKILL DEVELOPMENT ACTIVITIES:
+- Gross motor: Tummy time, rolling, crawling, walking activities
+- Fine motor: Grasping, stacking, transferring objects, finger foods
+- Balance and coordination: Sitting, standing, walking games
+- Always include: "Encourage but don't force. Let baby progress at their own pace."
+
+5. CRITICAL RULES:
+- Keep every response under 100 words unless user asks for details
+- Answer the question directly, no preamble
+- Consider baby's age (${babyAge} months) in responses
+- Always emphasize safety and supervision
+- Never recommend unsafe activities
+- Be natural - not every answer needs formatting or bullet points
+
+6. EXAMPLES:
+
+User: "What activities are good for my baby?"
+You: At ${babyAge} months, try tummy time, reaching for toys, mirror play, and reading board books. Focus on activities that match your baby's current abilities and follow their interests. Keep sessions short (5-15 minutes) and always supervise closely.
+
+User: "Baby doesn't like tummy time"
+You: **Tummy Time Troubleshooting**
+Start with very short sessions (1-2 minutes), use engaging toys or mirrors, and try after feeding when baby is alert. Gradually increase duration as baby gets stronger.
+
+**Key Tips:**
+• Make it fun with toys and interaction
+• Try different times of day
+• Don't force if baby is very upset
+
+User: "When can babies start playing with blocks?"
+You: Most babies can start playing with soft blocks around 6-7 months when they can sit up and grasp objects. Start with large, soft blocks and supervise closely. As they develop, they'll learn to stack and build.
+
+Remember: SHORT, NATURAL, PRACTICAL. Only use formatting and Key Tips when they genuinely help.`;
+
+  const getFallbackResponse = (babyAge) => `**Activity Support** 🎨
+
+I'm here to help with activity questions! Here are quick tips:
+
+**Age-Appropriate Activities**
+At ${babyAge} months, focus on activities that match your baby's development stage.
+
+**Key Tips:**
+• Follow baby's interests
+• Keep activities short and fun
+• Always supervise for safety
+
+To get personalized AI responses, set up your VITE_OPENAI_API_KEY. 🎨`;
+
+  const {
+    aiStatus,
+    aiError,
+    conversationHistory,
+    suggestionClickRef,
+    handleChatMessage
+  } = useAIChat(getSystemPrompt, {
+    activeBaby,
+    babyAgeInMonths,
+    maxTokens: 500,
+    timeout: 30000,
+    getFallbackResponse
+  });
+
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1 className="page-title">🎨 Activities</h1>
-        <p className="page-subtitle">Track playtime and learning activities</p>
-      </div>
-
-      <div className="page-actions">
-        <button className="btn btn-primary" onClick={() => openModal()}>
-          <span>➕</span>
-          <span>Log Activity</span>
-        </button>
-        <button className="btn btn-secondary" onClick={() => setIsIdeasOpen(true)}>
-          <span>💡</span>
-          <span>Activity Ideas</span>
-        </button>
-      </div>
-
-      <div className="content-grid">
-        <div className="feeding-log">
-          <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Recent Activities</h3>
-          {activities.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">🎨</div>
-              <h3>No activities logged yet</h3>
-              <p>Start tracking your baby's playtime and learning activities</p>
-              <div className="empty-tips">
-                <div className="empty-tip"><span>🎯</span><span>Track tummy time, reading, and play sessions</span></div>
-                <div className="empty-tip"><span>⏱️</span><span>Monitor activity duration and engagement</span></div>
-                <div className="empty-tip"><span>💡</span><span>Get activity ideas based on your baby's age</span></div>
-              </div>
-              <button className="btn btn-primary btn-large" onClick={() => openModal()}>
-                <span>➕</span>
-                <span>Log Your First Activity</span>
-              </button>
-            </div>
-          ) : (
-            activities.map((activity) => (
-              <div key={activity.id} className="log-entry" style={{ borderLeftColor: 'var(--warning)' }}>
-                <div className="log-entry-header">
-                  <div className="log-entry-type">
-                    <span className="log-entry-icon">{activity.icon || '🎨'}</span>
-                    <span>{activity.title}</span>
-                  </div>
-                  <div className="log-entry-time">{getTimeAgo(activity.timestamp)}</div>
-                </div>
-                <div className="log-entry-details">
-                  {activity.duration && (
-                    <div className="log-entry-detail">
-                      <span>⏱️</span>
-                      <span>{activity.duration}</span>
-                    </div>
-                  )}
-                  {activity.notes && (
-                    <div className="log-entry-detail">
-                      <span>📝</span>
-                      <span>{activity.notes}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="log-entry-actions">
-                  <button onClick={() => openModal(activity)} className="btn-icon">✏️</button>
-                  <button onClick={() => handleDelete(activity.id)} className="btn-icon">🗑️</button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="info-panel">
-          <div className="tip-card" style={{ background: 'linear-gradient(135deg, var(--warning) 0%, var(--accent) 100%)' }}>
-            <div className="tip-card-title">
+        <div className="page-header-content">
+          <div>
+            <h1 className="page-title">🎨 Activities</h1>
+            <p className="page-subtitle">Track playtime and learning activities</p>
+          </div>
+          <div className="page-actions">
+            <button
+              className={`btn ${viewMode === 'overview' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setViewMode('overview')}
+            >
+              <span>📋</span>
+              <span>Overview</span>
+            </button>
+            <button className="btn btn-secondary" onClick={() => openModal()}>
+              <span>➕</span>
+              <span>Log Activity</span>
+            </button>
+            <button className="btn btn-secondary" onClick={() => setIsIdeasOpen(true)}>
               <span>💡</span>
-              <span>Activity Suggestions</span>
-            </div>
-            <div style={{ fontSize: 'var(--font-size-sm)', lineHeight: 1.8 }}>
-              <div style={{ marginBottom: 'var(--spacing-sm)' }}>• Peek-a-boo games</div>
-              <div style={{ marginBottom: 'var(--spacing-sm)' }}>• Stacking blocks</div>
-              <div style={{ marginBottom: 'var(--spacing-sm)' }}>• Mirror play</div>
-              <div style={{ marginBottom: 'var(--spacing-sm)' }}>• Sensory bins</div>
-              <div>• Reading board books</div>
-            </div>
+              <span>Activity Ideas</span>
+            </button>
+            <button
+              className={`btn btn-new-feature ${viewMode === 'ai' ? 'active' : ''}`}
+              onClick={() => setViewMode('ai')}
+            >
+              <span>🤖</span>
+              <span>AI Activity Assistant</span>
+            </button>
           </div>
         </div>
       </div>
+
+      {viewMode === 'overview' && (
+        <div className="content-grid">
+          <div className="feeding-log">
+            <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Recent Activities</h3>
+            {activities.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">🎨</div>
+                <h3>No activities logged yet</h3>
+                <p>Start tracking your baby's playtime and learning activities</p>
+                <div className="empty-tips">
+                  <div className="empty-tip"><span>🎯</span><span>Track tummy time, reading, and play sessions</span></div>
+                  <div className="empty-tip"><span>⏱️</span><span>Monitor activity duration and engagement</span></div>
+                  <div className="empty-tip"><span>💡</span><span>Get activity ideas based on your baby's age</span></div>
+                </div>
+                <button className="btn btn-primary btn-large" onClick={() => openModal()}>
+                  <span>➕</span>
+                  <span>Log Your First Activity</span>
+                </button>
+              </div>
+            ) : (
+              activities.map((activity) => (
+                <div key={activity.id} className="log-entry" style={{ borderLeftColor: 'var(--warning)' }}>
+                  <div className="log-entry-header">
+                    <div className="log-entry-type">
+                      <span className="log-entry-icon">{activity.icon || '🎨'}</span>
+                      <span>{activity.title}</span>
+                    </div>
+                    <div className="log-entry-time">{getTimeAgo(activity.timestamp)}</div>
+                  </div>
+                  <div className="log-entry-details">
+                    {activity.duration && (
+                      <div className="log-entry-detail">
+                        <span>⏱️</span>
+                        <span>{activity.duration}</span>
+                      </div>
+                    )}
+                    {activity.notes && (
+                      <div className="log-entry-detail">
+                        <span>📝</span>
+                        <span>{activity.notes}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="log-entry-actions">
+                    <button onClick={() => openModal(activity)} className="btn-icon">✏️</button>
+                    <button onClick={() => handleDelete(activity.id)} className="btn-icon">🗑️</button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="info-panel">
+            <div className="tip-card" style={{ background: 'linear-gradient(135deg, var(--warning) 0%, var(--accent) 100%)' }}>
+              <div className="tip-card-title">
+                <span>💡</span>
+                <span>Activity Suggestions</span>
+              </div>
+              <div style={{ fontSize: 'var(--font-size-sm)', lineHeight: 1.8 }}>
+                <div style={{ marginBottom: 'var(--spacing-sm)' }}>• Peek-a-boo games</div>
+                <div style={{ marginBottom: 'var(--spacing-sm)' }}>• Stacking blocks</div>
+                <div style={{ marginBottom: 'var(--spacing-sm)' }}>• Mirror play</div>
+                <div style={{ marginBottom: 'var(--spacing-sm)' }}>• Sensory bins</div>
+                <div>• Reading board books</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewMode === 'ai' && (
+        <div className="ai-planner-container">
+          <div className="ai-chat-wrapper">
+            <ActivitiesChat
+              onSendMessage={handleChatMessage}
+              isLoading={aiStatus === 'loading'}
+              error={aiError}
+              onSuggestionClick={suggestionClickRef}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Log Activity Modal */}
       {isModalOpen && (

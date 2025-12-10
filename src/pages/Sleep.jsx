@@ -1,12 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useBaby } from '../contexts/BabyContext';
 import CustomSelect from '../components/onboarding/CustomSelect';
 import SleepReminder from '../components/SleepReminder';
+import SleepChat from '../components/SleepChat';
+import { useAIChat } from '../hooks/useAIChat';
 import '../styles/pages.css';
 import './sleep.css';
 
 const Sleep = () => {
+  const { activeBaby } = useBaby();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [viewMode, setViewMode] = useState('overview');
   const [sleeps, setSleeps] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
@@ -130,131 +135,271 @@ const Sleep = () => {
 
   const todaySleep = getTodaySleep();
 
-  const sleepLogs = [
-    { id: 1, type: 'nap', icon: '💤', time: '3 hours ago', duration: '1h 30m', quality: 'Good' },
-    { id: 2, type: 'night', icon: '🌙', time: 'Last night', duration: '9h 15m', quality: 'Excellent' },
-    { id: 3, type: 'nap', icon: '💤', time: 'Yesterday 2PM', duration: '45m', quality: 'Fair' },
-  ];
+  // AI Chat hook
+  const getSystemPrompt = (babyAge) => `You are a Sleep Assistant. Provide SHORT, PINPOINTED, practical answers about baby sleep. Follow these rules:
+
+1. RESPONSE STYLE:
+- Maximum 3-4 sentences per answer
+- Get straight to the point
+- Natural, conversational tone
+- Use emojis sparingly (😴 only when appropriate)
+- No fluff or filler words
+- Focus on what parents can do
+
+2. FORMATTING:
+- Use **bold** for the main answer title (optional, only if it helps clarity)
+- Answer directly in 1-3 sentences
+- Use bullet points ONLY when providing multiple actionable tips or steps
+- Include "Key Tips:" section ONLY when the answer benefits from additional actionable advice (not for simple factual answers)
+
+3. WHEN TO USE KEY TIPS:
+- Use Key Tips for troubleshooting questions, multi-step processes, or when providing actionable strategies
+- DON'T use Key Tips for simple factual answers, yes/no questions, or when the answer is already complete in 1-2 sentences
+- Examples that NEED Key Tips: troubleshooting, "how to" questions, complex topics
+- Examples that DON'T need Key Tips: "how much sleep", "when to transition", simple factual questions
+
+4. SLEEP TOPICS:
+
+A. SLEEP SCHEDULES BY AGE:
+- Provide age-appropriate sleep needs and schedules
+- Consider baby's age: ${babyAge} months
+- General guidelines:
+  * 0-3 months: 14-17 hours/day, 3-5 naps
+  * 4-6 months: 12-16 hours/day, 2-3 naps
+  * 6-12 months: 12-15 hours/day, 2 naps
+  * 12-18 months: 11-14 hours/day, 1-2 naps
+- Always mention: "Every baby is different. Adjust based on your baby's cues."
+
+B. TROUBLESHOOTING:
+- Night wakings: Check for hunger, discomfort, or sleep associations. Ensure baby isn't overtired.
+- Short naps: May indicate overtiredness or need for schedule adjustment. Try earlier nap times.
+- Sleep regression: Common at 4, 8, 12, 18 months. Maintain routines, be patient.
+- Always include: "If sleep issues persist, consult your pediatrician."
+
+C. SLEEP TRAINING METHODS:
+- Gradual methods: Fading, pick-up-put-down, chair method
+- Extinction methods: Cry it out, modified extinction
+- Always include: "Choose a method that fits your family. Consistency is key."
+
+D. NAP TRANSITIONS:
+- 3 to 2 naps: Usually around 6-9 months
+- 2 to 1 nap: Usually around 12-18 months
+- Signs: Resisting naps, taking longer to fall asleep, shorter naps
+- Always include: "Transition gradually. Watch for baby's readiness signs."
+
+E. BEDTIME ROUTINES:
+- Consistent sequence: Bath, feed, book, sleep
+- Start 30-60 minutes before desired bedtime
+- Keep it calm and predictable
+- Always include: "Consistency helps signal sleep time to baby."
+
+5. CRITICAL RULES:
+- Keep every response under 100 words unless user asks for details
+- Answer the question directly, no preamble
+- Never diagnose medical conditions
+- Always recommend consulting pediatrician for persistent concerns
+- Consider baby's age (${babyAge} months) in responses
+- Be natural - not every answer needs formatting or bullet points
+
+6. EXAMPLES:
+
+User: "How much sleep does my baby need?"
+You: At ${babyAge} months, most babies need 12-15 hours of sleep per day, including 2 naps. Night sleep is typically 10-12 hours. Watch for sleep cues like rubbing eyes or yawning, and maintain a consistent bedtime routine.
+
+User: "Baby wakes up every hour at night"
+You: **Night Wakings Troubleshooting**
+Check for hunger, discomfort, or sleep associations. Ensure baby isn't overtired at bedtime - an overtired baby often sleeps worse. Consider sleep training if baby is 4+ months old.
+
+**Key Tips:**
+• Establish a consistent bedtime routine
+• Check room temperature and comfort
+• Consider if baby needs to eat or is just seeking comfort
+
+If sleep issues persist after trying solutions, consult your pediatrician.
+
+User: "When should I transition from 2 naps to 1?"
+You: Most babies transition from 2 naps to 1 around 12-18 months. Signs your baby is ready include resisting naps, taking longer to fall asleep, or having shorter naps. Transition gradually by pushing the morning nap later until it merges with the afternoon nap.
+
+Remember: SHORT, NATURAL, PRACTICAL. Only use formatting and Key Tips when they genuinely help.`;
+
+  const getFallbackResponse = (babyAge) => `**Sleep Support** 😴
+
+I'm here to help with sleep questions! Here are quick tips:
+
+**Sleep Schedules**
+At ${babyAge} months, most babies need 12-15 hours of sleep per day, including 2 naps.
+
+**Key Tips:**
+• Maintain consistent bedtime routine
+• Watch for sleep cues
+• Every baby is different
+
+To get personalized AI responses, set up your VITE_OPENAI_API_KEY. 😴`;
+
+  const {
+    aiStatus,
+    aiError,
+    conversationHistory,
+    suggestionClickRef,
+    handleChatMessage
+  } = useAIChat(getSystemPrompt, {
+    activeBaby,
+    maxTokens: 500,
+    timeout: 30000,
+    getFallbackResponse
+  });
 
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1 className="page-title">😴 Sleep Tracker</h1>
-        <p className="page-subtitle">Monitor your baby's sleep patterns and quality</p>
-      </div>
-
-      <div className="page-actions">
-        <button className="btn btn-primary" onClick={() => openModal()}>
-          <span>➕</span>
-          <span>Log Sleep</span>
-        </button>
-        <button className="btn btn-secondary" onClick={() => setIsReminderOpen(true)}>
-          <span>⏰</span>
-          <span>Sleep Reminders</span>
-        </button>
-        <button className="btn btn-secondary">
-          <span>📊</span>
-          <span>Sleep Report</span>
-        </button>
-      </div>
-
-      <div className="content-grid">
-        <div className="feeding-log">
-          <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Sleep Log ({sleeps.length})</h3>
-          {sleeps.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">😴</div>
-              <h3>No Sleep Records Yet</h3>
-              <p>Start tracking your baby's sleep patterns</p>
-
-              <div className="empty-tips">
-                <div className="empty-tip">
-                  <span>🌙</span>
-                  <span>Track naps and nighttime sleep</span>
-                </div>
-                <div className="empty-tip">
-                  <span>⏰</span>
-                  <span>Monitor sleep duration and quality</span>
-                </div>
-                <div className="empty-tip">
-                  <span>📊</span>
-                  <span>Identify patterns to improve sleep routines</span>
-                </div>
-              </div>
-
-              <button className="btn btn-primary btn-large" onClick={() => setIsModalOpen(true)}>
-                <span>➕</span>
-                <span>Log Your First Sleep</span>
-              </button>
-            </div>
-          ) : (
-            sleeps.map((sleep) => (
-              <div key={sleep.id} className="log-entry" style={{ borderLeftColor: 'var(--secondary)' }}>
-                <div className="log-entry-header">
-                  <div className="log-entry-type">
-                    <span className="log-entry-icon">{sleep.type === 'nap' ? '💤' : '🌙'}</span>
-                    <span>{sleep.type === 'nap' ? 'Nap' : 'Night Sleep'}</span>
-                  </div>
-                  <div className="log-entry-time">{getTimeAgo(sleep.timestamp || sleep.date)}</div>
-                </div>
-                <div className="log-entry-details">
-                  <div className="log-entry-detail">
-                    <span>⏱️</span>
-                    <span>{sleep.duration}</span>
-                  </div>
-                  <div className="log-entry-detail">
-                    <span>⭐</span>
-                    <span style={{ textTransform: 'capitalize' }}>{sleep.quality}</span>
-                  </div>
-                  {sleep.notes && (
-                    <div className="log-entry-detail">
-                      <span>📝</span>
-                      <span>{sleep.notes}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="log-entry-actions">
-                  <button onClick={() => openModal(sleep)} className="btn-icon">✏️</button>
-                  <button onClick={() => handleDelete(sleep.id)} className="btn-icon">🗑️</button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="info-panel">
-          <div className="info-card">
-            <div className="info-card-title">
+        <div className="page-header-content">
+          <div>
+            <h1 className="page-title">😴 Sleep Tracker</h1>
+            <p className="page-subtitle">Monitor your baby's sleep patterns and quality</p>
+          </div>
+          <div className="page-actions">
+            <button
+              className={`btn ${viewMode === 'overview' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setViewMode('overview')}
+            >
+              <span>📋</span>
+              <span>Overview</span>
+            </button>
+            <button className="btn btn-secondary" onClick={() => openModal()}>
+              <span>➕</span>
+              <span>Log Sleep</span>
+            </button>
+            <button className="btn btn-secondary" onClick={() => setIsReminderOpen(true)}>
+              <span>⏰</span>
+              <span>Sleep Reminders</span>
+            </button>
+            <button className="btn btn-secondary">
               <span>📊</span>
-              <span>Today's Sleep</span>
-            </div>
-            <div className="info-item">
-              <div className="info-item-label">Total Sleep</div>
-              <div className="info-item-value">{calculateTotalSleep()}h</div>
-            </div>
-            <div className="info-item">
-              <div className="info-item-label">Sleep Sessions</div>
-              <div className="info-item-value">{todaySleep.length}</div>
-            </div>
-            <div className="info-item">
-              <div className="info-item-label">Last Sleep</div>
-              <div className="info-item-value">
-                {todaySleep.length > 0 ? getTimeAgo(todaySleep[0].timestamp || todaySleep[0].date) : 'No data'}
-              </div>
-            </div>
-          </div>
-
-          <div className="tip-card" style={{ background: 'linear-gradient(135deg, var(--secondary-light) 0%, var(--secondary) 100%)' }}>
-            <div className="tip-card-title">
-              <span>💡</span>
-              <span>Sleep Tip</span>
-            </div>
-            <p className="tip-card-text">
-              At 6-12 months, babies need 12-16 hours of sleep per day, including naps. Maintain a consistent bedtime routine to promote better sleep.
-            </p>
+              <span>Sleep Report</span>
+            </button>
+            <button
+              className={`btn btn-new-feature ${viewMode === 'ai' ? 'active' : ''}`}
+              onClick={() => setViewMode('ai')}
+            >
+              <span>🤖</span>
+              <span>AI Sleep Assistant</span>
+            </button>
           </div>
         </div>
       </div>
+
+      {viewMode === 'overview' && (
+        <div className="content-grid">
+          <div className="feeding-log">
+            <h3 style={{ marginBottom: 'var(--spacing-lg)' }}>Sleep Log ({sleeps.length})</h3>
+            {sleeps.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">😴</div>
+                <h3>No Sleep Records Yet</h3>
+                <p>Start tracking your baby's sleep patterns</p>
+
+                <div className="empty-tips">
+                  <div className="empty-tip">
+                    <span>🌙</span>
+                    <span>Track naps and nighttime sleep</span>
+                  </div>
+                  <div className="empty-tip">
+                    <span>⏰</span>
+                    <span>Monitor sleep duration and quality</span>
+                  </div>
+                  <div className="empty-tip">
+                    <span>📊</span>
+                    <span>Identify patterns to improve sleep routines</span>
+                  </div>
+                </div>
+
+                <button className="btn btn-primary btn-large" onClick={() => setIsModalOpen(true)}>
+                  <span>➕</span>
+                  <span>Log Your First Sleep</span>
+                </button>
+              </div>
+            ) : (
+              sleeps.map((sleep) => (
+                <div key={sleep.id} className="log-entry" style={{ borderLeftColor: 'var(--secondary)' }}>
+                  <div className="log-entry-header">
+                    <div className="log-entry-type">
+                      <span className="log-entry-icon">{sleep.type === 'nap' ? '💤' : '🌙'}</span>
+                      <span>{sleep.type === 'nap' ? 'Nap' : 'Night Sleep'}</span>
+                    </div>
+                    <div className="log-entry-time">{getTimeAgo(sleep.timestamp || sleep.date)}</div>
+                  </div>
+                  <div className="log-entry-details">
+                    <div className="log-entry-detail">
+                      <span>⏱️</span>
+                      <span>{sleep.duration}</span>
+                    </div>
+                    <div className="log-entry-detail">
+                      <span>⭐</span>
+                      <span style={{ textTransform: 'capitalize' }}>{sleep.quality}</span>
+                    </div>
+                    {sleep.notes && (
+                      <div className="log-entry-detail">
+                        <span>📝</span>
+                        <span>{sleep.notes}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="log-entry-actions">
+                    <button onClick={() => openModal(sleep)} className="btn-icon">✏️</button>
+                    <button onClick={() => handleDelete(sleep.id)} className="btn-icon">🗑️</button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="info-panel">
+            <div className="info-card">
+              <div className="info-card-title">
+                <span>📊</span>
+                <span>Today's Sleep</span>
+              </div>
+              <div className="info-item">
+                <div className="info-item-label">Total Sleep</div>
+                <div className="info-item-value">{calculateTotalSleep()}h</div>
+              </div>
+              <div className="info-item">
+                <div className="info-item-label">Sleep Sessions</div>
+                <div className="info-item-value">{todaySleep.length}</div>
+              </div>
+              <div className="info-item">
+                <div className="info-item-label">Last Sleep</div>
+                <div className="info-item-value">
+                  {todaySleep.length > 0 ? getTimeAgo(todaySleep[0].timestamp || todaySleep[0].date) : 'No data'}
+                </div>
+              </div>
+            </div>
+
+            <div className="tip-card" style={{ background: 'linear-gradient(135deg, var(--secondary-light) 0%, var(--secondary) 100%)' }}>
+              <div className="tip-card-title">
+                <span>💡</span>
+                <span>Sleep Tip</span>
+              </div>
+              <p className="tip-card-text">
+                At 6-12 months, babies need 12-16 hours of sleep per day, including naps. Maintain a consistent bedtime routine to promote better sleep.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewMode === 'ai' && (
+        <div className="ai-planner-container">
+          <div className="ai-chat-wrapper">
+            <SleepChat
+              onSendMessage={handleChatMessage}
+              isLoading={aiStatus === 'loading'}
+              error={aiError}
+              onSuggestionClick={suggestionClickRef}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Add/Edit Modal */}
       {isModalOpen && (

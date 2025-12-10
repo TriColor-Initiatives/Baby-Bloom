@@ -10,11 +10,8 @@ const Appointments = () => (
       </p>
     </div>
 
-    <div className="section-card">
-      <AppointmentManager />
-    </div>
+    <AppointmentManager />
   </div>
 );
 
 export default Appointments;
-

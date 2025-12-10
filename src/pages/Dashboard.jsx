@@ -78,12 +78,12 @@ const Dashboard = () => {
     };
 
     window.addEventListener('reminders-updated', handleReminderUpdate);
-    
+
     // Also reload when navigating back to Dashboard (using focus event)
     const handleFocus = () => {
       loadReminders();
     };
-    
+
     window.addEventListener('focus', handleFocus);
 
     return () => {
@@ -161,11 +161,11 @@ const Dashboard = () => {
 
   // Get photos from localStorage
   const getAllPhotos = () => {
-    try { 
+    try {
       const photos = JSON.parse(localStorage.getItem('baby-bloom-photos') || '[]');
       return Array.isArray(photos) ? photos : [];
-    } catch { 
-      return []; 
+    } catch {
+      return [];
     }
   };
   const allPhotos = getAllPhotos();
@@ -207,10 +207,10 @@ const Dashboard = () => {
   const analysisStats = analysisSources.map((source) => {
     const latest = getLatestEntryDate(source.data);
     // For photos, show count differently
-    const subtitle = source.id === 'photos' 
+    const subtitle = source.id === 'photos'
       ? (source.data.length ? `${source.data.length} photo${source.data.length !== 1 ? 's' : ''} saved` : 'No photos yet')
       : (source.data.length ? `Last entry ${getTimeAgo(latest)}` : 'No entries yet');
-    
+
     return {
       id: source.id,
       label: source.label,
@@ -226,17 +226,17 @@ const Dashboard = () => {
   const trackedCategories = analysisStats.filter((stat) => stat.count > 0).length;
   const donutGradient = totalLogs > 0
     ? (() => {
-        let cumulative = 0;
-        const segments = analysisStats
-          .filter((stat) => stat.count > 0)
-          .map((stat) => {
-            const start = (cumulative / totalLogs) * 100;
-            cumulative += stat.count;
-            const end = (cumulative / totalLogs) * 100;
-            return `${stat.color} ${start}% ${end}%`;
-          });
-        return `conic-gradient(${segments.join(',')})`;
-      })()
+      let cumulative = 0;
+      const segments = analysisStats
+        .filter((stat) => stat.count > 0)
+        .map((stat) => {
+          const start = (cumulative / totalLogs) * 100;
+          cumulative += stat.count;
+          const end = (cumulative / totalLogs) * 100;
+          return `${stat.color} ${start}% ${end}%`;
+        });
+      return `conic-gradient(${segments.join(',')})`;
+    })()
     : 'conic-gradient(var(--surface-variant, #e5e7f8) 0% 100%)';
 
   const formatSleepTitle = (s) => {
@@ -318,12 +318,12 @@ const Dashboard = () => {
     if (diffDays === 1) return 'Tomorrow';
     return `In ${diffDays} days`;
   };
-  
+
   const upcomingReminders = reminders
     .filter(r => {
       // Include reminders that are not completed
       if (r.completed === true) return false;
-      
+
       // Include all non-completed reminders (due now, past due, or future)
       // This ensures we show reminders even if they're slightly past due
       return true;
@@ -358,90 +358,88 @@ const Dashboard = () => {
         </h2>
       </div>
 
-      <div className="section-card" style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <div className="analysis-overview">
-          <div className="analysis-donut-card">
-            <div className="section-header">
-              <h3 className="section-title">Today's Overview</h3>
+      <div className="analysis-overview">
+        <div className="analysis-donut-card">
+          <div className="section-header">
+            <h3 className="section-title">Today's Overview</h3>
+          </div>
+          <div className="analysis-donut-ring" style={{ backgroundImage: donutGradient }}>
+            <div className="analysis-donut-inner">
+              <span className="analysis-total">{totalLogs}</span>
+              <small>Total logs</small>
+              <small>{trackedCategories || 0} categories</small>
             </div>
-            <div className="analysis-donut-ring" style={{ backgroundImage: donutGradient }}>
-              <div className="analysis-donut-inner">
-                <span className="analysis-total">{totalLogs}</span>
-                <small>Total logs</small>
-                <small>{trackedCategories || 0} categories</small>
+          </div>
+          <div className="analysis-donut-legend">
+            {analysisStats.map((stat) => (
+              <div key={stat.id} className="analysis-legend-item">
+                <span
+                  className="analysis-legend-dot"
+                  style={{ background: stat.color }}
+                />
+                <span>{stat.label}</span>
+                <strong>{stat.count}</strong>
               </div>
-            </div>
-            <div className="analysis-donut-legend">
-              {analysisStats.map((stat) => (
-                <div key={stat.id} className="analysis-legend-item">
-                  <span
-                    className="analysis-legend-dot"
-                    style={{ background: stat.color }}
-                  />
-                  <span>{stat.label}</span>
-                  <strong>{stat.count}</strong>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
+        </div>
 
-          <div className="analysis-stats-card category-card">
-            <div className="section-header" style={{ marginBottom: 'var(--spacing-sm)' }}>
-              <h3 className="section-title">Category Breakdown</h3>
-            </div>
-            <div className="analysis-stats-list">
-              {analysisStats.map((stat) => (
-                <div
-                  key={`${stat.id}-row`}
-                  className="analysis-stat-row"
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`View ${stat.label}`}
-                  onClick={stat.action}
-                  onKeyDown={(event) => handleStatKeyDown(event, stat.action)}
-                >
-                  <div className="analysis-stat-info">
-                    <span className="analysis-stat-icon" style={{ color: stat.color }}>
-                      {stat.icon}
-                    </span>
-                    <div>
-                      <div className="analysis-stat-label">{stat.label}</div>
-                      <div className="analysis-stat-subtitle">{stat.subtitle}</div>
-                    </div>
-                  </div>
-                  <div className="analysis-stat-value">{stat.count}</div>
-                </div>
-              ))}
-            </div>
+        <div className="analysis-stats-card category-card">
+          <div className="section-header" style={{ marginBottom: 'var(--spacing-sm)' }}>
+            <h3 className="section-title">Category Breakdown</h3>
           </div>
-
-          <div className="analysis-stats-card">
-            <div className="section-header">
-              <h3 className="section-title">Upcoming Reminders</h3>
-              <Link to="/reminders" className="section-link">All →</Link>
-            </div>
-            <div className="reminders">
-              {upcomingReminders.length === 0 ? (
-                <div className="empty-state">
-                  <div className="empty-icon">⏰</div>
-                  <h3>No reminders yet</h3>
-                  <p>Create reminders for feedings, vitamins, checkups and more</p>
-                  <button className="btn btn-primary btn-large" onClick={() => navigate('/reminders?add=true')}>
-                    <span>➕</span><span>Add a Reminder</span>
-                  </button>
-                </div>
-              ) : (
-                upcomingReminders.map((reminder) => (
-                  <div key={reminder.id} className="reminder-item">
-                    <span className="reminder-icon">{reminder.icon}</span>
-                    <div className="reminder-content">
-                      <div className="reminder-title">{reminder.title}</div>
-                      <div className="reminder-time">{reminder.time}</div>
-                    </div>
+          <div className="analysis-stats-list">
+            {analysisStats.map((stat) => (
+              <div
+                key={`${stat.id}-row`}
+                className="analysis-stat-row"
+                role="button"
+                tabIndex={0}
+                aria-label={`View ${stat.label}`}
+                onClick={stat.action}
+                onKeyDown={(event) => handleStatKeyDown(event, stat.action)}
+              >
+                <div className="analysis-stat-info">
+                  <span className="analysis-stat-icon" style={{ color: stat.color }}>
+                    {stat.icon}
+                  </span>
+                  <div>
+                    <div className="analysis-stat-label">{stat.label}</div>
+                    <div className="analysis-stat-subtitle">{stat.subtitle}</div>
                   </div>
-                ))
-              )}
-            </div>
+                </div>
+                <div className="analysis-stat-value">{stat.count}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="analysis-stats-card">
+          <div className="section-header">
+            <h3 className="section-title">Upcoming Reminders</h3>
+            <Link to="/reminders" className="section-link">All →</Link>
+          </div>
+          <div className="reminders">
+            {upcomingReminders.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">⏰</div>
+                <h3>No reminders yet</h3>
+                <p>Create reminders for feedings, vitamins, checkups and more</p>
+                <button className="btn btn-primary btn-large" onClick={() => navigate('/reminders?add=true')}>
+                  <span>➕</span><span>Add a Reminder</span>
+                </button>
+              </div>
+            ) : (
+              upcomingReminders.map((reminder) => (
+                <div key={reminder.id} className="reminder-item">
+                  <span className="reminder-icon">{reminder.icon}</span>
+                  <div className="reminder-content">
+                    <div className="reminder-title">{reminder.title}</div>
+                    <div className="reminder-time">{reminder.time}</div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -517,7 +515,7 @@ const Dashboard = () => {
           const sevenDaysAgo = new Date();
           sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
           sevenDaysAgo.setHours(0, 0, 0, 0);
-          
+
           const hasWeeklyData = [
             ...allFeedings,
             ...allSleep,
@@ -558,6 +556,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-
-

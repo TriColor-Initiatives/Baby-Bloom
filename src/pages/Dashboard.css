@@ -26,6 +26,7 @@
 }
 
 @keyframes gradientShift {
+
   0%,
   100% {
     opacity: 1;
@@ -85,6 +86,7 @@
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translate(0, 0) scale(1);
@@ -451,6 +453,7 @@
   align-items: stretch;
   animation: fadeIn 0.8s ease-out 0.3s both;
   margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
 }
 
 .analysis-donut-card {
@@ -799,6 +802,7 @@
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 0.3;

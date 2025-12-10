@@ -2,6 +2,7 @@ import '../styles/pages.css';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { recipeLibrary } from '../data/recipes';
 import BabyMealChat from '../components/BabyMealChat';
+import { useAIChat } from '../hooks/useAIChat';
 
 const FAVORITES_KEY = 'baby-bloom-recipe-favorites';
 const PROFILE_AGE_KEY = 'babyAgeMonths';
@@ -29,11 +30,7 @@ const Recipes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [favorites, setFavorites] = useState(() => new Set(loadFavorites()));
-  const [aiStatus, setAiStatus] = useState('idle');
-  const [aiError, setAiError] = useState('');
   const [dietFilter, setDietFilter] = useState('all');
-  const [conversationHistory, setConversationHistory] = useState([]);
-  const suggestionClickRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -71,99 +68,75 @@ const Recipes = () => {
     });
   };
 
-  const extractResponseText = (data) => {
-    // Normalize common provider response shapes to a single string
-    if (!data) return '';
-    // choices[0].message.content (chat format)
-    const choiceMsg = data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text ?? null;
-    if (typeof choiceMsg === 'string') return choiceMsg;
-    if (Array.isArray(choiceMsg)) return choiceMsg.map((r) => (typeof r === 'string' ? r : r?.text ?? JSON.stringify(r))).join('\n');
-    if (choiceMsg && typeof choiceMsg === 'object') {
-      if (Array.isArray(choiceMsg.content)) return choiceMsg.content.map((c) => c.text ?? JSON.stringify(c)).join('\n');
-      if (Array.isArray(choiceMsg.parts) || Array.isArray(choiceMsg.segments)) {
-        const parts = choiceMsg.parts ?? choiceMsg.segments;
-        return parts.map((p) => p.text ?? JSON.stringify(p)).join('\n');
-      }
-      if (typeof choiceMsg.text === 'string') return choiceMsg.text;
-      return JSON.stringify(choiceMsg);
-    }
-
-    // Legacy shape: answer -> array of segments
-    if (data?.answer && Array.isArray(data.answer) && data.answer[0]?.content) {
-      return data.answer[0].content.map((c) => c.text ?? JSON.stringify(c)).join('\n');
-    }
-
-    // Fallback: stringify entire response
-    try {
-      return JSON.stringify(data);
-    } catch (err) {
-      return String(data);
-    }
-  };
-
-  // Handle chat messages
-  const handleChatMessage = async (userMessage) => {
-    setAiStatus('loading');
-    setAiError('');
-
-    const openAiKey = import.meta.env.VITE_OPENAI_API_KEY;
-    const babyAge = getProfileAge();
-
-    // Determine token limit based on request type
-    const isLongRequest =
-      userMessage.toLowerCase().includes('7 days') ||
-      userMessage.toLowerCase().includes('week') ||
-      userMessage.toLowerCase().includes('meal plan') ||
-      userMessage.toLowerCase().includes('weekly');
-
-    const maxTokens = isLongRequest ? 3000 : 1500;
-
-    // System message to keep AI focused on baby meal planning
-    const systemMessage = {
-      role: 'system',
-      content: `You are the Baby Meal Assistant. Follow these formatting and behavior rules strictly:
+  // AI Chat hook - Recipes has special handling for long requests
+  const getSystemPrompt = (babyAge) => {
+    const age = babyAge || getProfileAge();
+    return `You are the Baby Meal Assistant. Follow these formatting and behavior rules:
 
 1. STYLE & TONE:
 - Warm, gentle, positive, and encouraging
 - Baby-friendly energy without being childish
 - Keep sentences clear and simple
 - Use soft emojis like 🍼🥣👶🍐 only where they enhance clarity
-- Never overwhelm with long paragraphs
+- Natural, conversational responses
 
-2. FORMATTING RULES (NO hash headings allowed):
-- All responses must use bold titles, bullets, numbers, and clean spacing
-- Use this structure:
+2. FORMATTING RULES:
+- Use **bold** for recipe/meal titles (required for recipes)
+- Use bullet points for ingredients and notes (required for recipes)
+- For simple questions (not recipe requests), answer naturally without excessive formatting
+- Only use structured formatting when providing actual recipes or meal plans
+- For general questions about feeding, answer conversationally
 
-Main Title (bold)
-A short friendly intro line.
+3. WHEN TO USE STRUCTURED FORMAT:
+- ALWAYS use structured format for: recipes, meal plans, specific meal suggestions
+- DON'T use structured format for: general questions, yes/no answers, simple advice
+- Examples that NEED structure: "give me a recipe", "meal plan for 7 days", "breakfast ideas"
+- Examples that DON'T need structure: "when to start solids", "is this safe", "how much"
 
-Meal Title (bold, optional emoji)
+4. RECIPE FORMAT (use when providing recipes):
+
+**Recipe Name** (emoji optional)
 Texture: smooth / mashed / finger food
 Age: recommended age in months
 
 Ingredients:
 • ingredient
 • ingredient
-• ingredient
 
 How to make:
 
-Step
+Step 1
 
-Step
-
-Step
+Step 2
 
 Notes:
 • safety tips
 • allergen info
-• simple swaps
 
-Finish with a gentle closing question or offer to help.
+5. BEHAVIORAL CONSTRAINTS:
+- Only discuss baby meals, purees, recipes, ingredients, textures, allergens, substitutions, and meal plans
+- Do not give medical instructions
+- If a medical question appears, gently redirect to a pediatrician
+- Keep all answers concise but helpful
+- Be natural - not every response needs recipe formatting
 
-3. RESPONSE LAYOUT EXAMPLE (copy this format):
+6. CHAT-FRIENDLY RULES:
+- No long blocks of text
+- Break sections with spacing
+- Use bullets and numbers for readability in recipes
+- Ensure every message is visually scannable
+- Keep tone supportive, not robotic
+- When creating tables, use actual line breaks between items, NOT <br> tags
 
-Day 1 – Breakfast: Apple Oatmeal 🥣
+7. MEMORY OF CONTEXT:
+- Remember the baby's age if mentioned earlier (current baby is ${age} months old)
+- Adjust textures according to age
+- Consider allergens or diet preferences previously stated
+
+8. EXAMPLES:
+
+User: "Give me a recipe for breakfast"
+You: **Apple Oatmeal** 🥣
 Texture: Smooth puree
 Age: 7–8 months
 
@@ -184,51 +157,18 @@ Notes:
 • Add more milk if you need a thinner puree.
 • Introduce new fruits slowly to check for reactions.
 
-Let me know if you'd like a dairy-free or faster version! 💛
+User: "When can I start giving finger foods?"
+You: Most babies are ready for finger foods around 8-9 months when they can sit up independently and use a pincer grasp. Start with soft, easy-to-grasp foods like banana slices, avocado, or well-cooked pasta. Always supervise closely.
 
-4. BEHAVIORAL CONSTRAINTS:
-- Only discuss baby meals, purees, recipes, ingredients, textures, allergens, substitutions, and meal plans
-- Do not give medical instructions
-- If a medical question appears, gently redirect to a pediatrician
-- Keep all answers concise but helpful
-- Avoid over-formatting — keep responses clean and consistent
+User: "Is honey safe for babies?"
+You: No, honey is not safe for babies under 12 months due to the risk of botulism. Avoid all forms of honey, including in baked goods, until your baby is at least one year old.
 
-5. CHAT-FRIENDLY RULES:
-- No long blocks of text
-- Break sections with spacing
-- Use bullets and numbers for readability
-- Ensure every message is visually scannable in a chat bubble
-- Keep tone supportive, not robotic
-- When creating tables, use actual line breaks (press Enter) between items in cells, NOT <br> tags
-- For multi-line content in table cells, use natural line breaks, not HTML tags
+Remember: Use structured formatting for recipes/meal plans, but answer general questions naturally.`;
+  };
 
-6. MEMORY OF CONTEXT:
-- Remember the baby's age if mentioned earlier (current baby is ${babyAge} months old)
-- Adjust textures according to age
-- Consider allergens or diet preferences previously stated
-
-Remember: Use **bold** for titles, not # headings. Keep responses warm, formatted, and focused on baby meal planning.`
-    };
-
-    const userMsg = {
-      role: 'user',
-      content: userMessage
-    };
-
-    // Build messages array with conversation history (last 10 messages for context)
-    const messagesForApi = [
-      systemMessage,
-      ...conversationHistory.slice(-10), // Last 10 messages for context
-      userMsg
-    ];
-
-    const sendRequest = async (messages, signal) => {
-      if (!openAiKey) {
-        // Demo fallback response
-        return {
-          choices: [{
-            message: {
-              content: `**Quick Meal Ideas for Your ${babyAge}-Month-Old** 🍼
+  const getFallbackResponse = (babyAge) => {
+    const age = babyAge || getProfileAge();
+    return `**Quick Meal Ideas for Your ${age}-Month-Old** 🍼
 
 Here are some simple suggestions to get you started:
 
@@ -273,119 +213,35 @@ Notes:
 • Great source of beta-carotene.
 • Can be stored in the fridge for up to 3 days.
 
-To get personalized AI responses with more recipes and meal plans, set up your VITE_OPENAI_API_KEY. 💛`
-            }
-          }]
-        };
-      }
+To get personalized AI responses with more recipes and meal plans, set up your VITE_OPENAI_API_KEY. 💛`;
+  };
 
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${openAiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages,
-          temperature: 0.7,
-          max_tokens: maxTokens
-        }),
-        signal
-      });
+  // AI Chat hook - Recipes uses higher defaults for meal plans
+  const {
+    aiStatus,
+    aiError,
+    conversationHistory,
+    suggestionClickRef,
+    handleChatMessage: baseHandleChatMessage
+  } = useAIChat(getSystemPrompt, {
+    activeBaby: null,
+    babyAgeInMonths: getProfileAge(),
+    maxTokens: 3000, // Higher default for meal plans
+    timeout: 60000, // Longer timeout for meal plans
+    getFallbackResponse
+  });
 
-      if (!res.ok) {
-        const errText = await res.text();
-        console.error('OpenAI response body:', errText);
-        const error = new Error(`OpenAI error: ${res.status} ${res.statusText}`);
-        error.status = res.status;
-        throw error;
-      }
-      return res.json();
-    };
-
-    const controller = new AbortController();
-    // Increase timeout for longer requests (7-day meal plans need more time)
-    const timeoutDuration = isLongRequest ? 60000 : 30000; // 60s for long requests, 30s for regular
-    const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
-
-    try {
-      const response = await sendRequest(messagesForApi, controller.signal);
-      const responseText = extractResponseText(response);
-
-      // Check if response was truncated (OpenAI sometimes truncates even with max_tokens)
-      const wasTruncated = responseText.length > 0 &&
-        (responseText.endsWith('...') ||
-          responseText.includes('[truncated]') ||
-          (maxTokens >= 2000 && responseText.length < 100)); // Suspiciously short for long requests
-
-      // Update conversation history
-      setConversationHistory(prev => {
-        const updated = [...prev, userMsg, {
-          role: 'assistant',
-          content: responseText
-        }];
-        // Keep only last 20 messages to avoid token bloat
-        return updated.slice(-20);
-      });
-
-      setAiStatus('idle');
-      setAiError('');
-
-      // Add note if truncated
-      if (wasTruncated) {
-        return responseText + '\n\n*Note: Response may have been truncated. Please ask for specific days if you need more details.*';
-      }
-
-      return responseText || "I'm here to help with baby meal planning! Ask me about recipes, purees, or meal ideas.";
-    } catch (err) {
-      console.error('AI chat error', err);
-      setAiStatus('idle');
-
-      // Don't add failed user message to history
-      if (err.name === 'AbortError') {
-        // Check if it was a long request based on the user message
-        const wasLongRequest =
-          userMessage.toLowerCase().includes('7 days') ||
-          userMessage.toLowerCase().includes('week') ||
-          userMessage.toLowerCase().includes('meal plan') ||
-          userMessage.toLowerCase().includes('weekly');
-
-        const errorMsg = wasLongRequest
-          ? 'Request timed out. Generating a 7-day meal plan takes longer. Please wait a moment and try again, or ask for fewer days.'
-          : 'Request timed out. The AI may be taking longer than expected. Please try again.';
-        setAiError(errorMsg);
-        throw new Error(errorMsg);
-      } else if (err.status === 429) {
-        const errorMsg = 'Rate limit reached. Please wait a moment before trying again.';
-        setAiError(errorMsg);
-        throw new Error(errorMsg);
-      } else if (err.status === 400) {
-        const errorMsg = 'Invalid request. Please check your message and try again.';
-        setAiError(errorMsg);
-        throw new Error(errorMsg);
-      } else if (err.status === 401) {
-        const errorMsg = 'API key is invalid or missing. Please check your configuration.';
-        setAiError(errorMsg);
-        throw new Error(errorMsg);
-      } else if (err.status === 500 || err.status >= 502) {
-        const errorMsg = 'AI service is temporarily unavailable. Please try again in a moment.';
-        setAiError(errorMsg);
-        throw new Error(errorMsg);
-      } else {
-        const errorMsg = `AI request failed: ${err.message || String(err)}. Please try again.`;
-        setAiError(errorMsg);
-        throw new Error(errorMsg);
-      }
-    } finally {
-      clearTimeout(timeoutId);
-    }
+  // Wrapper to handle dynamic tokens/timeout for long requests
+  const handleChatMessage = async (userMessage) => {
+    // The hook already uses high defaults, so we can just use it directly
+    // If needed in the future, we can enhance the hook to support dynamic parameters
+    return baseHandleChatMessage(userMessage);
   };
 
 
 
   return (
-    <div className="page-container recipes-page" style={{ background: '#FAFAFA', minHeight: '100vh' }}>
+    <>
       <div className="page-header">
         <div className="page-header-top">
           <h1 className="page-title">
@@ -394,24 +250,24 @@ To get personalized AI responses with more recipes and meal plans, set up your V
           </h1>
           <div className={`page-actions ${viewMode === 'planner' ? 'planner-mode' : ''}`}>
             <button
-              className={`nav-tab ${viewMode === 'library' ? 'active' : ''}`}
+              className={`btn ${viewMode === 'library' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setViewMode('library')}
             >
-              <span aria-hidden="true">🔎</span>
+              <span>🔎</span>
               <span>Recipe Library</span>
             </button>
             <button
-              className={`nav-tab ${viewMode === 'favorites' ? 'active' : ''}`}
+              className={`btn btn-secondary ${viewMode === 'favorites' ? 'active' : ''}`}
               onClick={() => setViewMode('favorites')}
             >
-              <span aria-hidden="true">⭐</span>
+              <span>⭐</span>
               <span>Favorites</span>
             </button>
             <button
-              className={`nav-tab ${viewMode === 'planner' ? 'active' : ''}`}
+              className={`btn btn-new-feature ${viewMode === 'planner' ? 'active' : ''}`}
               onClick={() => setViewMode('planner')}
             >
-              <span aria-hidden="true">🧠</span>
+              <span>🧠</span>
               <span>AI Meal Planner</span>
             </button>
           </div>
@@ -422,45 +278,43 @@ To get personalized AI responses with more recipes and meal plans, set up your V
 
       {viewMode !== 'planner' && (
         <>
-          <div className="recipes-toolbar-sticky">
-            <div className="recipes-toolbar">
-              <div className="toolbar-filters">
-                <span className="filter-label">Diet:</span>
-                <div className="filter-buttons">
-                  <button
-                    className={`filter-btn ${dietFilter === 'all' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setDietFilter('all')}
-                  >
-                    All
-                  </button>
-                  <button
-                    className={`filter-btn ${dietFilter === 'vegetarian' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setDietFilter('vegetarian')}
-                  >
-                    Vegetarian
-                  </button>
-                  <button
-                    className={`filter-btn ${dietFilter === 'non-veg' ? 'active' : ''}`}
-                    type="button"
-                    onClick={() => setDietFilter('non-veg')}
-                  >
-                    Non-veg
-                  </button>
-                </div>
+          <div className="recipes-toolbar">
+            <div className="toolbar-filters">
+              <span className="filter-label">Diet:</span>
+              <div className="filter-buttons">
+                <button
+                  className={`filter-btn ${dietFilter === 'all' ? 'active' : ''}`}
+                  type="button"
+                  onClick={() => setDietFilter('all')}
+                >
+                  All
+                </button>
+                <button
+                  className={`filter-btn ${dietFilter === 'vegetarian' ? 'active' : ''}`}
+                  type="button"
+                  onClick={() => setDietFilter('vegetarian')}
+                >
+                  Vegetarian
+                </button>
+                <button
+                  className={`filter-btn ${dietFilter === 'non-veg' ? 'active' : ''}`}
+                  type="button"
+                  onClick={() => setDietFilter('non-veg')}
+                >
+                  Non-veg
+                </button>
               </div>
-              <div className="toolbar-search">
-                <input
-                  className="recipe-search-input"
-                  placeholder="Search recipes, ingredients, tags..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <span className="toolbar-meta">
-                  {displayedRecipes.length} {displayedRecipes.length === 1 ? 'recipe' : 'recipes'}
-                </span>
-              </div>
+            </div>
+            <div className="toolbar-search">
+              <input
+                className="recipe-search-input"
+                placeholder="Search recipes, ingredients, tags..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <span className="toolbar-meta">
+                {displayedRecipes.length} {displayedRecipes.length === 1 ? 'recipe' : 'recipes'}
+              </span>
             </div>
           </div>
 
@@ -550,7 +404,7 @@ To get personalized AI responses with more recipes and meal plans, set up your V
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

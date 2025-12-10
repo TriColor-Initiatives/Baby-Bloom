@@ -478,19 +478,22 @@ const Growth = () => {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1 className="page-title">📏 Growth Tracking</h1>
-        <p className="page-subtitle">Monitor your baby's physical development</p>
-      </div>
-
-      <div className="page-actions">
-        <button className="btn btn-primary" onClick={openMeasurementModal}>
-          <span>➕</span>
-          <span>Add Measurement</span>
-        </button>
-        <button className="btn btn-secondary" onClick={() => setIsChartsOpen(true)}>
-          <span>📊</span>
-          <span>View Charts</span>
-        </button>
+        <div className="page-header-content">
+          <div>
+            <h1 className="page-title">📏 Growth Tracking</h1>
+            <p className="page-subtitle">Monitor your baby's physical development</p>
+          </div>
+          <div className="page-actions">
+            <button className="btn btn-primary" onClick={openMeasurementModal}>
+              <span>➕</span>
+              <span>Add Measurement</span>
+            </button>
+            <button className="btn btn-secondary" onClick={() => setIsChartsOpen(true)}>
+              <span>📊</span>
+              <span>View Charts</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Two Column Layout: Latest Measurements (Left) and Growth Charts (Right) */}

@@ -524,29 +524,32 @@ const Photos = () => {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1 className="page-title">📸 Photo Timeline</h1>
-        <p className="page-subtitle">Capture and cherish your baby's precious moments</p>
-      </div>
-
-      <div className="page-actions">
-        <button className="btn btn-primary" onClick={triggerUpload} disabled={uploading}>
-          <span>➕</span>
-          <span>{uploading ? 'Uploading...' : 'Upload Photo'}</span>
-        </button>
-        <button
-          className={`btn btn-secondary ${viewMode === 'grid' ? 'is-active' : ''}`}
-          onClick={() => setViewMode('grid')}
-        >
-          <span>📋</span>
-          <span>Grid</span>
-        </button>
-        <button
-          className={`btn btn-secondary ${viewMode === 'month' ? 'is-active' : ''}`}
-          onClick={() => setViewMode('month')}
-        >
-          <span>📅</span>
-          <span>By Month</span>
-        </button>
+        <div className="page-header-content">
+          <div>
+            <h1 className="page-title">📸 Photo Timeline</h1>
+            <p className="page-subtitle">Capture and cherish your baby's precious moments</p>
+          </div>
+          <div className="page-actions">
+            <button
+              className={`btn btn-secondary ${viewMode === 'grid' ? 'is-active' : ''}`}
+              onClick={() => setViewMode('grid')}
+            >
+              <span>📋</span>
+              <span>Grid</span>
+            </button>
+            <button
+              className={`btn btn-secondary ${viewMode === 'month' ? 'is-active' : ''}`}
+              onClick={() => setViewMode('month')}
+            >
+              <span>📅</span>
+              <span>By Month</span>
+            </button>
+            <button className="btn btn-primary" onClick={triggerUpload} disabled={uploading}>
+              <span>➕</span>
+              <span>{uploading ? 'Uploading...' : 'Upload Photo'}</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="page-meta">
