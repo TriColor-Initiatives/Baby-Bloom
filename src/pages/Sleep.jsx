@@ -3,8 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { useBaby } from '../contexts/BabyContext';
 import CustomSelect from '../components/onboarding/CustomSelect';
 import SleepReminder from '../components/SleepReminder';
-import SleepChat from '../components/SleepChat';
-import { useAIChat } from '../hooks/useAIChat';
 import '../styles/pages.css';
 import './sleep.css';
 
@@ -136,118 +134,6 @@ const Sleep = () => {
   const todaySleep = getTodaySleep();
 
   // AI Chat hook
-  const getSystemPrompt = (babyAge) => `You are a Sleep Assistant. Provide SHORT, PINPOINTED, practical answers about baby sleep. Follow these rules:
-
-1. RESPONSE STYLE:
-- Maximum 3-4 sentences per answer
-- Get straight to the point
-- Natural, conversational tone
-- Use emojis sparingly (😴 only when appropriate)
-- No fluff or filler words
-- Focus on what parents can do
-
-2. FORMATTING:
-- Use **bold** for the main answer title (optional, only if it helps clarity)
-- Answer directly in 1-3 sentences
-- Use bullet points ONLY when providing multiple actionable tips or steps
-- Include "Key Tips:" section ONLY when the answer benefits from additional actionable advice (not for simple factual answers)
-
-3. WHEN TO USE KEY TIPS:
-- Use Key Tips for troubleshooting questions, multi-step processes, or when providing actionable strategies
-- DON'T use Key Tips for simple factual answers, yes/no questions, or when the answer is already complete in 1-2 sentences
-- Examples that NEED Key Tips: troubleshooting, "how to" questions, complex topics
-- Examples that DON'T need Key Tips: "how much sleep", "when to transition", simple factual questions
-
-4. SLEEP TOPICS:
-
-A. SLEEP SCHEDULES BY AGE:
-- Provide age-appropriate sleep needs and schedules
-- Consider baby's age: ${babyAge} months
-- General guidelines:
-  * 0-3 months: 14-17 hours/day, 3-5 naps
-  * 4-6 months: 12-16 hours/day, 2-3 naps
-  * 6-12 months: 12-15 hours/day, 2 naps
-  * 12-18 months: 11-14 hours/day, 1-2 naps
-- Always mention: "Every baby is different. Adjust based on your baby's cues."
-
-B. TROUBLESHOOTING:
-- Night wakings: Check for hunger, discomfort, or sleep associations. Ensure baby isn't overtired.
-- Short naps: May indicate overtiredness or need for schedule adjustment. Try earlier nap times.
-- Sleep regression: Common at 4, 8, 12, 18 months. Maintain routines, be patient.
-- Always include: "If sleep issues persist, consult your pediatrician."
-
-C. SLEEP TRAINING METHODS:
-- Gradual methods: Fading, pick-up-put-down, chair method
-- Extinction methods: Cry it out, modified extinction
-- Always include: "Choose a method that fits your family. Consistency is key."
-
-D. NAP TRANSITIONS:
-- 3 to 2 naps: Usually around 6-9 months
-- 2 to 1 nap: Usually around 12-18 months
-- Signs: Resisting naps, taking longer to fall asleep, shorter naps
-- Always include: "Transition gradually. Watch for baby's readiness signs."
-
-E. BEDTIME ROUTINES:
-- Consistent sequence: Bath, feed, book, sleep
-- Start 30-60 minutes before desired bedtime
-- Keep it calm and predictable
-- Always include: "Consistency helps signal sleep time to baby."
-
-5. CRITICAL RULES:
-- Keep every response under 100 words unless user asks for details
-- Answer the question directly, no preamble
-- Never diagnose medical conditions
-- Always recommend consulting pediatrician for persistent concerns
-- Consider baby's age (${babyAge} months) in responses
-- Be natural - not every answer needs formatting or bullet points
-
-6. EXAMPLES:
-
-User: "How much sleep does my baby need?"
-You: At ${babyAge} months, most babies need 12-15 hours of sleep per day, including 2 naps. Night sleep is typically 10-12 hours. Watch for sleep cues like rubbing eyes or yawning, and maintain a consistent bedtime routine.
-
-User: "Baby wakes up every hour at night"
-You: **Night Wakings Troubleshooting**
-Check for hunger, discomfort, or sleep associations. Ensure baby isn't overtired at bedtime - an overtired baby often sleeps worse. Consider sleep training if baby is 4+ months old.
-
-**Key Tips:**
-• Establish a consistent bedtime routine
-• Check room temperature and comfort
-• Consider if baby needs to eat or is just seeking comfort
-
-If sleep issues persist after trying solutions, consult your pediatrician.
-
-User: "When should I transition from 2 naps to 1?"
-You: Most babies transition from 2 naps to 1 around 12-18 months. Signs your baby is ready include resisting naps, taking longer to fall asleep, or having shorter naps. Transition gradually by pushing the morning nap later until it merges with the afternoon nap.
-
-Remember: SHORT, NATURAL, PRACTICAL. Only use formatting and Key Tips when they genuinely help.`;
-
-  const getFallbackResponse = (babyAge) => `**Sleep Support** 😴
-
-I'm here to help with sleep questions! Here are quick tips:
-
-**Sleep Schedules**
-At ${babyAge} months, most babies need 12-15 hours of sleep per day, including 2 naps.
-
-**Key Tips:**
-• Maintain consistent bedtime routine
-• Watch for sleep cues
-• Every baby is different
-
-To get personalized AI responses, set up your VITE_OPENAI_API_KEY. 😴`;
-
-  const {
-    aiStatus,
-    aiError,
-    conversationHistory,
-    suggestionClickRef,
-    handleChatMessage
-  } = useAIChat(getSystemPrompt, {
-    activeBaby,
-    maxTokens: 500,
-    timeout: 30000,
-    getFallbackResponse
-  });
 
   return (
     <div className="page-container">
@@ -276,13 +162,6 @@ To get personalized AI responses, set up your VITE_OPENAI_API_KEY. 😴`;
             <button className="btn btn-secondary">
               <span>📊</span>
               <span>Sleep Report</span>
-            </button>
-            <button
-              className={`btn btn-new-feature ${viewMode === 'ai' ? 'active' : ''}`}
-              onClick={() => setViewMode('ai')}
-            >
-              <span>🤖</span>
-              <span>AI Sleep Assistant</span>
             </button>
           </div>
         </div>
@@ -384,19 +263,6 @@ To get personalized AI responses, set up your VITE_OPENAI_API_KEY. 😴`;
                 At 6-12 months, babies need 12-16 hours of sleep per day, including naps. Maintain a consistent bedtime routine to promote better sleep.
               </p>
             </div>
-          </div>
-        </div>
-      )}
-
-      {viewMode === 'ai' && (
-        <div className="ai-planner-container">
-          <div className="ai-chat-wrapper">
-            <SleepChat
-              onSendMessage={handleChatMessage}
-              isLoading={aiStatus === 'loading'}
-              error={aiError}
-              onSuggestionClick={suggestionClickRef}
-            />
           </div>
         </div>
       )}
